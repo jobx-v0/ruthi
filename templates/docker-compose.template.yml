@@ -1,0 +1,59 @@
+version: "3.8"
+
+services:
+  nginx_{{ environment }}:
+    container_name: nginx_{{ environment }}
+    image: nginx:latest
+    ports:
+      - "{{ nginx_http_port }}:80"
+      - "{{ nginx_https_port }}:443"
+    volumes:
+      - ../../data/certbot/conf:/etc/letsencrypt
+      - ../../data/certbot/www:/var/www/certbot
+      - ./nginx:/etc/nginx/conf.d
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    depends_on:
+      - backend_{{ environment }}
+      - frontend_{{ environment }}
+    networks:
+      - app-network-{{ environment }}
+  
+  # certbot_{{ environment }}:
+  #   container_name: certbot_{{ environment }}
+  #   image: certbot/certbot
+  #   volumes:
+  #     - ../../data/certbot/conf:/etc/letsencrypt
+  #     - ../../data/certbot/www:/var/www/certbot
+  #   command: certonly --webroot -w /var/www/certbot --force-renewal --email admin@ruthi.in -d {{ domain }} --agree-tos
+  #   # entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+  #   networks:
+  #     - app-network-{{ environment }}
+
+
+  backend_{{ environment }}:
+    container_name: backend_{{ environment }}
+    build: ../../server
+    expose:
+      - "{{ backend_port }}"
+    env_file:
+      - ../../server/.env.server.{{ environment }}
+    networks:
+      - app-network-{{ environment }}
+
+  frontend_{{ environment }}:
+    container_name: frontend_{{ environment }}
+    build: 
+      context: ../../client
+      args:
+      - REACT_APP_BACKEND_URL=https://{{ domain }}:{{ nginx_https_port }}
+    expose:
+      - "{{ frontend_port }}"
+    env_file:
+      - ../../client/.env.client.{{ environment }}
+    networks:
+      - app-network-{{ environment }}
+
+networks:
+  app-network-{{ environment }}:
+    name: app-network-{{ environment }}
+    driver: bridge

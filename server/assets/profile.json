@@ -1,0 +1,93 @@
+{
+    "personal_information": {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "jdoe@me.com",
+        "phone": "555-555-5555"
+    },
+    "socials": {
+        "github": "jdoe",
+        "linkedin": "jdoe",
+        "twitter": "jdoe",
+        "website": "jdoe.com"
+    },
+    "courses": [
+        "Introduction to Computer Science",
+        "Advanced Computer Science"
+    ],
+    "education": [
+        {
+            "institution": "University of Example",
+            "degree": "Bachelor of Science",
+            "field_of_study": "Computer Science",
+            "start_date": "2010-09-01",
+            "end_date": "2013-06-30",
+            "cgpa_or_percentage": 3.5
+        }
+    ],
+    "experience": [
+        {
+            "company": "Example Company",
+            "position": "Software Engineer",
+            "start_date": "2020-01-01",
+            "end_date": "2022-12-31",
+            "location": "New York, NY",
+            "responsibilities": [
+                "Developed new features",
+                "Maintained existing codebase",
+                "Trained new hires"
+            ]
+        }
+    ],
+    "publications": [
+        {
+            "name": "Example Publication",
+            "link": "https://example.com/publication",
+            "date": "2020-01-01"
+        }
+    ],
+    "skills": [
+        "Java",
+        "JavaScript",
+        "Python",
+        "C++"
+    ],
+    "personal_projects": [
+        {
+            "name": "Example Project",
+            "description": [
+                "An example project",
+                "With multiple lines"
+            ],
+            "link": "https://example.com/project",
+            "start_date": "2020-01-01",
+            "end_date": "2020-12-31",
+            "technologies": [
+                "Java",
+                "JavaScript"
+            ]
+        }
+    ],
+    "awards_and_achievements": [
+        "Award 1",
+        "Award 2"
+    ],
+    "position_of_responsibility": [
+        "Position 1",
+        "Position 2"
+    ],
+    "competitions": [
+        {
+            "name": "Example Competition",
+            "description": [
+                "An example competition",
+                "With multiple lines"
+            ],
+            "date": "2020-01-01"
+        }
+    ],
+    "extra_curricular_activities": [
+        "Activity 1",
+        "Activity 2"
+    ]
+}

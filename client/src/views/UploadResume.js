@@ -11,6 +11,9 @@ import {
 
 import axios from "axios";
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL + "/api/resume";
+
 export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
@@ -32,7 +35,7 @@ export default function Component() {
       // Connect with LinkedIn
       console.log("LinkedIn connected:", linkedinUrl);
     }
-    const response = await axios.get(`http://resume_parser:80/health_check/`)
+    const response = await axios.get(`${API_URL}/health_check`)
     console.log(response)
   };
 

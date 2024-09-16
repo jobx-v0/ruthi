@@ -67,6 +67,7 @@ const downloadAudio = async (req, res) => {
 
 const AzureController = {
   generateSasToken,
+  generateSasTokenForUser,
   handleTranscriptionForOneQuestion,
   handleTranscriptionForAllQuestions,
   downloadAudio,

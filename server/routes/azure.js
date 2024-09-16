@@ -5,6 +5,8 @@ const AzureController = require("../controllers/azureController");
 
 router.get("/sas/:userId/:jobId/:questionId", AzureController.generateSasToken);
 
+router.get("/sas/:userId", AzureController.generateSasTokenForUser);
+
 router.post(
   "/transcribeForOneQuestion",
   AzureController.handleTranscriptionForOneQuestion

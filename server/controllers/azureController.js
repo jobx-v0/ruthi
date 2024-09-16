@@ -46,6 +46,16 @@ const generateSasToken = async (req, res) => {
   }
 };
 
+const generateSasTokenForUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const sasUrl = await AzureService.generateSasTokenForBlob(`${userId}/resume.pdf`);
+    res.json({ sasUrl });
+  } catch (error) {
+    handleError(res, error);
+  }
+};
+
 const downloadAudio = async (req, res) => {
   const audioFilePath = path.join(__dirname, "audio.wav");
   try {

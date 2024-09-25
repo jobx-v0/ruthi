@@ -9,6 +9,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 
+import axios from "axios";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL + "/api/resume";
+
 export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
@@ -17,6 +22,21 @@ export default function Component() {
     if (event.target.files && event.target.files.length > 0) {
       setFile(event.target.files[0]);
     }
+  };
+
+  const handleContinueClick = async () => {
+    // Handle file upload logic here
+    if (file) {
+      // Upload file to server
+      console.log("File uploaded:", file);
+
+    }
+    else if (linkedinUrl !== "") {
+      // Connect with LinkedIn
+      console.log("LinkedIn connected:", linkedinUrl);
+    }
+    const response = await axios.get(`${API_URL}/health_check`)
+    console.log(response)
   };
 
   const handleLinkedinChange = (event) => {
@@ -100,7 +120,7 @@ export default function Component() {
               }}>
                 Skip for now
               </button>
-              <button className="bg-orange-400 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition duration-300 flex items-center">
+              <button className="bg-orange-400 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition duration-300 flex items-center" onClick={handleContinueClick}>
                 Continue
                 <ArrowRight className="ml-2 h-4 w-4" />
               </button>

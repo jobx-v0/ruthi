@@ -83,7 +83,7 @@ const userProfileSchema = new Schema(
     position_of_responsibility: [
       {
         id: { type: String },
-        position: { type: String },
+        title: { type: String },
         organization: { type: String },
         start_date: { type: Date },
         end_date: { type: Date },

@@ -33,6 +33,7 @@ import {
   competitionsState,
   extracurricularActivitiesState
 } from '../../store/atoms/userProfileSate';
+import ThankyouCard from './ThankyouCard';
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -112,6 +113,7 @@ export default function Resume() {
   const navigate = useNavigate();
   var { fetchUserInfo, userInfo } = useAuth();
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   const fetchUserInfoAndProfile = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -145,9 +147,9 @@ export default function Resume() {
         setSkills(response.data.skills || []);
         setPersonalProjects(response.data.personal_projects || []);
         setAwardsAndAchievements(response.data.awards_and_achievements || []);
-        setPositionsOfResponsibility(response.data.positions_of_responsibility || []);
+        setPositionsOfResponsibility(response.data.position_of_responsibility || []);
         setCompetitions(response.data.competitions || []);
-        setExtracurricularActivities(response.data.extracurricular_activities || []);
+        setExtracurricularActivities(response.data.extra_curricular_activities || []);
 
         setProfileExists(true);
       }
@@ -226,7 +228,7 @@ export default function Resume() {
         userId: userInfo._id,
         personal_information: {
           ...personalInfo,
-          email: userInfo.email // Use the email from userInfo
+          email: userInfo.email
         },
         socials,
         courses,
@@ -243,27 +245,35 @@ export default function Resume() {
 
       console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));
 
-      let response;
-      if (profileExists) {
-        // Update existing profile
-          response = await axios.put(`http://localhost:3004/api/user-profile/${userInfo._id}`, dataToSubmit, {
+      // First, check if a profile exists
+      try {
+        const checkResponse = await axios.get(`http://localhost:3004/api/user-profile/${userInfo._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-      } else {
-        // Create new profile
-        response = await axios.post('http://localhost:3004/api/user-profile/create', dataToSubmit, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        
+        if (checkResponse.data) {
+          // Profile exists, update it
+          const updateResponse = await axios.put(`http://localhost:3004/api/user-profile/${userInfo._id}`, dataToSubmit, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log('Profile updated successfully:', updateResponse.data);
+        }
+      } catch (checkError) {
+        if (checkError.response && checkError.response.status === 404) {
+          // Profile doesn't exist, create a new one
+          const createResponse = await axios.post('http://localhost:3004/api/user-profile/create', dataToSubmit, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          console.log('New profile created successfully:', createResponse.data);
+        } else {
+          // If it's not a 404 error, rethrow the error
+          throw checkError;
+        }
       }
 
-      console.log('Profile submitted successfully:', response.data);
       toast.success('Profile submitted successfully!');
-      setProfileExists(true);
-      setHasLocalChanges(false);  // Reset hasLocalChanges after successful submission
+      setIsSubmitted(true);
       
-      // Refetch the profile data to ensure local state is in sync with the backend
-      await fetchUserInfoAndProfile();
-
     } catch (error) {
       console.error('Error submitting profile:', error);
       if (error.response) {
@@ -276,6 +286,10 @@ export default function Resume() {
       }
     }
   };
+
+  if (isSubmitted) {
+    return <ThankyouCard />;
+  }
 
   if (isLoading) {
     return (
@@ -469,7 +483,7 @@ export default function Resume() {
                 </span>
               </div>
               <ul className="list-disc pl-5 text-gray-600">
-                {position.description?.split('\n').map((item, idx) => (
+                {position.description?.map((item, idx) => (
                   <li key={idx}>{item}</li>
                 ))}
               </ul>
@@ -572,10 +586,10 @@ export default function Resume() {
       {hasAnyData(personalInfo) && (
         <div className="mt-8 text-center">
           <button 
-            className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
             onClick={handleSubmit}
           >
-            {profileExists ? 'Update Profile' : 'Create Profile'}
+            Submit Profile
           </button>
         </div>
       )}

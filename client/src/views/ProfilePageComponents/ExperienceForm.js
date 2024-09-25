@@ -22,6 +22,12 @@ const experienceSchema = z.object({
   currently_working: z.boolean(),
 });
 
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
 export default function ExperienceForm() {
   const [experiences, setExperiences] = useRecoilState(experienceState);
   const newCardRef = useRef(null);
@@ -209,7 +215,7 @@ export default function ExperienceForm() {
                     <input
                       type="date"
                       id={`startDate-${experience.id}`}
-                      value={experience.start_date}
+                      value={formatDateForInput(experience.start_date)}
                       onChange={(e) => {
                         const newStartDate = e.target.value;
                         handleInputChange(

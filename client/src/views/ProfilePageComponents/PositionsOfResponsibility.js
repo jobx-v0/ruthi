@@ -41,6 +41,10 @@ export default function PositionsOfResponsibility() {
   const [errors, setErrors] = useState({});
   const { userInfo } = useAuth();
 
+  useEffect(() => {
+    console.log("Current positions:", positions);
+  }, [positions]);
+
   const getCurrentDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];

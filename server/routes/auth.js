@@ -4,24 +4,27 @@ const AuthController = require("../controllers/authController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 
 // Register a new user
-router.post("/register", AuthController.register);
+router.post("/register", AuthController.register); // Verified but didn't send the verification email
 
 // Log in an existing user
-router.post("/login", AuthController.login);
+router.post("/login", AuthController.login); // Verified
 
 // Get User data based on authToken
-router.get("/user/info", authMiddleware, AuthController.getUser);
+router.get("/user/info", authMiddleware, AuthController.getUser); // Verified
 
 // Route to verify email
 router.post("/verify-email", AuthController.verifyEmail);
 
-router.post('/resend-verification-email', AuthController.resendVerificationEmail);
+router.post(
+  "/resend-verification-email",
+  AuthController.resendVerificationEmail
+);
 
 //Route to send reset-password link
-router.post('/forgot-password', AuthController.forgotPassword);
+router.post("/forgot-password", AuthController.forgotPassword);
 
 // Route to reset password
-router.post('/reset-password', AuthController.resetPassword);
+router.post("/reset-password", AuthController.resetPassword);
 
 // Other authentication-related routes can be added here
 

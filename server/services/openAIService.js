@@ -3,7 +3,13 @@ const { encoding_for_model } = require("tiktoken");
 const InterviewService = require("./interviewService");
 const ResultService = require("./resultService");
 
-const openai = new OpenAI();
+require("dotenv").config();
+
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
+
+const openai = new OpenAI({
+  apikey: OPENAI_API_KEY,
+});
 
 class OpenAIServiceError extends Error {
   constructor(message, code) {

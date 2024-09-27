@@ -6,8 +6,8 @@ const questionSchema = new Schema({
   sub_category: String,
   type: String,
   question: { type: String, required: true },
-  skills: [String], // Array of skills associated with the question
-  jobs: [String], // Array of job IDs associated with the question
+  skills: [String],
+  jobs: [String],
 });
 
 const Question = mongoose.model("Question", questionSchema);

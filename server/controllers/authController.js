@@ -3,7 +3,6 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const EmailService = require("../services/emailService");
 
-
 require("dotenv").config();
 
 // Register a new user
@@ -11,7 +10,7 @@ register = async (req, res) => {
   try {
     // Retrieve user data from the request body
     const { username, password, email, role, companyName } = req.body;
-    console.log("inside register");
+    // console.log("inside register");
     // Check if the username or password is missing
     if (!username || !password) {
       return res
@@ -25,7 +24,7 @@ register = async (req, res) => {
     // Check if the username already exists in the database
     const existingUser = await User.findOne({ username });
     if (existingUser) {
-      console.log("Username already exists!!!");
+      // console.log("Username already exists!!!");
       return res.status(400).json({ message: "Username is already in use." });
     }
 
@@ -37,16 +36,20 @@ register = async (req, res) => {
       email,
       role,
       companyName, // Only for employers
+      isVerified: true,
     });
 
     // Save the user document to the database
     await newUser.save();
 
     // Send verification email
-    await EmailService.sendVerificationEmail(newUser);
-    console.log("New User Saved");
+    // await EmailService.sendVerificationEmail(newUser);
+    // console.log("New User Saved");
 
-    res.status(201).json({ message: "Registration successful! Please check your email to verify your account." });
+    res.status(201).json({
+      message:
+        "Registration successful! Please check your email to verify your account.",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Registration failed. Please try again." });
@@ -81,7 +84,7 @@ login = async (req, res) => {
       const token = jwt.sign({ id: user._id, role: user.role }, secretKey, {
         expiresIn: "12h",
       });
-      console.log("Authenticated new user");
+      // console.log("Authenticated new user");
       // Send the token in the response
       res.json({ token });
     } else {
@@ -96,27 +99,27 @@ login = async (req, res) => {
 verifyEmail = async (req, res) => {
   const token = req.body.token;
   if (!token) {
-      return res.status(400).send("Invalid or missing token");
+    return res.status(400).send("Invalid or missing token");
   }
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
-      const user = await User.findById(decoded.userId);
+    const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
+    const user = await User.findById(decoded.userId);
 
-      if (!user) {
-          return res.status(404).send("User not found");
-      }
+    if (!user) {
+      return res.status(404).send("User not found");
+    }
 
-      if (user.isVerified) {
-          return res.status(400).send("Email is already verified");
-      }
+    if (user.isVerified) {
+      return res.status(400).send("Email is already verified");
+    }
 
-      user.isVerified = true;
-      await user.save();
+    user.isVerified = true;
+    await user.save();
 
-      return res.status(200).send("Email verified successfully!");
+    return res.status(200).send("Email verified successfully!");
   } catch (error) {
-      return res.status(400).send("Invalid or expired token");
+    return res.status(400).send("Invalid or expired token");
   }
 };
 
@@ -140,7 +143,7 @@ forgotPassword = async (req, res) => {
 
 resetPassword = async (req, res) => {
   const { token, password } = req.body;
-  console.log("hello....")
+  console.log("hello....");
   try {
     console.log("token", token);
     const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
@@ -209,7 +212,7 @@ const AuthController = {
   verifyEmail,
   forgotPassword,
   resetPassword,
-  resendVerificationEmail
+  resendVerificationEmail,
 };
 
 module.exports = AuthController;

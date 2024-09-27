@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API_URL = BACKEND_URL + "/api/auth";
+const API_URL = "http://localhost:8080/api/auth";
 console.log("API URL:", API_URL);
 // const API_URL = 'https://jobx-32a058281844.herokuapp.com/api/auth';
 
@@ -34,9 +34,11 @@ export const loginUserAPI = async (
         const userData = userResponse.data;
         console.log("userData:", userData);
         console.log("isVerified:", userData.isVerified);
-        
+
         try {
-          const profileResponse = await axios.get(`${BACKEND_URL}/api/user-profile/${userData._id}`);
+          const profileResponse = await axios.get(
+            `${BACKEND_URL}/api/user-profile/${userData._id}`
+          );
           console.log("profileResponse:", profileResponse);
           // If we reach here, it means the profile exists
           navigate("/home");
@@ -47,7 +49,10 @@ export const loginUserAPI = async (
           } else {
             // Handle other errors
             console.error("Error checking user profile:", profileError);
-            showNotification("Error checking user profile. Please try again.", "error");
+            showNotification(
+              "Error checking user profile. Please try again.",
+              "error"
+            );
           }
         }
       }
@@ -57,14 +62,26 @@ export const loginUserAPI = async (
     console.log("Login failed", error);
     if (error.response) {
       if (error.response.status === 404) {
-        showNotification("User not found. Please check your username.", "error");
+        showNotification(
+          "User not found. Please check your username.",
+          "error"
+        );
       } else if (error.response.status === 401) {
-        showNotification("Invalid password. Please check your password.", "error");
+        showNotification(
+          "Invalid password. Please check your password.",
+          "error"
+        );
       } else {
-        showNotification("Network or server error. Please try again later.", "error");
+        showNotification(
+          "Network or server error. Please try again later.",
+          "error"
+        );
       }
     } else {
-      showNotification("An unexpected error occurred. Please try again.", "error");
+      showNotification(
+        "An unexpected error occurred. Please try again.",
+        "error"
+      );
     }
   }
 };

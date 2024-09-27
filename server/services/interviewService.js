@@ -92,7 +92,7 @@ const getQuestionIds = async (userId, jobId) => {
   if (!interview) {
     throw new Error("Interview not found");
   }
-  console.log("interview", interview);
+  // console.log("interview", interview);
   return interview.data.map((q) => q.question.toString());
 };
 

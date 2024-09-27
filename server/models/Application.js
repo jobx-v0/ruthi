@@ -26,7 +26,6 @@ const applicationSchema = new Schema({
     type: Date,
     default: Date.now,
   },
-  // Add any other fields you might need
 });
 
 const Application = mongoose.model("Application", applicationSchema);

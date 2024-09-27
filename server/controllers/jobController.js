@@ -4,10 +4,10 @@ const Job = require("../models/Job");
 const createJob = async (req, res) => {
   try {
     // Extract data from the request body
-    const { job_link, posted_date } = req.body;
+    const { job_link } = req.body;
 
     // Check if a job with the same job link and posted date already exists
-    const existingJob = await Job.findOne({ job_link, posted_date });
+    const existingJob = await Job.findOne({ job_link });
 
     if (existingJob) {
       // If a job with the same link and posted date exists, return an error
@@ -16,10 +16,13 @@ const createJob = async (req, res) => {
 
     // If the job does not already exist, create a new job posting
     const newJob = new Job(req.body);
+
     await newJob.save();
     console.log("New Job Added Successfully");
 
-    res.status(201).json({ message: "Job posting created successfully." });
+    res
+      .status(201)
+      .json({ message: "Job posting created successfully.", job: newJob });
   } catch (error) {
     console.error(error);
     res
@@ -67,6 +70,43 @@ const getAllJobs = async (req, res) => {
     const totalPages = Math.ceil(totalJobs / pageSize);
 
     res.status(200).json({ jobs, pageNumber, pageSize, totalPages });
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+    res.status(500).json({ message: "Failed to fetch jobs" });
+  }
+};
+
+const getAllJobsPagination = async (req, res) => {
+  try {
+    const { page, search } = req.query;
+
+    if (!page || isNaN(page) || page <= 0) {
+      return res.status(400).json({
+        message: "Page number is required and must be a positive integer.",
+      });
+    }
+
+    const jobsPerPage = 30;
+    const skip = (page - 1) * jobsPerPage;
+
+    let query = {};
+    if (search) {
+      query = {
+        $or: [
+          { title: { $regex: search, $options: "i" } },
+          { company_name: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    // console.log("query --> ", JSON.stringify(query, null, 2));
+
+    const jobs = await Job.find(query)
+      .sort({ posted_date: -1 })
+      .skip(skip)
+      .limit(jobsPerPage);
+
+    res.status(200).json({ jobs, currentPage: page });
   } catch (error) {
     console.error("Error fetching jobs:", error);
     res.status(500).json({ message: "Failed to fetch jobs" });
@@ -127,6 +167,7 @@ const deleteJobById = async (req, res) => {
 module.exports = {
   createJob,
   getAllJobs,
+  getAllJobsPagination,
   getJobById,
   updateJobById,
   deleteJobById,

@@ -13,16 +13,41 @@ const OpenAIService = require("../services/openAIService");
 // ]
 
 const getQuestions = async (req, res) => {
-  // res.json({ Questions }); // Use only for local mongo db connection
   try {
-    // Fetch random questions, e.g., 3 questions
     const numberOfQuestions =
-      parseInt(process.env.NUMBER_OF_QUESTIONS_IN_INTERVIEW) || 3;
+      parseInt(process.env.NUMBER_OF_QUESTIONS_IN_INTERVIEW) || 5;
     const randomQuestions = await Question.aggregate([
       { $sample: { size: numberOfQuestions } },
     ]);
 
     res.json({ Questions: randomQuestions });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error fetching questions" });
+  }
+};
+
+const getQuestionsBySkills = async (req, res) => {
+  try {
+    const numberOfQuestions =
+      parseInt(process.env.NUMBER_OF_QUESTIONS_IN_INTERVIEW) || 5;
+
+    const skills = req.body.skills;
+
+    const questions = await Question.aggregate([
+      { $match: { skills: { $in: skills } } },
+      { $sample: { size: Number(numberOfQuestions) } },
+      {
+        $project: {
+          _id: 1,
+          question: 1,
+          category: 1,
+          type: 1,
+        },
+      },
+    ]);
+
+    res.status(200).json(questions);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Error fetching questions" });
@@ -147,6 +172,7 @@ const getCurrentCountOfInterviews = async (req, res) => {
 
 const InterviewController = {
   getQuestions,
+  getQuestionsBySkills,
   submitInterview,
   getCurrentCountOfInterviews,
   createInterview,

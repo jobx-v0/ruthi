@@ -46,7 +46,7 @@ app.use("/api/user-profile", userProfileRoutes);
 // Define other server setup, middleware, and error handling as needed
 
 // Start the server
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 console.log("Port: ", port);
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["candidate", "recruiter"],
+    enum: ["candidate", "recruiter", "admin"],
     required: true,
   },
   email: {
@@ -41,12 +41,12 @@ const userSchema = new mongoose.Schema({
   interviews: [{ type: Schema.Types.ObjectId, ref: "Interview" }],
   UserProfile: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserProfile'
+    ref: "UserProfile",
   },
   created_at: { type: Date, default: Date.now },
   userProfile: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserProfile'
+    ref: "UserProfile",
   },
 });
 

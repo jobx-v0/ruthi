@@ -3,7 +3,8 @@ import { toast } from "react-toastify";
 import { useSetRecoilState } from "recoil";
 import { useAuth } from "../context/AuthContext";
 
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL + "/api/user-profile";
 
 // save user profile data
 export const saveUserProfileData = async (userId, data) => {

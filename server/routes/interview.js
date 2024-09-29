@@ -4,8 +4,10 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 const InterviewController = require("../controllers/interviewController.js");
 
 // Use the authMiddleware to protect the /questions route
-router.get(
-  "/questions",
+router.get("/questions", authMiddleware, InterviewController.getQuestions);
+
+router.post(
+  "/get-questions-by-skills",
   authMiddleware,
   InterviewController.getQuestionsBySkills
 );

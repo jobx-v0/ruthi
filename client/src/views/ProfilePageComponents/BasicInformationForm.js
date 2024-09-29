@@ -50,7 +50,7 @@ const BasicInformationForm = ({ errors: parentErrors }) => {
   const profileInformation = useRecoilValue(userProfileState);
   const [socials, setSocials] = useRecoilState(socialsState);
   const [errors, setErrors] = useState({});
-  const { userInfo } = useAuth();
+  const { userInfo = {} } = useAuth();
 
   const handleSave = async () => {
     if (!userInfo || !userInfo._id) {
@@ -69,8 +69,10 @@ const BasicInformationForm = ({ errors: parentErrors }) => {
 
     try {
       await saveUserProfileData(userInfo._id, dataToSubmit);
+      toast.success('Profile information saved successfully!');
     } catch (error) {
       console.error('Failed to save data:', error);
+      toast.error('Failed to save profile information. Please try again.');
     }
   };
 
@@ -195,10 +197,7 @@ const BasicInformationForm = ({ errors: parentErrors }) => {
                   className={`w-full px-3 py-2 border rounded-md shadow-sm bg-gray-100 focus:outline-none ${
                     errors.email ? "border-red-500" : "border-gray-300"
                   }`}
-                  value={
-                    profileInformation.personal_information.email ||
-                    "roshanchenna@gmail.com"
-                  }
+                  value={userInfo?.email || ""}
                   readOnly
                 />
                 {errors.email && (

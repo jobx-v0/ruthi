@@ -143,7 +143,7 @@ export default function SidebarDemo() {
         );
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        toast.error("Failed to load user profile. Please try again later.");
+        // toast.error("Failed to load user profile. Please try again later.");
       }
     };
 

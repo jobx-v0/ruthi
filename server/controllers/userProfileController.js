@@ -68,7 +68,7 @@ exports.updateProfile = async (req, res) => {
         const userProfile = await UserProfile.findOneAndUpdate(
             { user: userId },
             updateData,
-            { new: true, runValidators: true }
+            { new: true, runValidators: true, upsert: true }
         );
 
         if (!userProfile) {

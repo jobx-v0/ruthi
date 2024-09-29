@@ -11,7 +11,8 @@ import {
   IconBrandGithub,
   IconBrandLinkedin,
   IconMail,
-  IconPhone
+  IconPhone,
+  IconBallFootball
 } from '@tabler/icons-react';
 import {Rocket, BookOpen} from "lucide-react";
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +35,7 @@ import {
   extracurricularActivitiesState
 } from '../../store/atoms/userProfileSate';
 import ThankyouCard from './ThankyouCard';
+import { isSubmittedState } from '../../store/atoms/userProfileSate';
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -90,6 +92,33 @@ const hasAnyData = (profile) => {
   return Object.values(profile).some(isValidData);
 };
 
+const isValidProject = (data) => {
+  if (data == null) {
+    return false;
+  }
+  if (Array.isArray(data)) {
+    console.log("project array data",data);
+    return data.length > 0 && data.some(item => 
+      item != null && Object.entries(item).some(([key, value]) => 
+        value !== null && 
+        value !== undefined && 
+        value !== '' && 
+        (typeof value !== 'object' || (Array.isArray(value) && value.length > 0) || Object.keys(value).length > 0)
+      )
+    );
+  }
+  if (typeof data === 'object') {
+    console.log("project object data",data);
+    return Object.values(data).some(value => 
+      value !== null && 
+      value !== undefined && 
+      value !== '' && 
+      (typeof value !== 'object' || (Array.isArray(value) && value.length > 0) || Object.keys(value).length > 0)
+    );
+  }
+  return data !== null && data !== undefined && data !== '';
+};
+
 export default function Resume() {
   const [personalInfo, setPersonalInfo] = useRecoilState(personalInformationState);
   const [socials, setSocials] = useRecoilState(socialsState);
@@ -113,7 +142,7 @@ export default function Resume() {
   const navigate = useNavigate();
   var { fetchUserInfo, userInfo } = useAuth();
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
   const fetchUserInfoAndProfile = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -222,7 +251,6 @@ export default function Resume() {
       navigate("/login");
       return;
     }
-
     try {
       const dataToSubmit = {
         userId: userInfo._id,
@@ -359,13 +387,14 @@ export default function Resume() {
         icon={<IconCode className="w-5 h-5" />}
         isEmpty={!isValidData(skills)}
       >
-        <div className="flex flex-wrap gap-2">
+        <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-1">
           {skills?.map((skill, index) => (
-            <span key={index} className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-sm">
-              {skill.skill_name}
-            </span>
+            <li key={index} className="text-gray-700 flex items-start">
+              <span className="mr-2">•</span>
+              <span>{skill.skill_name}</span>
+            </li>
           ))}
-        </div>
+        </ul>
       </Section>
 
       <Section
@@ -375,22 +404,18 @@ export default function Resume() {
       >
         <div className="space-y-4">
           {education?.filter(isValidData).map((edu, index) => (
-            <div key={edu.id ||index} className="flex flex-col md:flex-row justify-between">
-              <div>
+            <div key={edu.id || index}>
+              <div className="flex flex-col md:flex-row justify-between mb-1">
                 <h3 className="font-semibold text-gray-800">{edu.institution}</h3>
-                <p className="text-gray-600">{edu.degree}</p>
-                {edu.description && (
-                  <p className="text-gray-500 mt-1">{edu.description}</p>
-                )}
-              </div>
-              <div className="text-right mt-2 md:mt-0">
-                <p className="text-gray-600">
+                <span className="text-gray-600">
                   {edu.start_date ? new Date(edu.start_date).getFullYear() : ''} - {edu.end_date ? new Date(edu.end_date).getFullYear() : 'Present'}
-                </p>
-                {edu.cgpa_or_percentage && (
-                  <p className="text-gray-500">CGPA/Percentage: {edu.cgpa_or_percentage}</p>
-                )}
+                </span>
               </div>
+              <ul className="list-disc pl-5 text-gray-600">
+                <li>{edu.degree}</li>
+                {edu.cgpa_or_percentage && <li>CGPA/Percentage: {edu.cgpa_or_percentage}</li>}
+                {edu.description && <li>{edu.description}</li>}
+              </ul>
             </div>
           ))}
         </div>
@@ -419,19 +444,18 @@ export default function Resume() {
                       })}
                 </span>
               </div>
-              {Array.isArray(exp.description) && exp.description.length > 0 && (
-                <ul className="list-disc pl-5 text-gray-600">
-                  {exp.description.map((item, idx) => (
-                    <li key={idx}>{item}</li>
-                  ))}
-                </ul>
-              )}
+              <ul className="list-disc pl-5 text-gray-600">
+                {Array.isArray(exp.description) 
+                  ? exp.description.map((item, idx) => <li key={idx}>{item}</li>)
+                  : <li>{exp.description}</li>
+                }
+              </ul>
             </div>
           ))}
         </div>
       </Section>
 
-      <Section
+      {isValidProject(personalProjects) && <Section
         title="Projects"
         icon={<Rocket className="w-5 h-5" />}
         isEmpty={!isValidData(personalProjects)}
@@ -450,13 +474,9 @@ export default function Resume() {
               )}
               <ul className="list-disc pl-5 text-gray-600">
                 {Array.isArray(project.description)
-                  ? project.description.map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))
+                  ? project.description.map((item, idx) => <li key={idx}>{item}</li>)
                   : typeof project.description === 'string'
-                    ? project.description.split("\n").map((item, idx) => (
-                        <li key={idx}>{item}</li>
-                      ))
+                    ? project.description.split("\n").map((item, idx) => <li key={idx}>{item}</li>)
                     : project.description
                       ? <li>{String(project.description)}</li>
                       : null
@@ -465,7 +485,7 @@ export default function Resume() {
             </div>
           ))}
         </div>
-      </Section>
+      </Section>}
 
       <Section
         title="Positions of Responsibility"
@@ -573,7 +593,7 @@ export default function Resume() {
 
       <Section
         title="Extra Curricular Activities"
-        icon={<IconHeart className="w-5 h-5" />}
+        icon={<IconBallFootball className="w-5 h-5" />}
         isEmpty={!isValidData(extracurricularActivities)}
       >
         <ul className="list-disc pl-5 space-y-1">

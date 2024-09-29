@@ -34,11 +34,28 @@ const projectSchema = z.object({
   ).optional(),
 });
 
+// Add this utility function at the top of your file
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
 export default function PersonalProjects() {
   const [projects, setProjects] = useRecoilState(personalProjectsState);
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
   const { userInfo } = useAuth();
+
+  useEffect(() => {
+    // Format dates when projects are loaded or updated
+    const formattedProjects = projects.map(project => ({
+      ...project,
+      start_date: formatDateForInput(project.start_date),
+      end_date: formatDateForInput(project.end_date),
+    }));
+    setProjects(formattedProjects);
+  }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
     return new Date().toISOString().split("T")[0];
@@ -214,7 +231,7 @@ export default function PersonalProjects() {
                     <input
                       type="date"
                       id={`start-date-${project.id}`}
-                      value={project.start_date}
+                      value={formatDateForInput(project.start_date)}
                       max={getCurrentDate()}
                       onChange={(e) => handleInputChange(index, "start_date", e.target.value)}
                       className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
@@ -235,7 +252,7 @@ export default function PersonalProjects() {
                     <input
                       type="date"
                       id={`end-date-${project.id}`}
-                      value={project.end_date}
+                      value={formatDateForInput(project.end_date)}
                       min={project.start_date}
                       max={getCurrentDate()}
                       onChange={(e) => handleInputChange(index, "end_date", e.target.value)}

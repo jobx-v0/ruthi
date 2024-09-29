@@ -18,8 +18,7 @@ export const saveUserProfileData = async (userId, data) => {
     const response = await axios.put(`${API_URL}/${userId}`, data, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    console.log("Profile data saved successfully:", response.data);
+    
     return response.data;
   } catch (error) {
     console.error("Error saving profile data:", error);

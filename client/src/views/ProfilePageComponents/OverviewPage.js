@@ -34,6 +34,7 @@ import {
   extracurricularActivitiesState
 } from '../../store/atoms/userProfileSate';
 import ThankyouCard from './ThankyouCard';
+import { isSubmittedState } from '../../store/atoms/userProfileSate';
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -113,7 +114,7 @@ export default function Resume() {
   const navigate = useNavigate();
   var { fetchUserInfo, userInfo } = useAuth();
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
   const fetchUserInfoAndProfile = useCallback(async () => {
     const token = localStorage.getItem('authToken');
@@ -222,7 +223,6 @@ export default function Resume() {
       navigate("/login");
       return;
     }
-
     try {
       const dataToSubmit = {
         userId: userInfo._id,

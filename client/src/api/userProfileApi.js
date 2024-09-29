@@ -6,7 +6,7 @@ import { useAuth } from "../context/AuthContext";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_URL = BACKEND_URL + "/api/user-profile";
 
-// save user profile data
+// save or create user profile data
 export const saveUserProfileData = async (userId, data) => {
   const token = localStorage.getItem("authToken");
   if (!token || !userId) {
@@ -15,11 +15,27 @@ export const saveUserProfileData = async (userId, data) => {
   }
 
   try {
-    const response = await axios.put(`${API_URL}/${userId}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    let response;
+    
+    // First, try to update the existing profile
+    try {
+      response = await axios.put(`${API_URL}/${userId}`, data, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+    } catch (error) {
+      // If the profile doesn't exist (404 error), create a new one
+      if (error.response && error.response.status === 404) {
+        response = await axios.post(API_URL, { ...data, userId }, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        // If it's not a 404 error, rethrow it
+        throw error;
+      }
+    }
 
     console.log("Profile data saved successfully:", response.data);
+    // toast.success("Profile data saved successfully!");
     return response.data;
   } catch (error) {
     console.error("Error saving profile data:", error);
@@ -49,6 +65,12 @@ export const fetchUserProfile = async (userId) => {
     return response.data;
   } catch (error) {
     console.error("Error fetching user profile:", error);
-    // Handle error (e.g., show a toast notification)
+    if (error.response && error.response.status === 404) {
+      // If profile doesn't exist, return null or an empty object
+      return null; // or return {};
+    }
+    // Handle other errors (e.g., show a toast notification)
+    toast.error("Failed to fetch user profile. Please try again.");
+    throw error;
   }
 };

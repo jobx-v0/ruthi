@@ -35,7 +35,7 @@ import PositionsOfResponsibility from "./ProfilePageComponents/PositionsOfRespon
 import Competitions from "./ProfilePageComponents/Competitions";
 import ExtraCurricularActivities from "./ProfilePageComponents/ExtraCurricularActivities";
 import OverviewPage from "./ProfilePageComponents/OverviewPage";
-import { useRecoilValue, useSetRecoilState } from "recoil";
+import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
 import { Toaster, toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -53,6 +53,7 @@ import {
   positionsOfResponsibilityState,
   competitionsState,
   extracurricularActivitiesState,
+  isSubmittedState,
 } from "../store/atoms/userProfileSate";
 
 const sectionIcons = {
@@ -81,6 +82,7 @@ export default function SidebarDemo() {
   const [errors, setErrors] = useState({});
   const personalInformation = useRecoilValue(personalInformationState);
   const educations = useRecoilValue(educationState);
+  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
   // const setPersonalInformation = useSetRecoilState(personalInformationState);
   // const setEducation = useSetRecoilState(educationState);
@@ -162,6 +164,12 @@ export default function SidebarDemo() {
     setCompetitions,
     setExtracurricularActivities,
   ]);
+
+  useEffect(() => {
+    if (isSubmitted) {
+      setSelectedSection("Overview");
+    }
+  }, [isSubmitted, setSelectedSection]);
 
   const initialLinks = [
     { label: "Basic Information", icon: <IconUserCheck />, href: "#" },
@@ -358,6 +366,11 @@ export default function SidebarDemo() {
       }
     }
 
+    if (direction === "next" && currentIndex === sections.length - 1) {
+      handleOverview();
+      return;
+    }
+
     const newIndex = direction === "next" ? currentIndex + 1 : currentIndex - 1;
     if (newIndex >= 0 && newIndex < sections.length) {
       setSelectedSection(sections[newIndex]);
@@ -369,11 +382,26 @@ export default function SidebarDemo() {
   const handleOverview = () => {
     setSelectedSection("Overview");
     setIsModalOpen(false);
+    setIsSubmitted(true);
   };
 
   const handleStartAddingDetails = () => {
     setSelectedSection("Basic Information");
     setIsModalOpen(false);
+  };
+
+  const getVisibleLinks = () => {
+    if (isSubmitted) {
+      return [
+        { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
+        {
+          label: "Logout",
+          icon: <IconArrowLeft />,
+          href: "http://localhost:3000/",
+        },
+      ];
+    }
+    return links;
   };
 
   return (
@@ -392,14 +420,10 @@ export default function SidebarDemo() {
       />
       <Sidebar open={open} setOpen={setOpen} className="flex-shrink-0">
         <SidebarBody className="justify-between py-2">
-          {" "}
-          {/* Reduced padding */}
           <div className="flex flex-col flex-1">
             {open ? <Logo /> : <LogoIcon />}
             <div className="mt-4 flex flex-col gap-1.5">
-              {" "}
-              {/* Reduced gap and top margin */}
-              {links.map((link, idx) => (
+              {getVisibleLinks().map((link, idx) => (
                 <div key={idx} className="group relative flex items-center">
                   <SidebarLink
                     link={link}
@@ -425,16 +449,18 @@ export default function SidebarDemo() {
               ))}
             </div>
           </div>
-          <SidebarLink
-            link={{
-              label: "Overview",
-              icon: <IconLayoutDashboard />,
-              href: "#",
-            }}
-            onClick={() => setSelectedSection("Overview")}
-            isActive={selectedSection === "Overview"}
-            className="mt-2 py-1 text-sm"
-          />
+          {!isSubmitted && (
+            <SidebarLink
+              link={{
+                label: "Overview",
+                icon: <IconLayoutDashboard />,
+                href: "#",
+              }}
+              onClick={() => setSelectedSection("Overview")}
+              isActive={selectedSection === "Overview"}
+              className="mt-2 py-1 text-sm"
+            />
+          )}
         </SidebarBody>
       </Sidebar>
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -445,7 +471,7 @@ export default function SidebarDemo() {
             errors={errors}
           />
         </main>
-        {selectedSection !== "Overview" && (
+        {!isSubmitted && selectedSection !== "Overview" && (
           <div className="p-4 bg-transparent z-10">
             <div className="max-w-4xl mx-auto w-full flex justify-between">
               <button

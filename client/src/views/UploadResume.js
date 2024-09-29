@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Upload,
   Linkedin,
@@ -18,9 +18,15 @@ export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
 
+  useEffect(() => {
+    console.log("File state updated:", file);
+  }, [file]);
+
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
-      setFile(event.target.files[0]);
+      const uploadedFile = event.target.files[0];
+      console.log("File uploaded:", uploadedFile);
+      setFile(uploadedFile);
     }
   };
 
@@ -84,19 +90,35 @@ export default function Component() {
                 id="file-upload"
                 className="hidden"
                 accept=".pdf,.doc,.docx"
+                onChange={handleFileChange}
               />
-              <label
-                htmlFor="file-upload"
-                className="cursor-pointer flex flex-col items-center space-y-2"
-              >
-                <Upload className="w-12 h-12 text-orange-600" />
-                <span className="text-orange-600 font-medium">
-                  Drop resume or click to browse
-                </span>
-                <span className="text-sm text-gray-500">
-                  PDF or DOC, max 5MB
-                </span>
-              </label>
+              {file ? (
+                <div className="flex flex-col items-center space-y-2">
+                  <FileText className="w-12 h-12 text-orange-600" />
+                  <span className="text-orange-600 font-medium">
+                    {file.name}
+                  </span>
+                  <button
+                    onClick={() => setFile(null)}
+                    className="text-sm text-gray-500 hover:text-orange-600"
+                  >
+                    Remove file
+                  </button>
+                </div>
+              ) : (
+                <label
+                  htmlFor="file-upload"
+                  className="cursor-pointer flex flex-col items-center space-y-2"
+                >
+                  <Upload className="w-12 h-12 text-orange-600" />
+                  <span className="text-orange-600 font-medium">
+                    Drop resume or click to browse
+                  </span>
+                  <span className="text-sm text-gray-500">
+                    PDF or DOC, max 5MB
+                  </span>
+                </label>
+              )}
             </div>
 
             <div className="flex items-center">

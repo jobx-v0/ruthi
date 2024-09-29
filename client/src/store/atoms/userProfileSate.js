@@ -125,3 +125,9 @@ export const extracurricularActivitiesState = atom({
   key: "extracurricularActivitiesState",
   default: [],
 });
+
+// Atom for submitted state
+export const isSubmittedState = atom({
+  key: 'isSubmittedState',
+  default: false,
+});

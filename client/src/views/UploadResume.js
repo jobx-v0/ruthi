@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../context/AuthContext";
 import {
   Upload,
   Linkedin,
@@ -17,10 +19,19 @@ const API_URL = BACKEND_URL + "/api/resume";
 export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
+  var { fetchUserInfo, userInfo } = useAuth();
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     console.log("File state updated:", file);
   }, [file]);
+
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    navigate("/login");
+    return;
+  }
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -35,7 +46,12 @@ export default function Component() {
     if (file) {
       // Upload file to server
       console.log("File uploaded:", file);
-
+      const response = await axios.get(`${API_URL}/health_check/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("Response:", response);
     }
     else if (linkedinUrl !== "") {
       // Connect with LinkedIn

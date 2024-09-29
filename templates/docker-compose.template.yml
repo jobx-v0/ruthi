@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   nginx_{{ environment }}:
     container_name: nginx_{{ environment }}
@@ -45,7 +43,7 @@ services:
     build: 
       context: ../../client
       args:
-      - REACT_APP_BACKEND_URL=https://{{ domain }}:{{ nginx_https_port }}
+      - REACT_APP_BACKEND_URL=http://{{ domain }}:{{ nginx_http_port }}
     expose:
       - "{{ frontend_port }}"
     env_file:

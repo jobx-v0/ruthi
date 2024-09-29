@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRecoilState } from "recoil";
 import { competitionsState } from "../../store/atoms/userProfileSate";
 import { Flag, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
+import { saveUserProfileData } from "../../api/userProfileApi";
+import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-toastify";
 
 const competitionSchema = z.object({
   name: z.string()
@@ -22,11 +25,27 @@ const competitionSchema = z.object({
   ),
 });
 
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
 export default function Competitions() {
   const [competitions, setCompetitions] = useRecoilState(competitionsState);
   const [expandedId, setExpandedId] = useState(null);
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
+  const { userInfo } = useAuth();
+
+  useEffect(() => {
+    // Format dates when competitions are loaded or updated
+    const formattedCompetitions = competitions.map(comp => ({
+      ...comp,
+      date: formatDateForInput(comp.date),
+    }));
+    setCompetitions(formattedCompetitions);
+  }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
     const today = new Date();
@@ -80,6 +99,30 @@ export default function Competitions() {
       return [];
     }
     return description.split('\n').filter(point => point.trim() !== '');
+  };
+
+  const handleSave = async () => {
+    if (!userInfo || !userInfo._id) {
+      toast.error("User information not available.");
+      return;
+    }
+
+    const formattedCompetitions = competitions.map(comp => ({
+      ...comp,
+      date: comp.date ? new Date(comp.date).toISOString() : null,
+    }));
+
+    const dataToSubmit = {
+      competitions: formattedCompetitions,
+    };
+
+    try {
+      await saveUserProfileData(userInfo._id, dataToSubmit);
+      toast.success("Competitions saved successfully!");
+    } catch (error) {
+      console.error("Failed to save competitions:", error);
+      toast.error("Failed to save competitions. Please try again.");
+    }
   };
 
   return (
@@ -176,7 +219,7 @@ export default function Competitions() {
                             <input
                               type="date"
                               id={`competition-date-${competition.id}`}
-                              value={competition.date}
+                              value={formatDateForInput(competition.date)}
                               max={getCurrentDate()}
                               onChange={(e) => handleInputChange(competition.id, "date", e.target.value)}
                               className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
@@ -224,6 +267,16 @@ export default function Competitions() {
                 </AnimatePresence>
               </div>
             ))}
+          </div>
+
+          {/* Add the save button */}
+          <div className="mt-6 text-left">
+            <button
+              onClick={handleSave}
+              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
+            >
+              Save
+            </button>
           </div>
         </div>
       </motion.div>

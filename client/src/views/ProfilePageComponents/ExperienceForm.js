@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useRecoilState } from "recoil";
 import { experienceState } from "../../store/atoms/userProfileSate";
@@ -22,11 +22,27 @@ const experienceSchema = z.object({
   currently_working: z.boolean(),
 });
 
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
 export default function ExperienceForm() {
   const [experiences, setExperiences] = useRecoilState(experienceState);
   const newCardRef = useRef(null);
   const [errors, setErrors] = React.useState({});
   const { userInfo } = useAuth();
+
+  useEffect(() => {
+    // Format dates when experiences are loaded or updated
+    const formattedExperiences = experiences.map(exp => ({
+      ...exp,
+      start_date: formatDateForInput(exp.start_date),
+      end_date: formatDateForInput(exp.end_date),
+    }));
+    setExperiences(formattedExperiences);
+  }, []); // Empty dependency array means this runs once on mount
 
   const validateField = (field, value, experienceId) => {
     try {
@@ -97,8 +113,14 @@ export default function ExperienceForm() {
       return;
     }
 
+    const formattedExperiences = experiences.map(exp => ({
+      ...exp,
+      start_date: exp.start_date ? new Date(exp.start_date).toISOString() : null,
+      end_date: exp.end_date ? new Date(exp.end_date).toISOString() : null,
+    }));
+
     const dataToSubmit = {
-      experience: experiences,
+      experience: formattedExperiences,
     };
 
     try {
@@ -106,6 +128,7 @@ export default function ExperienceForm() {
       toast.success('Data saved successfully!');
     } catch (error) {
       console.error('Failed to save data:', error);
+      toast.error('Failed to save data. Please try again.');
     }
   };
 
@@ -209,7 +232,7 @@ export default function ExperienceForm() {
                     <input
                       type="date"
                       id={`startDate-${experience.id}`}
-                      value={experience.start_date}
+                      value={formatDateForInput(experience.start_date)}
                       onChange={(e) => {
                         const newStartDate = e.target.value;
                         handleInputChange(
@@ -242,7 +265,7 @@ export default function ExperienceForm() {
                     <input
                       type="date"
                       id={`endDate-${experience.id}`}
-                      value={experience.end_date}
+                      value={formatDateForInput(experience.end_date)}
                       onChange={(e) => {
                         const newEndDate = e.target.value;
                         if (

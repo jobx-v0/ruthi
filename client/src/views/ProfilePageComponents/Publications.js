@@ -10,6 +10,12 @@ import { saveUserProfileData } from '../../api/userProfileApi';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
 const publicationSchema = z.object({
   name: z.string()
     .min(1, "Publication name is required")
@@ -35,6 +41,14 @@ export default function Publications() {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
+
+  useEffect(() => {
+    const formattedPublications = publications.map(pub => ({
+      ...pub,
+      date: formatDateForInput(pub.date),
+    }));
+    setPublications(formattedPublications);
+  }, []);
 
   const validateField = (field, value, index) => {
     try {
@@ -187,7 +201,7 @@ export default function Publications() {
                     <input
                       type="date"
                       id={`publication-date-${publication.id}`}
-                      value={publication.date}
+                      value={formatDateForInput(publication.date)}
                       max={getCurrentDate()}
                       onChange={(e) => handleInputChange(index, "date", e.target.value)}
                       className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${

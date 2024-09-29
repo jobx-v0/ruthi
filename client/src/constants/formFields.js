@@ -1,15 +1,15 @@
 const loginFields = [
   {
-    labelText: "Username",
+    labelText: "Username or Email",
     labelFor: "username",
     id: "username",
     name: "username",
     type: "text",
     autoComplete: "username",
     isRequired: true,
-    placeholder: "Username",
+    placeholder: "Username or Email",
     error: false,
-    errorMessage: "Username is required",
+    errorMessage: "Username or Email is required",
   },
   {
     labelText: "Password",

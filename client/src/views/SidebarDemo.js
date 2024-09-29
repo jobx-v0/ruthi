@@ -35,18 +35,33 @@ import PositionsOfResponsibility from "./ProfilePageComponents/PositionsOfRespon
 import Competitions from "./ProfilePageComponents/Competitions";
 import ExtraCurricularActivities from "./ProfilePageComponents/ExtraCurricularActivities";
 import OverviewPage from "./ProfilePageComponents/OverviewPage";
-import { useRecoilValue } from "recoil";
-import { personalInformationState, educationState } from "../store/atoms/userProfileSate";
-import { Toaster, toast } from 'react-hot-toast';
-import {useAuth} from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
+import { Toaster, toast } from "react-hot-toast";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { fetchUserProfile } from "../api/userProfileApi";
+import {
+  personalInformationState,
+  socialsState,
+  coursesState,
+  educationState,
+  experienceState,
+  publicationsState,
+  skillsState,
+  personalProjectsState,
+  awardsAndAchievementsState,
+  positionsOfResponsibilityState,
+  competitionsState,
+  extracurricularActivitiesState,
+  isSubmittedState,
+} from "../store/atoms/userProfileSate";
 
 const sectionIcons = {
   Publications: IconNotebook,
   "Personal Projects": IconRocket,
   "Awards and Achievements": IconAward,
   "Positions of Responsibility": IconUserBolt,
-  "Competitions": IconFlag,
+  Competitions: IconFlag,
   "Extra-curricular Activities": IconBallFootball,
 };
 
@@ -67,6 +82,94 @@ export default function SidebarDemo() {
   const [errors, setErrors] = useState({});
   const personalInformation = useRecoilValue(personalInformationState);
   const educations = useRecoilValue(educationState);
+  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+
+  // const setPersonalInformation = useSetRecoilState(personalInformationState);
+  // const setEducation = useSetRecoilState(educationState);
+  // const setExperience = useSetRecoilState(experienceState);
+  // const setSkills = useSetRecoilState(skillsState);
+  const { authToken } = useAuth();
+  const { fetchUserInfo } = useAuth();
+
+  const setPersonalInformation = useSetRecoilState(personalInformationState);
+  const setSocials = useSetRecoilState(socialsState);
+  const setCourses = useSetRecoilState(coursesState);
+  const setEducation = useSetRecoilState(educationState);
+  const setExperience = useSetRecoilState(experienceState);
+  const setPublications = useSetRecoilState(publicationsState);
+  const setSkills = useSetRecoilState(skillsState);
+  const setPersonalProjects = useSetRecoilState(personalProjectsState);
+  const setAwardsAndAchievements = useSetRecoilState(
+    awardsAndAchievementsState
+  );
+  const setPositionsOfResponsibility = useSetRecoilState(
+    positionsOfResponsibilityState
+  );
+  const setCompetitions = useSetRecoilState(competitionsState);
+  const setExtracurricularActivities = useSetRecoilState(
+    extracurricularActivitiesState
+  );
+
+  useEffect(() => {
+    const getUserProfile = async () => {
+      if (!authToken) return;
+
+      try {
+        const userInfo = await fetchUserInfo();
+        if (!userInfo || !userInfo._id) {
+          toast.error("Unable to fetch user information");
+          return;
+        }
+
+        const userProfileData = await fetchUserProfile(userInfo._id);
+        console.log("userProfileData:", userProfileData);
+
+        // Set all profile sections
+        setPersonalInformation(userProfileData.personal_information || {});
+        setSocials(userProfileData.socials || {});
+        setCourses(userProfileData.courses || []);
+        setEducation(userProfileData.education || []);
+        setExperience(userProfileData.experience || []);
+        setPublications(userProfileData.publications || []);
+        setSkills(userProfileData.skills || []);
+        setPersonalProjects(userProfileData.personal_projects || []);
+        setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
+        setPositionsOfResponsibility(
+          userProfileData.position_of_responsibility || []
+        );
+        setCompetitions(userProfileData.competitions || []);
+        setExtracurricularActivities(
+          userProfileData.extra_curricular_activities || []
+        );
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        // toast.error("Failed to load user profile. Please try again later.");
+      }
+    };
+
+    getUserProfile();
+  }, [
+    authToken,
+    fetchUserInfo,
+    setPersonalInformation,
+    setSocials,
+    setCourses,
+    setEducation,
+    setExperience,
+    setPublications,
+    setSkills,
+    setPersonalProjects,
+    setAwardsAndAchievements,
+    setPositionsOfResponsibility,
+    setCompetitions,
+    setExtracurricularActivities,
+  ]);
+
+  useEffect(() => {
+    if (isSubmitted) {
+      setSelectedSection("Overview");
+    }
+  }, [isSubmitted, setSelectedSection]);
 
   const initialLinks = [
     { label: "Basic Information", icon: <IconUserCheck />, href: "#" },
@@ -116,22 +219,24 @@ export default function SidebarDemo() {
     }
   };
 
-  const {authToken, fetchUserInfo} = useAuth();
   const navigate = useNavigate();
   useEffect(() => {
     if (!authToken) {
-      navigate('/login');
+      navigate("/login");
     }
   }, [authToken, navigate]);
 
   // Update the links state when additionalSections change
   useEffect(() => {
-
     const updatedLinks = [
       ...initialLinks.slice(0, -2),
-      ...additionalSections.map(section => ({
+      ...additionalSections.map((section) => ({
         label: section,
-        icon: sectionIcons[section] ? React.createElement(sectionIcons[section]) : <IconPlus />,
+        icon: sectionIcons[section] ? (
+          React.createElement(sectionIcons[section])
+        ) : (
+          <IconPlus />
+        ),
         href: "#",
         deletable: true,
       })),
@@ -162,16 +267,18 @@ export default function SidebarDemo() {
 
   const validateBasicInfo = () => {
     const newErrors = {};
-    if (!personalInformation.first_name) newErrors.first_name = "First name is required";
-    if (!personalInformation.last_name) newErrors.last_name = "Last name is required";
-    
+    if (!personalInformation.first_name)
+      newErrors.first_name = "First name is required";
+    if (!personalInformation.last_name)
+      newErrors.last_name = "Last name is required";
+
     // Phone number validation
     if (!personalInformation.phone) {
       newErrors.phone = "Phone number is required";
     } else if (!/^\d{10}$/.test(personalInformation.phone)) {
       newErrors.phone = "Phone number must be exactly 10 digits";
     }
-    
+
     // Expected salary validation
     if (!personalInformation.expected_salary) {
       newErrors.expected_salary = "Expected salary is required";
@@ -181,7 +288,7 @@ export default function SidebarDemo() {
         newErrors.expected_salary = "Expected salary must be between 1 and 99";
       }
     }
-    
+
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
@@ -200,7 +307,7 @@ export default function SidebarDemo() {
         </div>,
         {
           duration: 5000,
-          position: 'top-right',
+          position: "top-right",
         }
       );
       return false;
@@ -215,22 +322,29 @@ export default function SidebarDemo() {
     }
 
     const firstEducation = educations[0];
-    const requiredFields = ['institution', 'degree', 'start_date', 'cgpa_or_percentage'];
-    const missingFields = requiredFields.filter(field => !firstEducation[field]);
+    const requiredFields = [
+      "institution",
+      "degree",
+      "start_date",
+      "cgpa_or_percentage",
+    ];
+    const missingFields = requiredFields.filter(
+      (field) => !firstEducation[field]
+    );
 
     if (missingFields.length > 0) {
       toast.error(
         <div>
           <strong>Please fill in all required fields for education:</strong>
           <ul className="mt-2 list-disc list-inside">
-            {missingFields.map(field => (
-              <li key={field}>{field.replace('_', ' ')}</li>
+            {missingFields.map((field) => (
+              <li key={field}>{field.replace("_", " ")}</li>
             ))}
           </ul>
         </div>,
         {
           duration: 5000,
-          position: 'top-right',
+          position: "top-right",
         }
       );
       return false;
@@ -252,6 +366,11 @@ export default function SidebarDemo() {
       }
     }
 
+    if (direction === "next" && currentIndex === sections.length - 1) {
+      handleOverview();
+      return;
+    }
+
     const newIndex = direction === "next" ? currentIndex + 1 : currentIndex - 1;
     if (newIndex >= 0 && newIndex < sections.length) {
       setSelectedSection(sections[newIndex]);
@@ -263,6 +382,7 @@ export default function SidebarDemo() {
   const handleOverview = () => {
     setSelectedSection("Overview");
     setIsModalOpen(false);
+    setIsSubmitted(true);
   };
 
   const handleStartAddingDetails = () => {
@@ -270,26 +390,40 @@ export default function SidebarDemo() {
     setIsModalOpen(false);
   };
 
+  const getVisibleLinks = () => {
+    if (isSubmitted) {
+      return [
+        { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
+        {
+          label: "Logout",
+          icon: <IconArrowLeft />,
+          href: "http://localhost:3000/",
+        },
+      ];
+    }
+    return links;
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
-      <Toaster 
+      <Toaster
         toastOptions={{
           // Prevent duplicate toasts
-          id: 'unique-toast',
+          id: "unique-toast",
           // Custom styles to position the toast
           style: {
-            background: '#363636',
-            color: '#fff',
+            background: "#363636",
+            color: "#fff",
             zIndex: 9999,
           },
         }}
       />
       <Sidebar open={open} setOpen={setOpen} className="flex-shrink-0">
-        <SidebarBody className="justify-between py-2"> {/* Reduced padding */}
+        <SidebarBody className="justify-between py-2">
           <div className="flex flex-col flex-1">
             {open ? <Logo /> : <LogoIcon />}
-            <div className="mt-4 flex flex-col gap-1.5"> {/* Reduced gap and top margin */}
-              {links.map((link, idx) => (
+            <div className="mt-4 flex flex-col gap-1.5">
+              {getVisibleLinks().map((link, idx) => (
                 <div key={idx} className="group relative flex items-center">
                   <SidebarLink
                     link={link}
@@ -315,16 +449,18 @@ export default function SidebarDemo() {
               ))}
             </div>
           </div>
-          <SidebarLink
-            link={{
-              label: "Overview",
-              icon: <IconLayoutDashboard />,
-              href: "#",
-            }}
-            onClick={() => setSelectedSection("Overview")}
-            isActive={selectedSection === "Overview"}
-            className="mt-2 py-1 text-sm" 
-          />
+          {!isSubmitted && (
+            <SidebarLink
+              link={{
+                label: "Overview",
+                icon: <IconLayoutDashboard />,
+                href: "#",
+              }}
+              onClick={() => setSelectedSection("Overview")}
+              isActive={selectedSection === "Overview"}
+              className="mt-2 py-1 text-sm"
+            />
+          )}
         </SidebarBody>
       </Sidebar>
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -335,7 +471,7 @@ export default function SidebarDemo() {
             errors={errors}
           />
         </main>
-        {selectedSection !== "Overview" && (
+        {!isSubmitted && selectedSection !== "Overview" && (
           <div className="p-4 bg-transparent z-10">
             <div className="max-w-4xl mx-auto w-full flex justify-between">
               <button
@@ -411,7 +547,7 @@ export const Logo = () => {
   return (
     <Link
       to="#"
-      className="flex items-center justify-center relative z-20 py-1" 
+      className="flex items-center justify-center relative z-20 py-1"
     >
       <img
         src={Ruthi_Logo1}
@@ -426,7 +562,7 @@ export const LogoIcon = () => {
   return (
     <Link
       to="#"
-      className="flex items-center justify-center relative z-20 py-0.5" 
+      className="flex items-center justify-center relative z-20 py-0.5"
     >
       <img
         src={Ruthi_Logo1}

@@ -45,7 +45,7 @@ export const educationState = atom({
       start_date: "",
       end_date: "",
       cgpa_or_percentage: "",
-      description:[],
+      description: [],
     },
   ],
 });
@@ -89,7 +89,7 @@ export const personalProjectsState = atom({
       link: "",
       start_date: "",
       end_date: "",
-      description:[]
+      description: [],
     },
   ],
 });
@@ -103,7 +103,15 @@ export const awardsAndAchievementsState = atom({
 // Atom for positions of responsibility
 export const positionsOfResponsibilityState = atom({
   key: "positionsOfResponsibilityState",
-  default: [],
+  default: [
+    {
+      title: "",
+      organization: "",
+      start_date: "",
+      end_date: "",
+      description: [],
+    },
+  ],
 });
 
 // Atom for competitions
@@ -116,4 +124,10 @@ export const competitionsState = atom({
 export const extracurricularActivitiesState = atom({
   key: "extracurricularActivitiesState",
   default: [],
+});
+
+// Atom for submitted state
+export const isSubmittedState = atom({
+  key: 'isSubmittedState',
+  default: false,
 });

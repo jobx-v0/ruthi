@@ -30,6 +30,7 @@ const userProfileSchema = new Schema(
         course_provider: { type: String },
         completion_date: { type: Date },
         id: { type: String },
+        _id: false,
       },
     ],
     education: [
@@ -41,6 +42,7 @@ const userProfileSchema = new Schema(
         cgpa_or_percentage: { type: Number },
         description: [String],
         id: { type: String },
+        _id: false,
       },
     ],
     experience: [
@@ -52,6 +54,7 @@ const userProfileSchema = new Schema(
         description: [String],
         id: { type: Number },
         currently_working: { type: Boolean },
+        _id: false,
       },
     ],
 
@@ -61,12 +64,14 @@ const userProfileSchema = new Schema(
         name: { type: String },
         link: { type: String },
         date: { type: Date },
+        _id: false,
       },
     ],
     skills: [
       {
         skill_name: { type: String },
         skill_proficiency: { type: String },
+        _id: false,
       },
     ],
     personal_projects: [
@@ -77,17 +82,19 @@ const userProfileSchema = new Schema(
         link: { type: String },
         start_date: { type: Date },
         end_date: { type: Date },
+        _id: false,
       },
     ],
     awards_and_achievements: [String],
     position_of_responsibility: [
       {
         id: { type: String },
-        position: { type: String },
+        title: { type: String },
         organization: { type: String },
         start_date: { type: Date },
         end_date: { type: Date },
         description: [String],
+        _id: false,
       },
     ],
     competitions: [
@@ -96,6 +103,7 @@ const userProfileSchema = new Schema(
         name: { type: String },
         description: [String],
         date: { type: Date },
+        _id: false,
       },
     ],
     extra_curricular_activities: [String],

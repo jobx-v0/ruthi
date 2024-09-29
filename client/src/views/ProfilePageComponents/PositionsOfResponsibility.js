@@ -18,6 +18,12 @@ import { saveUserProfileData } from "../../api/userProfileApi";
 import { useAuth } from "../../context/AuthContext";
 import { toast } from "react-toastify";
 
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0];
+};
+
 const positionSchema = z.object({
   title: z
     .string()
@@ -40,6 +46,20 @@ export default function PositionsOfResponsibility() {
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
   const { userInfo } = useAuth();
+
+  useEffect(() => {
+    console.log("Current positions:", positions);
+  }, [positions]);
+
+  useEffect(() => {
+    // Format dates when positions are loaded or updated
+    const formattedPositions = positions.map(position => ({
+      ...position,
+      start_date: formatDateForInput(position.start_date),
+      end_date: formatDateForInput(position.end_date),
+    }));
+    setPositions(formattedPositions);
+  }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
     const today = new Date();
@@ -91,16 +111,10 @@ export default function PositionsOfResponsibility() {
     validateField(field, value, index);
 
     // Additional validation for end date
-    if (field === "end_date") {
+    if (field === 'end_date') {
       const currentPosition = updatedPositions[index];
-      if (
-        currentPosition.start_date &&
-        new Date(value) < new Date(currentPosition.start_date)
-      ) {
-        setErrors((prev) => ({
-          ...prev,
-          [`${index}-${field}`]: "End date must be after start date",
-        }));
+      if (currentPosition.start_date && new Date(value) < new Date(currentPosition.start_date)) {
+        setErrors(prev => ({...prev, [`${index}-${field}`]: "End date must be after start date"}));
       }
     }
   };
@@ -116,8 +130,14 @@ export default function PositionsOfResponsibility() {
       return;
     }
 
+    const formattedPositions = positions.map(position => ({
+      ...position,
+      start_date: position.start_date ? new Date(position.start_date).toISOString() : null,
+      end_date: position.end_date ? new Date(position.end_date).toISOString() : null,
+    }));
+
     const dataToSubmit = {
-      position_of_responsibility: positions,
+      position_of_responsibility: formattedPositions,
     };
     console.log("positions", positions);
 
@@ -268,7 +288,7 @@ export default function PositionsOfResponsibility() {
                             <input
                               type="date"
                               id={`position-start-date-${position.id}`}
-                              value={position.start_date}
+                              value={formatDateForInput(position.start_date)}
                               max={getCurrentDate()}
                               onChange={(e) =>
                                 handleInputChange(
@@ -299,7 +319,7 @@ export default function PositionsOfResponsibility() {
                             <input
                               type="date"
                               id={`position-end-date-${position.id}`}
-                              value={position.end_date}
+                              value={formatDateForInput(position.end_date)}
                               min={position.start_date}
                               max={getCurrentDate()}
                               onChange={(e) =>

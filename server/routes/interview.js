@@ -6,6 +6,12 @@ const InterviewController = require("../controllers/interviewController.js");
 // Use the authMiddleware to protect the /questions route
 router.get("/questions", authMiddleware, InterviewController.getQuestions);
 
+router.post(
+  "/get-questions-by-skills",
+  authMiddleware,
+  InterviewController.getQuestionsBySkills
+);
+
 // Get route to get the current count of interviews for a given user
 // The authMiddleware ensures that only authenticated users can post an interview
 router.get(

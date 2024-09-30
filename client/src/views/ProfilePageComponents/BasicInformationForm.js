@@ -43,7 +43,7 @@ const socialsSchema = z.object({
   website: z.string().url("Invalid URL").optional().or(z.literal("")),
 });
 
-const BasicInformationForm = ({ errors: parentErrors }) => {
+const BasicInformationForm = ({ errors: parentErrors}) => {
   const [personalInformation, setPersonalInformation] = useRecoilState(
     personalInformationState
   );

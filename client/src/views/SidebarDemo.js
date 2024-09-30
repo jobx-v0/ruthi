@@ -121,49 +121,39 @@ export default function SidebarDemo() {
           return;
         }
 
-        const userProfileData = await fetchUserProfile(userInfo._id);
-        console.log("userProfileData:", userProfileData);
+        // Check if personalInformation is empty or not present
+        if (!personalInformation || Object.keys(personalInformation).length === 0) {
+          console.log("Personal information not found, fetching from backend...");
+          const userProfileData = await fetchUserProfile(userInfo._id);
+          console.log("Fetched user profile data:", userProfileData);
 
-        // Set all profile sections
-        setPersonalInformation(userProfileData.personal_information || {});
-        setSocials(userProfileData.socials || {});
-        setCourses(userProfileData.courses || []);
-        setEducation(userProfileData.education || []);
-        setExperience(userProfileData.experience || []);
-        setPublications(userProfileData.publications || []);
-        setSkills(userProfileData.skills || []);
-        setPersonalProjects(userProfileData.personal_projects || []);
-        setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
-        setPositionsOfResponsibility(
-          userProfileData.position_of_responsibility || []
-        );
-        setCompetitions(userProfileData.competitions || []);
-        setExtracurricularActivities(
-          userProfileData.extra_curricular_activities || []
-        );
+          // Update all profile sections
+          setPersonalInformation(userProfileData.personal_information || {});
+          setSocials(userProfileData.socials || {});
+          setCourses(userProfileData.courses || []);
+          setEducation(userProfileData.education || []);
+          setExperience(userProfileData.experience || []);
+          setPublications(userProfileData.publications || []);
+          setSkills(userProfileData.skills || []);
+          setPersonalProjects(userProfileData.personal_projects || []);
+          setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
+          setPositionsOfResponsibility(userProfileData.position_of_responsibility || []);
+          setCompetitions(userProfileData.competitions || []);
+          setExtracurricularActivities(userProfileData.extra_curricular_activities || []);
+
+          console.log("User profile data updated from backend");
+        } else {
+          console.log("User profile data already present in atoms");
+        }
+
       } catch (error) {
-        console.error("Error fetching user profile:", error);
-        // toast.error("Failed to load user profile. Please try again later.");
+        console.error("Error in getUserProfile:", error);
+        toast.error("An error occurred while loading the profile");
       }
     };
 
     getUserProfile();
-  }, [
-    authToken,
-    fetchUserInfo,
-    setPersonalInformation,
-    setSocials,
-    setCourses,
-    setEducation,
-    setExperience,
-    setPublications,
-    setSkills,
-    setPersonalProjects,
-    setAwardsAndAchievements,
-    setPositionsOfResponsibility,
-    setCompetitions,
-    setExtracurricularActivities,
-  ]);
+  }, [authToken, fetchUserInfo, personalInformation, setPersonalInformation, setSocials, setCourses, setEducation, setExperience, setPublications, setSkills, setPersonalProjects, setAwardsAndAchievements, setPositionsOfResponsibility, setCompetitions, setExtracurricularActivities]);
 
   useEffect(() => {
     if (isSubmitted) {
@@ -512,7 +502,7 @@ const Dashboard = ({ selectedSection, additionalSections, errors }) => {
           {(() => {
             switch (selectedSection) {
               case "Basic Information":
-                return <BasicInformationForm errors={errors} />;
+                return <BasicInformationForm />;
               case "Education":
                 return <Education />;
               case "Experience":
@@ -572,7 +562,6 @@ export const LogoIcon = () => {
     </Link>
   );
 };
-
 const Overview = () => {
   return (
     <div className="h-full overflow-y-auto">

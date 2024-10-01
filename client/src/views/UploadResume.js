@@ -29,7 +29,6 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
 } from "../store/atoms/userProfileSate";
-import { useNavigate } from "react-router-dom";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_URL = BACKEND_URL + "/api/resume";
@@ -44,11 +43,6 @@ export default function Component() {
     console.log("File state updated:", file);
   }, [file]);
 
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    navigate("/login");
-    return;
-  }
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -77,6 +71,12 @@ export default function Component() {
     extracurricularActivitiesState
   );
   const setIsSubmitted = useSetRecoilState(isSubmittedState);
+
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    navigate("/login");
+    return;
+  }
 
   const handleContinueClick = async () => {
     if (file) {

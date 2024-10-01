@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../context/AuthContext";
 import {
   Upload,
   Linkedin,
@@ -41,6 +43,12 @@ export default function Component() {
   useEffect(() => {
     console.log("File state updated:", file);
   }, [file]);
+
+  const token = localStorage.getItem('authToken');
+  if (!token) {
+    navigate("/login");
+    return;
+  }
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {

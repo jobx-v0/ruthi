@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import {
   Upload,
@@ -10,7 +10,13 @@ import {
   Briefcase,
   ArrowRight,
   Loader,
+  Coffee,
+  Zap,
+  Smile,
+  Brain,
+  Rocket,
 } from "lucide-react";
+import { motion } from "framer-motion";
 
 import axios from "axios";
 import { useSetRecoilState } from "recoil";
@@ -28,21 +34,52 @@ import {
   competitionsState,
   extracurricularActivitiesState,
   isSubmittedState,
+  isParsedResumeState,
 } from "../store/atoms/userProfileSate";
+import { toast } from "react-toastify";
+
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_URL = BACKEND_URL + "/api/resume";
+const AZURE_URL = BACKEND_URL + "/api/azure";
+// const RESUME_PARSER_URL = process.env.RESUME_PARSER_URL + "/api/resume";
+
 
 export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const { fetchUserInfo } = useAuth();
+
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingSteps = [
+    { icon: Brain, text: "Warming up our AI brain..." },
+    { icon: Zap, text: "Energizing the resume parser..." },
+    { icon: FileText, text: "Decoding your career history..." },
+    { icon: Rocket, text: "Preparing to launch your profile..." },
+    { icon: Smile, text: "Almost there! Polishing the results..." },
+  ];
 
   useEffect(() => {
     console.log("File state updated:", file);
+    const authToken = localStorage.getItem("authToken");
+    if(!authToken){
+      toast.error("Please login to continue");
+      navigate("/login");
+      return;
+    }
   }, [file]);
 
+  useEffect(() => {
+    let interval;
+    if (isLoading) {
+      interval = setInterval(() => {
+        setLoadingStep((prevStep) => (prevStep + 1) % loadingSteps.length);
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -70,145 +107,75 @@ export default function Component() {
   const setExtracurricularActivities = useSetRecoilState(
     extracurricularActivitiesState
   );
-  const setIsSubmitted = useSetRecoilState(isSubmittedState);
 
-  const token = localStorage.getItem('authToken');
-  if (!token) {
-    navigate("/login");
-    return;
-  }
+  const setIsParsedResume = useSetRecoilState(isParsedResumeState);
+
 
   const handleContinueClick = async () => {
+    setIsParsedResume(true);
+    const userInfo = await fetchUserInfo();
+    const userId = userInfo._id;
     if (file) {
       setIsLoading(true);
       console.log("File uploaded:", file);
 
-      // Simulate API call with a 5-second delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const response = await axios.get(`${AZURE_URL}/sas/${userId}`);
+      const { sasUrl } = response.data;
+      console.log("SAS URL:", sasUrl);
 
-      // Hardcoded response
-      const hardcodedResponse = {
-        personal_information: {
-          first_name: "John",
-          last_name: "Doe",
-          email: "john.doe@example.com",
-          phone: "1234567890",
+      const blob = new Blob([file], { type: file.type });
+      console.log("Blob:", blob);
+
+      await axios.put(sasUrl, blob, {
+        headers: {
+          "x-ms-blob-type": "BlockBlob",
         },
-        socials: {
-          github: "https://github.com/johndoe",
-          linkedin: "https://linkedin.com/in/johndoe",
-          twitter: "https://twitter.com/johndoe",
-          website: "https://johndoe.com",
-        },
-        courses: [
+      });
+
+      const res = await axios.get(`http://localhost:8000/api/resume/health_check`);
+      console.log("Health check response:", res);
+
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      console.log("Form data:", formData);
+      
+      try {
+        const extract = await axios.post(
+          `http://localhost:8000/api/resume/parse-resume`,
+          formData,
           {
-            course_name: "Web Development Bootcamp",
-            course_link: "https://example.com/webdev",
-            course_provider: "Udemy",
-            completion_date: "2023-05-15",
-          },
-        ],
-        education: [
-          {
-            institution: "University of Example",
-            degree: "Bachelor of Science in Computer Science",
-            start_date: "2018-09-01",
-            end_date: "2022-05-31",
-            cgpa_or_percentage: "3.8",
-            description: ["Dean's List", "Graduated with Honors"],
-          },
-        ],
-        experience: [
-          {
-            company: "Tech Solutions Inc.",
-            position: "Software Developer",
-            start_date: "2022-06-01",
-            // end_date: "Present",
-            currently_working: true,
-            description: [
-              "Developed web applications using React and Node.js",
-              "Implemented RESTful APIs",
-            ],
-          },
-        ],
-        publications: [
-          {
-            name: "Introduction to Machine Learning",
-            link: "https://example.com/ml-paper",
-            date: "2023-03-01",
-          },
-        ],
-        skills: [
-          { skill_name: "JavaScript", skill_proficiency: "Expert" },
-          { skill_name: "Python", skill_proficiency: "Intermediate" },
-        ],
-        personal_projects: [
-          {
-            name: "Personal Portfolio Website",
-            description: [
-              "Designed and developed a responsive portfolio website",
-              "Implemented dark mode",
-            ],
-            link: "https://johndoe-portfolio.com",
-            start_date: "2023-01-01",
-            end_date: "2023-02-28",
-          },
-        ],
-        awards_and_achievements: [
-          "Best Hackathon Project 2022",
-          "Dean's Honor Roll 2020-2022",
-        ],
-        positions_of_responsibility: [
-          {
-            title: "President",
-            organization: "Computer Science Club",
-            start_date: "2021-09-01",
-            end_date: "2022-05-31",
-            description: [
-              "Organized coding workshops",
-              "Managed a team of 10 members",
-            ],
-          },
-        ],
-        competitions: [
-          {
-            name: "ACM ICPC Regional Finalist",
-            date: "2021-12-01",
-            description: "Participated in ACM ICPC regionals and advanced to the finals."
-          },
-          {
-            name: "Google Code Jam Qualifier",
-            date: "2022-04-25",
-            description: "Qualified for the Google Code Jam with a score in the top 5%."
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            withCredentials: true,
           }
-        ],
-        extracurricular_activities: [
-          "Volunteer at local coding bootcamp for underprivileged youth",
-          "Member of university chess club",
-        ],
-      };
+        );
+        console.log("Extract response:", extract);
 
-      // Update Recoil atoms with hardcoded data
-      setPersonalInformation(hardcodedResponse.personal_information);
-      setSocials(hardcodedResponse.socials);
-      setCourses(hardcodedResponse.courses);
-      setEducation(hardcodedResponse.education);
-      setExperience(hardcodedResponse.experience);
-      setPublications(hardcodedResponse.publications);
-      setSkills(hardcodedResponse.skills);
-      setPersonalProjects(hardcodedResponse.personal_projects);
-      setAwardsAndAchievements(hardcodedResponse.awards_and_achievements);
-      setPositionsOfResponsibility(
-        hardcodedResponse.positions_of_responsibility
-      );
-      setCompetitions(hardcodedResponse.competitions);
-      setExtracurricularActivities(
-        hardcodedResponse.extracurricular_activities
-      );
-      console.log("User profile updated with hardcoded data");
+        const parsedData = extract.data.parsed_data;
 
-      setIsLoading(false);
-      navigate("/profile");
+        // Update Recoil atoms with parsed data
+        setPersonalInformation(parsedData.personal_information || {});
+        setSocials(parsedData.socials || {});
+        setCourses(parsedData.courses || []);
+        setEducation(parsedData.education || []);
+        setExperience(parsedData.experience || []);
+        setPublications(parsedData.publications || []);
+        setSkills(parsedData.skills || []);
+        setPersonalProjects(parsedData.personal_projects || []);
+        setAwardsAndAchievements(parsedData.awards_and_achievements || []);
+        setPositionsOfResponsibility(parsedData.position_of_responsibility || []);
+        setCompetitions(parsedData.competitions || []);
+        setExtracurricularActivities(parsedData.extra_curricular_activities || []);
+        console.log("User profile updated with parsed data");
+
+        setIsLoading(false);
+        navigate("/profile");
+      } catch (error) {
+        console.error("Error parsing resume:", error);
+        setIsLoading(false);
+        // Handle error (e.g., show error message to user)
+      }
     } else if (linkedinUrl !== "") {
       // Connect with LinkedIn
       console.log("LinkedIn connected:", linkedinUrl);
@@ -219,33 +186,64 @@ export default function Component() {
     setLinkedinUrl(event.target.value);
   };
 
-  const processSteps = [
-    {
-      icon: <User className="w-6 h-6" />,
-      text: "Sign up and complete your profile: Upload your resume or connect your LinkedIn to get started quickly.",
-    },
-    {
-      icon: <CheckCircle className="w-6 h-6" />,
-      text: "Take our tests and interviews: Showcase your skills through our tailored assessments.",
-    },
-    {
-      icon: <Briefcase className="w-6 h-6" />,
-      text: "Receive job offers or apply for jobs: Get matched with companies looking for your specific skill set.",
-    },
-    {
-      icon: <CheckCircle className="w-6 h-6" />,
-      text: "Start working on your dream job! Begin your new career journey with confidence.",
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {isLoading ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 flex flex-col items-center">
-            <Loader className="w-12 h-12 text-orange-600 animate-spin" />
-            <p className="mt-4 text-lg font-semibold text-gray-700">Processing your resume...</p>
-          </div>
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-lg p-8 flex flex-col items-center max-w-md w-full"
+          >
+            <div className="w-48 h-48 relative">
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 border-4 border-orange-200 rounded-full"
+              />
+              <motion.div 
+                animate={{ rotate: -360 }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-3 border-4 border-orange-400 rounded-full"
+              />
+              <motion.div 
+                animate={{ rotate: 360 }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-6 border-4 border-orange-600 rounded-full"
+              />
+              <motion.div 
+                key={loadingStep}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="absolute inset-0 flex items-center justify-center"
+              >
+                {React.createElement(loadingSteps[loadingStep].icon, { className: "w-16 h-16 text-orange-500" })}
+              </motion.div>
+            </div>
+            <motion.p 
+              key={loadingStep}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mt-6 text-lg font-semibold text-gray-700 text-center"
+            >
+              {loadingSteps[loadingStep].text}
+            </motion.p>
+            <p className="mt-2 text-sm text-gray-500 text-center">
+              This might take a minute. Why not grab a coffee?
+            </p>
+            {/* <motion.div 
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 1, repeat: Infinity, repeatType: "reverse" }}
+              className="mt-4"
+            >
+              <Coffee className="w-8 h-8 text-orange-400" />
+            </motion.div> */}
+          </motion.div>
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden max-w-6xl w-full">

@@ -131,3 +131,8 @@ export const isSubmittedState = atom({
   key: 'isSubmittedState',
   default: false,
 });
+
+export const isParsedResumeState = atom({
+  key: 'isParsedResumeState',
+  default: false,
+});

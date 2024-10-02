@@ -35,14 +35,13 @@ export default function ExperienceForm() {
   const { userInfo } = useAuth();
 
   useEffect(() => {
-    // Format dates when experiences are loaded or updated
     const formattedExperiences = experiences.map(exp => ({
       ...exp,
       start_date: formatDateForInput(exp.start_date),
       end_date: formatDateForInput(exp.end_date),
     }));
     setExperiences(formattedExperiences);
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   const validateField = (field, value, experienceId) => {
     try {
@@ -64,7 +63,7 @@ export default function ExperienceForm() {
       description: "",
       currently_working: false,
     };
-    setExperiences([...experiences, newExperience]);
+    setExperiences(prevExperiences => [...prevExperiences, newExperience]);
 
     setTimeout(() => {
       newCardRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,18 +71,17 @@ export default function ExperienceForm() {
   };
 
   const removeExperience = (id) => {
-    setExperiences(experiences.filter((experience) => experience.id !== id));
+    setExperiences(prevExperiences => prevExperiences.filter((experience) => experience.id !== id));
   };
 
   const handleInputChange = (id, field, value) => {
-    setExperiences((prevExperiences) =>
+    setExperiences(prevExperiences =>
       prevExperiences.map((experience) =>
         experience.id === id ? { ...experience, [field]: value } : experience
       )
     );
     validateField(field, value, id);
 
-    // Additional validation for end date
     if (field === 'end_date') {
       const currentExperience = experiences.find(exp => exp.id === id);
       if (currentExperience && new Date(value) <= new Date(currentExperience.start_date)) {
@@ -345,7 +343,7 @@ export default function ExperienceForm() {
                       <ul className="list-disc pl-5 space-y-1">
                         {descriptionToBulletPoints(experience.description).map(
                           (point, index) => (
-                            <li key={index} className="text-sm text-gray-600">
+                            <li key={`${experience.id}-point-${index}`} className="text-sm text-gray-600">
                               {point}
                             </li>
                           )

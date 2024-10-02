@@ -54,7 +54,10 @@ import {
   competitionsState,
   extracurricularActivitiesState,
   isSubmittedState,
+  isParsedResumeState,
 } from "../store/atoms/userProfileSate";
+
+import axios from 'axios';
 
 const sectionIcons = {
   Publications: IconNotebook,
@@ -83,6 +86,9 @@ export default function SidebarDemo() {
   const personalInformation = useRecoilValue(personalInformationState);
   const educations = useRecoilValue(educationState);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+  const hasData = Object.keys(personalInformation).length > 0;
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   // const setPersonalInformation = useSetRecoilState(personalInformationState);
   // const setEducation = useSetRecoilState(educationState);
@@ -109,24 +115,25 @@ export default function SidebarDemo() {
   const setExtracurricularActivities = useSetRecoilState(
     extracurricularActivitiesState
   );
-
+  const [isParsedResume, setIsParsedResume] = useRecoilState(isParsedResumeState);
   useEffect(() => {
     const getUserProfile = async () => {
-      if (!authToken) return;
+      if (!authToken) {
+        setIsLoading(false);
+        return;
+      }
 
       try {
+        setIsLoading(true);
+        setError(null);
         const userInfo = await fetchUserInfo();
         if (!userInfo || !userInfo._id) {
-          toast.error("Unable to fetch user information");
-          return;
+          throw new Error("Unable to fetch user information");
         }
 
-        // Check if personalInformation is empty or not present
         if (!personalInformation || Object.keys(personalInformation).length === 0) {
-          console.log("Personal information not found, fetching from backend...");
           const userProfileData = await fetchUserProfile(userInfo._id);
-          console.log("Fetched user profile data:", userProfileData);
-
+          
           // Update all profile sections
           setPersonalInformation(userProfileData.personal_information || {});
           setSocials(userProfileData.socials || {});
@@ -141,14 +148,24 @@ export default function SidebarDemo() {
           setCompetitions(userProfileData.competitions || []);
           setExtracurricularActivities(userProfileData.extra_curricular_activities || []);
 
-          console.log("User profile data updated from backend");
+          const hasData = Object.values(userProfileData).some(value => 
+            Array.isArray(value) ? value.length > 0 : Object.keys(value).length > 0
+          );
+          if (hasData) {
+            setSelectedSection("Overview");
+          } else {
+            setSelectedSection("Ba");
+          }
         } else {
-          console.log("User profile data already present in atoms");
+          setSelectedSection("Overview");
         }
-
       } catch (error) {
         console.error("Error in getUserProfile:", error);
-        toast.error("An error occurred while loading the profile");
+        setError(error.message || "An error occurred while loading the profile");
+        setSelectedSection("Overview");
+        setIsSubmitted(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -394,6 +411,25 @@ export default function SidebarDemo() {
     return links;
   };
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen">
+        <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
+        <p className="text-gray-700">{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
       <Toaster
@@ -456,7 +492,7 @@ export default function SidebarDemo() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto p-4">
           <Dashboard
-            selectedSection={selectedSection}
+            selectedSection={hasData ? selectedSection : "Basic Information"}
             additionalSections={additionalSections}
             errors={errors}
           />
@@ -562,6 +598,7 @@ export const LogoIcon = () => {
     </Link>
   );
 };
+
 const Overview = () => {
   return (
     <div className="h-full overflow-y-auto">

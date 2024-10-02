@@ -32,7 +32,8 @@ import {
   awardsAndAchievementsState,
   positionsOfResponsibilityState,
   competitionsState,
-  extracurricularActivitiesState
+  extracurricularActivitiesState,
+  isParsedResumeState
 } from '../../store/atoms/userProfileSate';
 import ThankyouCard from './ThankyouCard';
 import { isSubmittedState } from '../../store/atoms/userProfileSate';
@@ -97,7 +98,7 @@ const isValidProject = (data) => {
     return false;
   }
   if (Array.isArray(data)) {
-    console.log("project array data",data);
+    // console.log("project array data",data);
     return data.length > 0 && data.some(item => 
       item != null && Object.entries(item).some(([key, value]) => 
         value !== null && 
@@ -138,13 +139,16 @@ export default function Resume() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [profileExists, setProfileExists] = useState(false);
-  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
   const navigate = useNavigate();
   var { fetchUserInfo, userInfo } = useAuth();
   const [hasLocalChanges, setHasLocalChanges] = useState(false);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+  const [isParsedResume, setIsParsedResume] = useRecoilState(isParsedResumeState);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchUserInfoAndProfile = useCallback(async () => {
+    if (hasFetched) return;
+    
     const token = localStorage.getItem('authToken');
     if (!token) {
       navigate("/login");
@@ -158,18 +162,10 @@ export default function Resume() {
         const response = await axios.get(`http://localhost:3004/api/user-profile/${userInfo._id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-        console.log(response.data);
         
         // Update states with fetched data
-        setPersonalInfo(prevState => ({
-          ...prevState,
-          ...response.data.personal_information
-        }));
-        setSocials(prevState => ({
-          ...prevState,
-          ...response.data.socials
-        }));
-        // setCourses(response.data.courses || []);
+        setPersonalInfo(prevState => ({ ...prevState, ...response.data.personal_information }));
+        setSocials(prevState => ({ ...prevState, ...response.data.socials }));
         setEducation(response.data.education || []);
         setExperience(response.data.experience || []);
         setPublications(response.data.publications || []);
@@ -183,41 +179,34 @@ export default function Resume() {
         setProfileExists(true);
       }
     } catch (error) {
-      console.error('Error fetching user info or profile:', error);
       if (error.response && error.response.status === 404) {
         console.log('User profile not found. New user can create their profile.');
-        // Initialize all states with default values
-        // setPersonalInfo({
-        //   ...personalInformationState.default,
-        //   first_name: userInfo?.first_name || '',
-        //   last_name: userInfo?.last_name || '',
-        //   email: userInfo?.email || ''
-        // });
-        // setSocials(socialsState);
-        // setCourses(coursesState);
-        // setEducation(educationState);
-        // setExperience(experienceState);
-        // setPublications(publicationsState);
-        // setSkills(skillsState.default);
-        // setPersonalProjects(personalProjectsState);
-        // setAwardsAndAchievements(awardsAndAchievementsState);
-        // setPositionsOfResponsibility(positionsOfResponsibilityState);
-        // setCompetitions(competitionsState);
-        // setExtracurricularActivities(extracurricularActivitiesState);
       } else {
+        console.error('Error fetching user info or profile:', error);
         toast.error('Failed to fetch user information or profile. Please try again.');
       }
     } finally {
       setIsLoading(false);
-      setHasAttemptedFetch(true);
+      setHasFetched(true);
     }
-  }, [navigate, fetchUserInfo, userInfo, setPersonalInfo, setSocials, setEducation, setExperience, setPublications, setSkills, setPersonalProjects, setAwardsAndAchievements, setPositionsOfResponsibility, setCompetitions, setExtracurricularActivities]);
+  }, [setPersonalInfo, setSocials, setEducation, setExperience, setPublications, setSkills, setPersonalProjects, setAwardsAndAchievements, setPositionsOfResponsibility, setCompetitions, setExtracurricularActivities]);
 
   useEffect(() => {
-    if (!hasAttemptedFetch) {
-      fetchUserInfoAndProfile();
+    fetchUserInfoAndProfile();
+  }, [fetchUserInfoAndProfile, hasFetched]);
+
+  useEffect(() => {
+    if (isParsedResume) {
+      toast.success("we worked our magic and parsed your resume", {
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      setIsParsedResume(false);
     }
-  }, [fetchUserInfoAndProfile, hasAttemptedFetch]);
+  }, [isParsedResume, setIsParsedResume]);
 
   // New function to check for changes
   const checkForChanges = useCallback(() => {
@@ -266,9 +255,9 @@ export default function Resume() {
         skills,
         personal_projects: personalProjects,
         awards_and_achievements: awardsAndAchievements,
-        positions_of_responsibility: positionsOfResponsibility,
+        position_of_responsibility: positionsOfResponsibility,
         competitions,
-        extracurricular_activities: extracurricularActivities
+        extra_curricular_activities: extracurricularActivities
       };
 
       console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));

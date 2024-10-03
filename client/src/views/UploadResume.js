@@ -5,12 +5,7 @@ import {
   Upload,
   Linkedin,
   FileText,
-  User,
-  CheckCircle,
-  Briefcase,
   ArrowRight,
-  Loader,
-  Coffee,
   Zap,
   Smile,
   Brain,
@@ -33,16 +28,14 @@ import {
   positionsOfResponsibilityState,
   competitionsState,
   extracurricularActivitiesState,
-  isSubmittedState,
   isParsedResumeState,
 } from "../store/atoms/userProfileSate";
 import { toast } from "react-toastify";
 
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API_URL = BACKEND_URL + "/api/resume";
 const AZURE_URL = BACKEND_URL + "/api/azure";
-// const RESUME_PARSER_URL = process.env.RESUME_PARSER_URL + "/api/resume";
+const RESUME_PARSER_URL = process.env.REACT_APP_RESUME_PARSER_URL + "/api/resume";
 
 
 export default function Component() {
@@ -107,7 +100,6 @@ export default function Component() {
   const setExtracurricularActivities = useSetRecoilState(
     extracurricularActivitiesState
   );
-
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
 
 
@@ -132,7 +124,8 @@ export default function Component() {
         },
       });
 
-      const res = await axios.get(`http://localhost:8000/api/resume/health_check`);
+      const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
+      console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
       console.log("Health check response:", res);
 
       const formData = new FormData();
@@ -141,7 +134,7 @@ export default function Component() {
       
       try {
         const extract = await axios.post(
-          `http://localhost:8000/api/resume/parse-resume`,
+          `${RESUME_PARSER_URL}/parse-resume`,
           formData,
           {
             headers: {
@@ -155,8 +148,8 @@ export default function Component() {
         const parsedData = extract.data.parsed_data;
 
         // Update Recoil atoms with parsed data
-        setPersonalInformation(parsedData.personal_information || {});
-        setSocials(parsedData.socials || {});
+        setPersonalInformation(parsedData.personal_information || []);
+        setSocials(parsedData.socials || []);
         setCourses(parsedData.courses || []);
         setEducation(parsedData.education || []);
         setExperience(parsedData.experience || []);
@@ -256,11 +249,11 @@ export default function Component() {
                   Quick Profile Setup
                 </h1>
                 <p className="text-gray-600">
-                  Upload your resume or add your LinkedIn URL to get started.
+                  Upload your resume to get started.
                 </p>
               </div>
 
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-orange-600 transition-colors duration-300">
+              <div className="border-2 border-dashed border-gray-300 rounded-xl p-12 text-center hover:border-orange-600 transition-colors duration-300">
                 <input
                   type="file"
                   id="file-upload"
@@ -269,9 +262,9 @@ export default function Component() {
                   onChange={handleFileChange}
                 />
                 {file ? (
-                  <div className="flex flex-col items-center space-y-2">
-                    <FileText className="w-12 h-12 text-orange-600" />
-                    <span className="text-orange-600 font-medium">
+                  <div className="flex flex-col items-center space-y-4">
+                    <FileText className="w-16 h-16 text-orange-600" />
+                    <span className="text-orange-600 font-medium text-lg">
                       {file.name}
                     </span>
                     <button
@@ -284,10 +277,10 @@ export default function Component() {
                 ) : (
                   <label
                     htmlFor="file-upload"
-                    className="cursor-pointer flex flex-col items-center space-y-2"
+                    className="cursor-pointer flex flex-col items-center space-y-4"
                   >
-                    <Upload className="w-12 h-12 text-orange-600" />
-                    <span className="text-orange-600 font-medium">
+                    <Upload className="w-16 h-16 text-orange-600" />
+                    <span className="text-orange-600 font-medium text-lg">
                       Drop resume or click to browse
                     </span>
                     <span className="text-sm text-gray-500">
@@ -297,22 +290,7 @@ export default function Component() {
                 )}
               </div>
 
-              <div className="flex items-center">
-                <div className="flex-grow border-t border-gray-300"></div>
-                <span className="flex-shrink mx-4 text-gray-600">or</span>
-                <div className="flex-grow border-t border-gray-300"></div>
-              </div>
-
-              <div className="relative">
-                <Linkedin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Your LinkedIn profile URL"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center mt-8">
                 <button
                   className="text-gray-600 hover:text-orange-600 font-medium"
                   onClick={() => {
@@ -322,11 +300,11 @@ export default function Component() {
                   Skip for now
                 </button>
                 <button
-                  className="bg-orange-400 text-white px-4 py-2 rounded-md hover:bg-orange-600 transition duration-300 flex items-center"
+                  className="bg-orange-400 text-white px-6 py-3 rounded-md hover:bg-orange-600 transition duration-300 flex items-center text-lg"
                   onClick={handleContinueClick}
                 >
                   Continue
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </button>
               </div>
             </div>
@@ -339,7 +317,7 @@ export default function Component() {
                 </h2>
                 <ul className="space-y-4">
                   {[
-                    "Upload your resume or LinkedIn profile",
+                    "Upload your resume",
                     "We'll extract your information automatically",
                     "Review and enhance your profile",
                     "Start applying for jobs!",

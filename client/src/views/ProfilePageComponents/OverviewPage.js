@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   IconUser,
   IconBriefcase,
@@ -12,14 +12,15 @@ import {
   IconBrandLinkedin,
   IconMail,
   IconPhone,
-  IconBallFootball
-} from '@tabler/icons-react';
-import {Rocket, BookOpen} from "lucide-react";
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { useAuth } from '../../context/AuthContext';
-import { useRecoilState,useRecoilValue,useSetRecoilState } from 'recoil';
+  IconBallFootball,
+} from "@tabler/icons-react";
+import { Rocket, BookOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAuth } from "../../context/AuthContext";
+import { useRecoilState } from "recoil";
+import ThankyouCard from "./ThankyouCard";
+import { useRecoilValue } from "recoil";
 import {
   personalInformationState,
   socialsState,
@@ -33,10 +34,15 @@ import {
   positionsOfResponsibilityState,
   competitionsState,
   extracurricularActivitiesState,
-  isParsedResumeState
-} from '../../store/atoms/userProfileSate';
-import ThankyouCard from './ThankyouCard';
-import { isSubmittedState } from '../../store/atoms/userProfileSate';
+  isSubmittedState,
+} from "../../store/atoms/userProfileSate";
+import {
+  fetchUserProfile,
+  saveUserProfileData,
+} from "../../api/userProfileApi";
+import { isValidData, hasAnyData } from "../../validators/validData";
+import axios from "axios";
+import Loader from "./Loader";
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -56,196 +62,55 @@ const Section = ({ title, children, isEmpty, icon }) => {
 };
 
 const ResumePage = ({ content }) => (
-  <div className="bg-white shadow-lg p-4 mx-auto my-2 max-w-4xl w-full text-sm">
+  <div className=" bg-white shadow-lg p-4 mx-auto my-2 max-w-4xl w-full text-sm">
     {content}
   </div>
 );
+const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL + "/api/user-profile";
 
-const isValidData = (data) => {
-  if (data == null) {
-    return false;
-  }
-  if (Array.isArray(data)) {
-    return data.length > 0 && data.some(item => 
-      item != null && Object.entries(item).some(([key, value]) => 
-        value !== null && 
-        value !== undefined && 
-        value !== '' && 
-        (typeof value !== 'object' || (Array.isArray(value) && value.length > 0) || Object.keys(value).length > 0)
-      )
-    );
-  }
-  if (typeof data === 'object') {
-    return Object.values(data).some(value => 
-      value !== null && 
-      value !== undefined && 
-      value !== '' && 
-      (typeof value !== 'object' || (Array.isArray(value) && value.length > 0) || Object.keys(value).length > 0)
-    );
-  }
-  return data !== null && data !== undefined && data !== '';
-};
-
-const hasAnyData = (profile) => {
-  if (!profile || typeof profile !== 'object') {
-    return false;
-  }
-  return Object.values(profile).some(isValidData);
-};
-
-const isValidProject = (data) => {
-  if (data == null) {
-    return false;
-  }
-  if (Array.isArray(data)) {
-    // console.log("project array data",data);
-    return data.length > 0 && data.some(item => 
-      item != null && Object.entries(item).some(([key, value]) => 
-        value !== null && 
-        value !== undefined && 
-        value !== '' && 
-        (typeof value !== 'object' || (Array.isArray(value) && value.length > 0) || Object.keys(value).length > 0)
-      )
-    );
-  }
-  if (typeof data === 'object') {
-    console.log("project object data",data);
-    return Object.values(data).some(value => 
-      value !== null && 
-      value !== undefined && 
-      value !== '' && 
-      (typeof value !== 'object' || (Array.isArray(value) && value.length > 0) || Object.keys(value).length > 0)
-    );
-  }
-  return data !== null && data !== undefined && data !== '';
-};
-
-export default function Resume() {
-  const [personalInfo, setPersonalInfo] = useRecoilState(personalInformationState);
-  const [socials, setSocials] = useRecoilState(socialsState);
-  // const [courses, setCourses] = useRecoilState(coursesState);
+export default function OverviewPage() {
+  const { fetchUserInfo, authToken } = useAuth();
+  const [userInfo, setUserInfo] = useState(null);
+  const personal_information = useRecoilValue(personalInformationState);
+  const socials = useRecoilValue(socialsState);
   const courses = useRecoilValue(coursesState);
-  const setCourses = useSetRecoilState(coursesState);
-
-  const [education, setEducation] = useRecoilState(educationState);
-  const [experience, setExperience] = useRecoilState(experienceState);
-  const [publications, setPublications] = useRecoilState(publicationsState);
-  const [skills, setSkills] = useRecoilState(skillsState);
-  const [personalProjects, setPersonalProjects] = useRecoilState(personalProjectsState);
-  const [awardsAndAchievements, setAwardsAndAchievements] = useRecoilState(awardsAndAchievementsState);
-  const [positionsOfResponsibility, setPositionsOfResponsibility] = useRecoilState(positionsOfResponsibilityState);
-  const [competitions, setCompetitions] = useRecoilState(competitionsState);
-  const [extracurricularActivities, setExtracurricularActivities] = useRecoilState(extracurricularActivitiesState);
-
-  const [isLoading, setIsLoading] = useState(true);
-  const [profileExists, setProfileExists] = useState(false);
-  const navigate = useNavigate();
-  var { fetchUserInfo, userInfo } = useAuth();
-  const [hasLocalChanges, setHasLocalChanges] = useState(false);
+  const education = useRecoilValue(educationState);
+  const experience = useRecoilValue(experienceState);
+  const publications = useRecoilValue(publicationsState);
+  const skills = useRecoilValue(skillsState);
+  const personalProjects = useRecoilValue(personalProjectsState);
+  const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
+  const positionsOfResponsibility = useRecoilValue(
+    positionsOfResponsibilityState
+  );
+  const competitions = useRecoilValue(competitionsState);
+  const extracurricularActivities = useRecoilValue(
+    extracurricularActivitiesState
+  );
+  const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
-  const [isParsedResume, setIsParsedResume] = useRecoilState(isParsedResumeState);
-  const [hasFetched, setHasFetched] = useState(false);
-
-  const fetchUserInfoAndProfile = useCallback(async () => {
-    if (hasFetched) return;
-    
-    const token = localStorage.getItem('authToken');
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      await fetchUserInfo(token);
-      if (userInfo && userInfo._id) {
-        const response = await axios.get(`http://localhost:3004/api/user-profile/${userInfo._id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        // Update states with fetched data
-        setPersonalInfo(prevState => ({ ...prevState, ...response.data.personal_information }));
-        setSocials(prevState => ({ ...prevState, ...response.data.socials }));
-        setEducation(response.data.education || []);
-        setExperience(response.data.experience || []);
-        setPublications(response.data.publications || []);
-        setSkills(response.data.skills || []);
-        setPersonalProjects(response.data.personal_projects || []);
-        setAwardsAndAchievements(response.data.awards_and_achievements || []);
-        setPositionsOfResponsibility(response.data.position_of_responsibility || []);
-        setCompetitions(response.data.competitions || []);
-        setExtracurricularActivities(response.data.extra_curricular_activities || []);
-
-        setProfileExists(true);
+  
+  useEffect(() => {
+    const getUserInfo = async () => {
+      if (authToken) {
+        const info = await fetchUserInfo(authToken);
+        setUserInfo(info);
       }
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
-        console.log('User profile not found. New user can create their profile.');
-      } else {
-        console.error('Error fetching user info or profile:', error);
-        toast.error('Failed to fetch user information or profile. Please try again.');
-      }
-    } finally {
-      setIsLoading(false);
-      setHasFetched(true);
-    }
-  }, [setPersonalInfo, setSocials, setEducation, setExperience, setPublications, setSkills, setPersonalProjects, setAwardsAndAchievements, setPositionsOfResponsibility, setCompetitions, setExtracurricularActivities]);
+    };
 
-  useEffect(() => {
-    fetchUserInfoAndProfile();
-  }, [fetchUserInfoAndProfile, hasFetched]);
+    getUserInfo();
+  }, [authToken, fetchUserInfo]);
 
-  useEffect(() => {
-    if (isParsedResume) {
-      toast.success("we worked our magic and parsed your resume", {
-        autoClose: 3000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setIsParsedResume(false);
-    }
-  }, [isParsedResume, setIsParsedResume]);
-
-  // New function to check for changes
-  const checkForChanges = useCallback(() => {
-    // Compare current state with initial state
-    const hasChanges = 
-      JSON.stringify(personalInfo) !== JSON.stringify(personalInformationState.default) ||
-      JSON.stringify(socials) !== JSON.stringify(socialsState.default) ||
-      JSON.stringify(courses) !== JSON.stringify(coursesState.default) ||
-      JSON.stringify(education) !== JSON.stringify(educationState.default) ||
-      JSON.stringify(experience) !== JSON.stringify(experienceState.default) ||
-      JSON.stringify(publications) !== JSON.stringify(publicationsState.default) ||
-      JSON.stringify(skills) !== JSON.stringify(skillsState.default) ||
-      JSON.stringify(personalProjects) !== JSON.stringify(personalProjectsState.default) ||
-      JSON.stringify(awardsAndAchievements) !== JSON.stringify(awardsAndAchievementsState.default) ||
-      JSON.stringify(positionsOfResponsibility) !== JSON.stringify(positionsOfResponsibilityState.default) ||
-      JSON.stringify(competitions) !== JSON.stringify(competitionsState.default) ||
-      JSON.stringify(extracurricularActivities) !== JSON.stringify(extracurricularActivitiesState.default) ||
-      false;
-
-    setHasLocalChanges(hasChanges);
-  }, [personalInfo, socials, courses, education, experience, publications, skills, personalProjects, awardsAndAchievements, positionsOfResponsibility, competitions, extracurricularActivities]);
-
-  useEffect(() => {
-    checkForChanges();
-  }, [personalInfo, socials, courses, education, experience, publications, skills, personalProjects, awardsAndAchievements, positionsOfResponsibility, competitions, extracurricularActivities, checkForChanges]);
+  console.log("rendering again");
 
   const handleSubmit = async () => {
-    const token = localStorage.getItem('authToken');
-    if (!token || !userInfo || !userInfo._id) {
-      toast.error('You must be logged in to submit your profile.');
-      navigate("/login");
-      return;
-    }
+    setIsLoading(true);
     try {
       const dataToSubmit = {
         userId: userInfo._id,
         personal_information: {
-          ...personalInfo,
-          email: userInfo.email
+          ...personal_information,
+          email: userInfo.email,
         },
         socials,
         courses,
@@ -257,50 +122,71 @@ export default function Resume() {
         awards_and_achievements: awardsAndAchievements,
         position_of_responsibility: positionsOfResponsibility,
         competitions,
-        extra_curricular_activities: extracurricularActivities
+        extra_curricular_activities: extracurricularActivities,
       };
 
-      console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));
+      console.log(
+        "Data being submitted:",
+        JSON.stringify(dataToSubmit, null, 2)
+      );
 
       // First, check if a profile exists
       try {
-        const checkResponse = await axios.get(`http://localhost:3004/api/user-profile/${userInfo._id}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        
+        const checkResponse = await axios.get(
+          `${REACT_APP_BACKEND_URL}/${userInfo._id}`,
+          {
+            headers: { Authorization: `Bearer ${authToken}` },
+          }
+        );
+
         if (checkResponse.data) {
           // Profile exists, update it
-          const updateResponse = await axios.put(`http://localhost:3004/api/user-profile/${userInfo._id}`, dataToSubmit, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          console.log('Profile updated successfully:', updateResponse.data);
+          const updateResponse = await axios.put(
+            `${REACT_APP_BACKEND_URL}/${userInfo._id}`,
+            dataToSubmit,
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            }
+          );
+          console.log("Profile updated successfully:", updateResponse.data);
         }
       } catch (checkError) {
         if (checkError.response && checkError.response.status === 404) {
           // Profile doesn't exist, create a new one
-          const createResponse = await axios.post('http://localhost:3004/api/user-profile/create', dataToSubmit, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          console.log('New profile created successfully:', createResponse.data);
+          const createResponse = await axios.post(
+            `${REACT_APP_BACKEND_URL}/create`,
+            dataToSubmit,
+            {
+              headers: { Authorization: `Bearer ${authToken}` },
+            }
+          );
+          console.log("New profile created successfully:", createResponse.data);
         } else {
           // If it's not a 404 error, rethrow the error
           throw checkError;
         }
       }
 
-      toast.success('Profile submitted successfully!');
+      toast.success("Profile submitted successfully!");
       setIsSubmitted(true);
-      
     } catch (error) {
-      console.error('Error submitting profile:', error);
+      console.error("Error submitting profile:", error);
       if (error.response) {
-        console.error('Error response:', error.response.data);
-        toast.error(`Failed to submit profile: ${error.response.data.message || 'Unknown error'}`);
+        console.error("Error response:", error.response.data);
+        toast.error(
+          `Failed to submit profile: ${
+            error.response.data.message || "Unknown error"
+          }`
+        );
       } else if (error.request) {
-        toast.error('Failed to submit profile. No response received from server.');
+        toast.error(
+          "Failed to submit profile. No response received from server."
+        );
       } else {
-        toast.error('Failed to submit profile. Please try again.');
+        toast.error("Failed to submit profile. Please try again.");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -308,26 +194,17 @@ export default function Resume() {
     return <ThankyouCard />;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-          <div className="h-4 bg-gray-200 rounded"></div>
-          <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!hasAnyData(personalInfo)) {
+  if (!hasAnyData(personal_information)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 sm:p-6 md:p-8">
         <div className="text-center p-6 sm:p-8 bg-white rounded-lg shadow-xl w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl">
           <IconUser className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Your Resume is Empty</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Your Resume is Empty
+          </h2>
           <p className="text-gray-600 mb-4">
-            Please enter your details in the various sections to build your resume.
+            Please enter your details in the various sections to build your
+            resume.
           </p>
         </div>
       </div>
@@ -336,33 +213,38 @@ export default function Resume() {
 
   const content = (
     <>
-      {isValidData(personalInfo) && (
+      {isValidData(personal_information) && (
         <header className="text-center mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            {personalInfo?.first_name}{" "}
-            {personalInfo?.last_name}
+            {personal_information?.first_name} {personal_information?.last_name}
           </h1>
           <div className="flex flex-wrap justify-center items-center gap-4 text-gray-600">
-            {personalInfo?.email && (
+            {personal_information?.email && (
               <span className="flex items-center">
                 <IconMail className="w-4 h-4 mr-1" />
-                <span className="break-all">{personalInfo.email}</span>
+                <span className="break-all">{personal_information.email}</span>
               </span>
             )}
-            {personalInfo?.phone && (
+            {personal_information?.phone && (
               <span className="flex items-center">
                 <IconPhone className="w-4 h-4 mr-1" />
-                {personalInfo.phone}
+                {personal_information.phone}
               </span>
             )}
             {socials?.github && (
-              <a href={`https://github.com/${socials.github}`} className="flex items-center hover:text-blue-500">
+              <a
+                href={`https://github.com/${socials.github}`}
+                className="flex items-center hover:text-blue-500"
+              >
                 <IconBrandGithub className="w-4 h-4 mr-1" />
                 <span className="break-all">{socials.github}</span>
               </a>
             )}
             {socials?.linkedin && (
-              <a href={`https://linkedin.com/in/${socials.linkedin}`} className="flex items-center hover:text-blue-500">
+              <a
+                href={`https://linkedin.com/in/${socials.linkedin}`}
+                className="flex items-center hover:text-blue-500"
+              >
                 <IconBrandLinkedin className="w-4 h-4 mr-1" />
                 <span className="break-all">{socials.linkedin}</span>
               </a>
@@ -395,14 +277,22 @@ export default function Resume() {
           {education?.filter(isValidData).map((edu, index) => (
             <div key={edu.id || index}>
               <div className="flex flex-col md:flex-row justify-between mb-1">
-                <h3 className="font-semibold text-gray-800">{edu.institution}</h3>
+                <h3 className="font-semibold text-gray-800">
+                  {edu.institution}
+                </h3>
                 <span className="text-gray-600">
-                  {edu.start_date ? new Date(edu.start_date).getFullYear() : ''} - {edu.end_date ? new Date(edu.end_date).getFullYear() : 'Present'}
+                  {edu.start_date ? new Date(edu.start_date).getFullYear() : ""}{" "}
+                  -{" "}
+                  {edu.end_date
+                    ? new Date(edu.end_date).getFullYear()
+                    : "Present"}
                 </span>
               </div>
               <ul className="list-disc pl-5 text-gray-600">
                 <li>{edu.degree}</li>
-                {edu.cgpa_or_percentage && <li>CGPA/Percentage: {edu.cgpa_or_percentage}</li>}
+                {edu.cgpa_or_percentage && (
+                  <li>CGPA/Percentage: {edu.cgpa_or_percentage}</li>
+                )}
                 {edu.description && <li>{edu.description}</li>}
               </ul>
             </div>
@@ -419,62 +309,84 @@ export default function Resume() {
           {experience?.filter(isValidData).map((exp, index) => (
             <div key={index}>
               <div className="flex flex-col md:flex-row justify-between mb-1">
-                <h3 className="font-semibold text-gray-800">{exp.position} - {exp.company}</h3>
+                <h3 className="font-semibold text-gray-800">
+                  {exp.position} - {exp.company}
+                </h3>
                 <span className="text-gray-600">
-                  {exp.start_date && new Date(exp.start_date).toLocaleDateString("en-US", {
-                    month: "short",
-                    year: "numeric",
-                  })} -
+                  {exp.start_date &&
+                    new Date(exp.start_date).toLocaleDateString("en-US", {
+                      month: "short",
+                      year: "numeric",
+                    })}{" "}
+                  -
                   {exp.currently_working
                     ? " Present"
-                    : exp.end_date && new Date(exp.end_date).toLocaleDateString("en-US", {
+                    : exp.end_date &&
+                      new Date(exp.end_date).toLocaleDateString("en-US", {
                         month: "short",
                         year: "numeric",
                       })}
                 </span>
               </div>
               <ul className="list-disc pl-5 text-gray-600">
-                {Array.isArray(exp.description) 
-                  ? exp.description.map((item, idx) => <li key={idx}>{item}</li>)
-                  : <li>{exp.description}</li>
-                }
+                {Array.isArray(exp.description) ? (
+                  exp.description.map((item, idx) => <li key={idx}>{item}</li>)
+                ) : (
+                  <li>{exp.description}</li>
+                )}
               </ul>
             </div>
           ))}
         </div>
       </Section>
 
-      {isValidProject(personalProjects) && <Section
-        title="Projects"
-        icon={<Rocket className="w-5 h-5" />}
-        isEmpty={!isValidData(personalProjects)}
-      >
-        <div className="space-y-4">
-          {personalProjects?.filter(isValidData).map((project, index) => (
-            <div key={index}>
-              <div className="flex flex-col md:flex-row justify-between mb-1">
-                <h3 className="font-semibold text-gray-800">{project.name}</h3>
-                <span className="text-gray-600">
-                  {project.start_date && new Date(project.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
-                </span>
+      {isValidData(personalProjects) && (
+        <Section
+          title="Projects"
+          icon={<Rocket className="w-5 h-5" />}
+          isEmpty={!isValidData(personalProjects)}
+        >
+          <div className="space-y-4">
+            {personalProjects?.filter(isValidData).map((project, index) => (
+              <div key={index}>
+                <div className="flex flex-col md:flex-row justify-between mb-1">
+                  <h3 className="font-semibold text-gray-800">
+                    {project.name}
+                  </h3>
+                  <span className="text-gray-600">
+                    {project.start_date &&
+                      new Date(project.start_date).toLocaleDateString("en-US", {
+                        month: "short",
+                        year: "numeric",
+                      })}
+                  </span>
+                </div>
+                {project.link && (
+                  <a
+                    href={project.link}
+                    className="text-blue-500 hover:underline block mb-1 break-all"
+                  >
+                    {project.link}
+                  </a>
+                )}
+                <ul className="list-disc pl-5 text-gray-600">
+                  {Array.isArray(project.description) ? (
+                    project.description.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))
+                  ) : typeof project.description === "string" ? (
+                    project.description
+                      .split("\n")
+                      .map((item, idx) => <li key={idx}>{item}</li>)
+                  ) : project.description ? (
+                    <li>{String(project.description)}</li>
+                  ) : null}
+                </ul>
               </div>
-              {project.link && (
-                <a href={project.link} className="text-blue-500 hover:underline block mb-1 break-all">{project.link}</a>
-              )}
-              <ul className="list-disc pl-5 text-gray-600">
-                {Array.isArray(project.description)
-                  ? project.description.map((item, idx) => <li key={idx}>{item}</li>)
-                  : typeof project.description === 'string'
-                    ? project.description.split("\n").map((item, idx) => <li key={idx}>{item}</li>)
-                    : project.description
-                      ? <li>{String(project.description)}</li>
-                      : null
-                }
-              </ul>
-            </div>
-          ))}
-        </div>
-      </Section>}
+            ))}
+          </div>
+        </Section>
+      )}
 
       <Section
         title="Positions of Responsibility"
@@ -482,22 +394,40 @@ export default function Resume() {
         isEmpty={!isValidData(positionsOfResponsibility)}
       >
         <div className="space-y-4">
-          {positionsOfResponsibility?.filter(isValidData).map((position, index) => (
-            <div key={position.id || index}>
-              <div className="flex flex-col md:flex-row justify-between mb-1">
-                <h3 className="font-semibold text-gray-800">{position.title} - {position.organization}</h3>
-                <span className="text-gray-600">
-                  {position.start_date && new Date(position.start_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })} -
-                  {position.end_date ? new Date(position.end_date).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : 'Present'}
-                </span>
+          {positionsOfResponsibility
+            ?.filter(isValidData)
+            .map((position, index) => (
+              <div key={position.id || index}>
+                <div className="flex flex-col md:flex-row justify-between mb-1">
+                  <h3 className="font-semibold text-gray-800">
+                    {position.title} - {position.organization}
+                  </h3>
+                  <span className="text-gray-600">
+                    {position.start_date &&
+                      new Date(position.start_date).toLocaleDateString(
+                        "en-US",
+                        { month: "short", year: "numeric" }
+                      )}{" "}
+                    -
+                    {position.end_date
+                      ? new Date(position.end_date).toLocaleDateString(
+                          "en-US",
+                          { month: "short", year: "numeric" }
+                        )
+                      : "Present"}
+                  </span>
+                </div>
+                <ul className="list-disc pl-5 text-gray-600">
+                  {Array.isArray(position.description) ? (
+                    position.description.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))
+                  ) : typeof position.description === 'string' ? (
+                    <li>{position.description}</li>
+                  ) : null}
+                </ul>
               </div>
-              <ul className="list-disc pl-5 text-gray-600">
-                {position.description?.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          ))}
+            ))}
         </div>
       </Section>
 
@@ -510,20 +440,27 @@ export default function Resume() {
           {competitions?.map((competition, index) => (
             <div key={index}>
               <div className="flex flex-col md:flex-row justify-between mb-1">
-                <h3 className="font-semibold text-gray-800">{competition.name}</h3>
+                <h3 className="font-semibold text-gray-800">
+                  {competition.name}
+                </h3>
                 <span className="text-gray-600">
-                  {competition.date && new Date(competition.date).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                  {competition.date &&
+                    new Date(competition.date).toLocaleDateString("en-US", {
+                      month: "short",
+                      year: "numeric",
+                    })}
                 </span>
               </div>
               <ul className="list-disc pl-5 text-gray-600">
-                {Array.isArray(competition.description) 
+                {Array.isArray(competition.description)
                   ? competition.description.map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))
-                  : competition.description?.split('\n').map((item, idx) => (
-                      <li key={idx}>{item}</li>
-                    ))
-                }
+                  : typeof competition.description === "string"
+                  ? competition.description
+                      .split("\n")
+                      .map((item, idx) => <li key={idx}>{item}</li>)
+                  : null}
               </ul>
             </div>
           ))}
@@ -540,10 +477,19 @@ export default function Resume() {
             <li key={index} className="text-gray-700">
               <span className="font-semibold">{publication.name}</span>
               {publication.link && (
-                <a href={publication.link} className="ml-1 text-blue-500 hover:underline">[Link]</a>
+                <a
+                  href={publication.link}
+                  className="ml-1 text-blue-500 hover:underline"
+                >
+                  [Link]
+                </a>
               )}
               <span className="ml-1 text-gray-600">
-                {publication.date && `(${new Date(publication.date).toLocaleDateString("en-US", { month: "short", year: "numeric" })})`}
+                {publication.date &&
+                  `(${new Date(publication.date).toLocaleDateString("en-US", {
+                    month: "short",
+                    year: "numeric",
+                  })})`}
               </span>
             </li>
           ))}
@@ -559,9 +505,20 @@ export default function Resume() {
           {courses?.map((course, index) => (
             <li key={index} className="text-gray-700">
               <span className="font-semibold">{course.course_name}</span>
-              {course.course_provider && <span className="text-gray-600"> - {course.course_provider}</span>}
+              {course.course_provider && (
+                <span className="text-gray-600">
+                  {" "}
+                  - {course.course_provider}
+                </span>
+              )}
               <span className="ml-1 text-gray-600">
-                {course.completion_date && `(Completed: ${new Date(course.completion_date).toLocaleDateString("en-US", { month: "short", year: "numeric" })})`}
+                {course.completion_date &&
+                  `(Completed: ${new Date(
+                    course.completion_date
+                  ).toLocaleDateString("en-US", {
+                    month: "short",
+                    year: "numeric",
+                  })})`}
               </span>
             </li>
           ))}
@@ -575,7 +532,9 @@ export default function Resume() {
       >
         <ul className="list-disc pl-5 space-y-1">
           {awardsAndAchievements?.map((award, index) => (
-            <li key={index} className="text-gray-700">{award}</li>
+            <li key={index} className="text-gray-700">
+              {typeof award === "string" ? award : award.name}
+            </li>
           ))}
         </ul>
       </Section>
@@ -587,18 +546,21 @@ export default function Resume() {
       >
         <ul className="list-disc pl-5 space-y-1">
           {extracurricularActivities?.map((activity, index) => (
-            <li key={index} className="text-gray-700">{activity}</li>
+            <li key={index} className="text-gray-700">
+              {typeof activity === "string" ? activity : activity.name}
+            </li>
           ))}
         </ul>
       </Section>
 
-      {hasAnyData(personalInfo) && (
+      {hasAnyData(personal_information) && (
         <div className="mt-8 text-center">
-          <button 
+          <button
             className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
             onClick={handleSubmit}
+            disabled={isLoading}
           >
-            Submit Profile
+            {isLoading ? "Submitting..." : "Submit Profile"}
           </button>
         </div>
       )}
@@ -608,7 +570,7 @@ export default function Resume() {
   return (
     <div className="min-h-screen">
       <div className="w-full mx-auto">
-        <ResumePage content={content} />
+        {isLoading ? <Loader /> : <ResumePage content={content} />}
       </div>
     </div>
   );

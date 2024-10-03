@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { toast } from 'react-hot-toast';
 import {
   candidateSignupFields,
   employerSignupFields,
 } from "../../constants/formFields";
 import FormAction from "../FormAction";
-import NotificationBanner from "../NotificationBanner";
-import useNotification from "../../services/useNotification";
 import { useNavigate } from "react-router-dom";
 import { registerUserAPI } from "../../api/authApi";
 import InputField from "../Input";
@@ -18,9 +17,6 @@ export default function Signup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const { notification, showNotification, closeNotification } =
-    useNotification();
-
   useEffect(() => {
     const fields = isEmployer ? employerSignupFields : candidateSignupFields;
     const initialState = {};
@@ -29,14 +25,11 @@ export default function Signup() {
   }, [isEmployer]);
 
   const handleChange = (e) => {
-    setSignUpState({ ...signUpState, [e.target.id]: e.target.value });
+    setSignUpState((prevState) => ({
+      ...prevState,
+      [e.target.id]: e.target.value
+    }));
   };
-
-  useEffect(() => {
-    if (notification) {
-      setIsSubmitting(false);
-    }
-  }, [notification]);
 
   const validateEmail = (email) => {
     // Basic email validation
@@ -136,11 +129,11 @@ export default function Signup() {
 
     if (is_valid) {
       setIsSubmitting(true);
-      registerUserAPI(
-        { ...signUpState, role: isEmployer ? "recruiter" : "candidate" },
-        showNotification,
-        () => navigate("/login")
-      );
+      const success = await registerUserAPI({ ...signUpState, role: isEmployer ? "recruiter" : "candidate" });
+      if (success) {
+        navigate("/login");
+      }
+      setIsSubmitting(false);
     }
   };
 
@@ -150,13 +143,8 @@ export default function Signup() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
-      {notification && (
-        <NotificationBanner
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
-        />
-      )}
+      {/* Remove NotificationBanner component */}
+      
       {/* Left Side */}
       <div className="w-full lg:w-[40%] text-white p-4 lg:p-6 flex flex-col items-center justify-center">
         <div className="flex items-center justify-center mr-14">
@@ -207,7 +195,7 @@ export default function Signup() {
               <InputField
                 key={field.id}
                 handleChange={handleChange}
-                value={signUpState[field.id]}
+                value={signUpState[field.id] || ""} // Ensure a default value
                 labelText={field.labelText}
                 labelFor={field.labelFor}
                 id={field.id}

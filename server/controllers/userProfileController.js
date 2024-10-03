@@ -60,6 +60,7 @@ exports.updateProfile = async (req, res) => {
     try {
         const userId = req.params.userId;
         const updateData = req.body;
+        console.log("Update data received from client:", updateData);
 
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: "Invalid user ID" });
@@ -70,6 +71,7 @@ exports.updateProfile = async (req, res) => {
             updateData,
             { new: true, runValidators: true, upsert: true }
         );
+        console.log("User profile updated from server:", userProfile);
 
         if (!userProfile) {
             return res.status(404).json({ message: "User profile not found" });

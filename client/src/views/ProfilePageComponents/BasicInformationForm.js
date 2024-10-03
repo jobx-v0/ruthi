@@ -52,29 +52,8 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
   const [errors, setErrors] = useState({});
   const { userInfo = {} } = useAuth();
 
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.');
-      return;
-    }
-
-    const dataToSubmit = {
-      userId: userInfo._id,
-        personal_information: {
-          ...personalInformation,
-          email: userInfo.email, // Use the email from userInfo
-        },
-        socials,
-    };
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success('Profile information saved successfully!');
-    } catch (error) {
-      console.error('Failed to save data:', error);
-      toast.error('Failed to save profile information. Please try again.');
-    }
-  };
+  // Add this helper function at the beginning of your component
+  const ensureString = (value) => value === null || value === undefined ? '' : value;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -150,7 +129,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.first_name ? "border-red-500" : "border-gray-300"
                     }`}
-                    value={profileInformation.personal_information.first_name}
+                    value={ensureString(profileInformation.personal_information.first_name)}
                     onChange={handleChange}
                   />
                   {errors.first_name && (
@@ -173,7 +152,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.last_name ? "border-red-500" : "border-gray-300"
                     }`}
-                    value={profileInformation.personal_information.last_name}
+                    value={ensureString(profileInformation.personal_information.last_name)}
                     onChange={handleChange}
                   />
                   {errors.last_name && (
@@ -225,7 +204,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     name="phone"
                     className="w-full px-3 py-2 focus:outline-none rounded-r-md"
                     onChange={handleChange}
-                    value={profileInformation.personal_information.phone}
+                    value={ensureString(profileInformation.personal_information.phone)}
                     maxLength={10}
                   />
                 </div>
@@ -255,9 +234,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                       name="expected_salary"
                       className="w-full px-3 py-2 focus:outline-none rounded-r-md"
                       onChange={handleChange}
-                      value={
-                        profileInformation.personal_information.expected_salary
-                      }
+                      value={ensureString(profileInformation.personal_information.expected_salary)}
                       min="1"
                       max="99"
                     />
@@ -298,7 +275,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     errors.github ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://github.com/username"
-                  value={profileInformation.socials.github}
+                  value={ensureString(profileInformation.socials.github)}
                   onChange={handleSocialChange}
                 />
                 {errors.github && (
@@ -320,7 +297,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     errors.linkedin ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://linkedin.com/in/username"
-                  value={profileInformation.socials.linkedin}
+                  value={ensureString(profileInformation.socials.linkedin)}
                   onChange={handleSocialChange}
                 />
                 {errors.linkedin && (
@@ -342,7 +319,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     errors.twitter ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://twitter.com/username"
-                  value={profileInformation.socials.twitter}
+                  value={ensureString(profileInformation.socials.twitter)}
                   onChange={handleSocialChange}
                 />
                 {errors.twitter && (
@@ -364,7 +341,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     errors.website ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://example.com"
-                  value={profileInformation.socials.website}
+                  value={ensureString(profileInformation.socials.website)}
                   onChange={handleSocialChange}
                 />
                 {errors.website && (
@@ -373,16 +350,6 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Add the Save button here, aligned to the right */}
-        <div className="mt-6 text-left">
-          <button
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-            onClick={handleSave}
-          >
-            Save
-          </button>
         </div>
       </motion.div>
     </div>

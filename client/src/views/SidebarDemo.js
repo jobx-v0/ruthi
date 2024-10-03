@@ -54,10 +54,7 @@ import {
   competitionsState,
   extracurricularActivitiesState,
   isSubmittedState,
-  isParsedResumeState,
 } from "../store/atoms/userProfileSate";
-
-import axios from 'axios';
 
 const sectionIcons = {
   Publications: IconNotebook,
@@ -78,6 +75,8 @@ const availableSections = [
 ];
 
 export default function SidebarDemo() {
+  const { authToken } = useAuth();
+  const { fetchUserInfo } = useAuth();
   const [open, setOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("Basic Information");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -86,16 +85,7 @@ export default function SidebarDemo() {
   const personalInformation = useRecoilValue(personalInformationState);
   const educations = useRecoilValue(educationState);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
-  const hasData = Object.keys(personalInformation).length > 0;
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
 
-  // const setPersonalInformation = useSetRecoilState(personalInformationState);
-  // const setEducation = useSetRecoilState(educationState);
-  // const setExperience = useSetRecoilState(experienceState);
-  // const setSkills = useSetRecoilState(skillsState);
-  const { authToken } = useAuth();
-  const { fetchUserInfo } = useAuth();
 
   const setPersonalInformation = useSetRecoilState(personalInformationState);
   const setSocials = useSetRecoilState(socialsState);
@@ -115,62 +105,83 @@ export default function SidebarDemo() {
   const setExtracurricularActivities = useSetRecoilState(
     extracurricularActivitiesState
   );
-  const [isParsedResume, setIsParsedResume] = useRecoilState(isParsedResumeState);
+
   useEffect(() => {
     const getUserProfile = async () => {
-      if (!authToken) {
-        setIsLoading(false);
-        return;
-      }
+      if (!authToken) return;
 
       try {
-        setIsLoading(true);
-        setError(null);
         const userInfo = await fetchUserInfo();
         if (!userInfo || !userInfo._id) {
-          throw new Error("Unable to fetch user information");
+          toast.error("Unable to fetch user information");
+          return;
         }
 
-        if (!personalInformation || Object.keys(personalInformation).length === 0) {
-          const userProfileData = await fetchUserProfile(userInfo._id);
-          
-          // Update all profile sections
-          setPersonalInformation(userProfileData.personal_information || {});
-          setSocials(userProfileData.socials || {});
-          setCourses(userProfileData.courses || []);
-          setEducation(userProfileData.education || []);
-          setExperience(userProfileData.experience || []);
-          setPublications(userProfileData.publications || []);
-          setSkills(userProfileData.skills || []);
-          setPersonalProjects(userProfileData.personal_projects || []);
-          setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
-          setPositionsOfResponsibility(userProfileData.position_of_responsibility || []);
-          setCompetitions(userProfileData.competitions || []);
-          setExtracurricularActivities(userProfileData.extra_curricular_activities || []);
+        const userProfileData = await fetchUserProfile(userInfo._id);
+        console.log("userProfileData:", userProfileData);
 
-          const hasData = Object.values(userProfileData).some(value => 
-            Array.isArray(value) ? value.length > 0 : Object.keys(value).length > 0
-          );
-          if (hasData) {
-            setSelectedSection("Overview");
-          } else {
-            setSelectedSection("Ba");
-          }
-        } else {
-          setSelectedSection("Overview");
+        // Set all profile sections
+        setPersonalInformation(userProfileData.personal_information || {});
+        setSocials(userProfileData.socials || {});
+        setCourses(userProfileData.courses || []);
+        setEducation(userProfileData.education || []);
+        setExperience(userProfileData.experience || []);
+        setPublications(userProfileData.publications || []);
+        setSkills(userProfileData.skills || []);
+        setPersonalProjects(userProfileData.personal_projects || []);
+        setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
+        setPositionsOfResponsibility(
+          userProfileData.position_of_responsibility || []
+        );
+        setCompetitions(userProfileData.competitions || []);
+        setExtracurricularActivities(
+          userProfileData.extra_curricular_activities || []
+        );
+
+        // Populate additional sections based on fetched data
+        const newAdditionalSections = [];
+        if (userProfileData.publications && userProfileData.publications.length > 0) {
+          newAdditionalSections.push("Publications");
         }
+        if (userProfileData.personal_projects && userProfileData.personal_projects.length > 0) {
+          newAdditionalSections.push("Personal Projects");
+        }
+        if (userProfileData.awards_and_achievements && userProfileData.awards_and_achievements.length > 0) {
+          newAdditionalSections.push("Awards and Achievements");
+        }
+        if (userProfileData.position_of_responsibility && userProfileData.position_of_responsibility.length > 0) {
+          newAdditionalSections.push("Positions of Responsibility");
+        }
+        if (userProfileData.competitions && userProfileData.competitions.length > 0) {
+          newAdditionalSections.push("Competitions");
+        }
+        if (userProfileData.extra_curricular_activities && userProfileData.extra_curricular_activities.length > 0) {
+          newAdditionalSections.push("Extracurricular Activities");
+        }
+
+        setAdditionalSections(newAdditionalSections);
       } catch (error) {
-        console.error("Error in getUserProfile:", error);
-        setError(error.message || "An error occurred while loading the profile");
-        setSelectedSection("Overview");
-        setIsSubmitted(false);
-      } finally {
-        setIsLoading(false);
+        console.error("Error fetching user profile:", error);
       }
     };
 
     getUserProfile();
-  }, [authToken, fetchUserInfo, personalInformation, setPersonalInformation, setSocials, setCourses, setEducation, setExperience, setPublications, setSkills, setPersonalProjects, setAwardsAndAchievements, setPositionsOfResponsibility, setCompetitions, setExtracurricularActivities]);
+  }, [
+    authToken,
+    fetchUserInfo,
+    setPersonalInformation,
+    setSocials,
+    setCourses,
+    setEducation,
+    setExperience,
+    setPublications,
+    setSkills,
+    setPersonalProjects,
+    setAwardsAndAchievements,
+    setPositionsOfResponsibility,
+    setCompetitions,
+    setExtracurricularActivities,
+  ]);
 
   useEffect(() => {
     if (isSubmitted) {
@@ -235,33 +246,45 @@ export default function SidebarDemo() {
 
   // Update the links state when additionalSections change
   useEffect(() => {
-    const updatedLinks = [
-      ...initialLinks.slice(0, -2),
-      ...additionalSections.map((section) => ({
-        label: section,
-        icon: sectionIcons[section] ? (
-          React.createElement(sectionIcons[section])
-        ) : (
-          <IconPlus />
-        ),
-        href: "#",
-        deletable: true,
-      })),
-    ];
+    console.log("isSubmitted:", isSubmitted);
+    if (isSubmitted) {
+      setLinks([
+        { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
+        {
+          label: "Logout",
+          icon: <IconArrowLeft />,
+          href: "http://localhost:3000/",
+        },
+      ]);
+    } else {
+      const updatedLinks = [
+        ...initialLinks.slice(0, -2),
+        ...additionalSections.map((section) => ({
+          label: section,
+          icon: sectionIcons[section] ? (
+            React.createElement(sectionIcons[section])
+          ) : (
+            <IconPlus />
+          ),
+          href: "#",
+          deletable: true,
+        })),
+      ];
 
-    // Only add the "Add more" button if there are still sections available to add
-    if (additionalSections.length < availableSections.length) {
-      updatedLinks.push({
-        label: "Add more",
-        icon: <IconPlus />,
-        href: "#",
-        onClick: () => setIsModalOpen(true),
-      });
+      // Only add the "Add more" button if there are still sections available to add
+      if (additionalSections.length < availableSections.length) {
+        updatedLinks.push({
+          label: "Add more",
+          icon: <IconPlus />,
+          href: "#",
+          onClick: () => setIsModalOpen(true),
+        });
+      }
+
+      updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
+      setLinks(updatedLinks);
     }
-
-    updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
-    setLinks(updatedLinks);
-  }, [additionalSections]);
+  }, [additionalSections, isSubmitted]);
 
   const sections = [
     "Basic Information",
@@ -411,25 +434,6 @@ export default function SidebarDemo() {
     return links;
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-        <p className="text-gray-700">{error}</p>
-        <button 
-          onClick={() => window.location.reload()} 
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col md:flex-row h-screen overflow-hidden">
       <Toaster
@@ -492,7 +496,7 @@ export default function SidebarDemo() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <main className="flex-1 overflow-y-auto p-4">
           <Dashboard
-            selectedSection={hasData ? selectedSection : "Basic Information"}
+            selectedSection={selectedSection}
             additionalSections={additionalSections}
             errors={errors}
           />
@@ -531,6 +535,24 @@ export default function SidebarDemo() {
 }
 
 const Dashboard = ({ selectedSection, additionalSections, errors }) => {
+  const isSubmitted = useRecoilValue(isSubmittedState);
+  const personal_information = useRecoilValue(personalInformationState);
+  const socials = useRecoilValue(socialsState);
+  const courses = useRecoilValue(coursesState);
+  const education = useRecoilValue(educationState);
+  const experience = useRecoilValue(experienceState);
+  const publications = useRecoilValue(publicationsState);
+  const skills = useRecoilValue(skillsState);
+  const personalProjects = useRecoilValue(personalProjectsState);
+  const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
+  const positionsOfResponsibility = useRecoilValue(positionsOfResponsibilityState);
+  const competitions = useRecoilValue(competitionsState);
+  const extracurricularActivities = useRecoilValue(extracurricularActivitiesState);
+
+  if (isSubmitted) {
+    return <OverviewPage />;
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -538,7 +560,7 @@ const Dashboard = ({ selectedSection, additionalSections, errors }) => {
           {(() => {
             switch (selectedSection) {
               case "Basic Information":
-                return <BasicInformationForm />;
+                return <BasicInformationForm errors={errors} />;
               case "Education":
                 return <Education />;
               case "Experience":
@@ -558,9 +580,24 @@ const Dashboard = ({ selectedSection, additionalSections, errors }) => {
               case "Extra-curricular Activities":
                 return <ExtraCurricularActivities />;
               case "Overview":
-                return <Overview />;
+                return (
+                  <Overview
+                    personal_information={personal_information}
+                    socials={socials}
+                    courses={courses}
+                    education={education}
+                    experience={experience}
+                    publications={publications}
+                    skills={skills}
+                    personalProjects={personalProjects}
+                    awardsAndAchievements={awardsAndAchievements} 
+                    positionsOfResponsibility={positionsOfResponsibility}
+                    competitions={competitions}
+                    extracurricularActivities={extracurricularActivities}
+                  />
+                );
               default:
-                return <div>Hehe</div>;
+                return <div>Select a section</div>;
             }
           })()}
         </div>
@@ -599,11 +636,11 @@ export const LogoIcon = () => {
   );
 };
 
-const Overview = () => {
+const Overview = (props) => {
   return (
     <div className="h-full overflow-y-auto">
       <h2 className="text-2xl font-bold text-black">Overview</h2>
-      <OverviewPage />
+      <OverviewPage {...props} />
     </div>
   );
 };

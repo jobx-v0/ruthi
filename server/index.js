@@ -21,6 +21,7 @@ const azureRoutes = require("./routes/azure");
 const openAIRoutes = require("./routes/openAI");
 const userProfileRoutes = require("./routes/userProfiles");
 
+
 // Use your authentication routes
 app.use("/api/auth", authRoutes);
 
@@ -46,7 +47,7 @@ app.use("/api/user-profile", userProfileRoutes);
 // Define other server setup, middleware, and error handling as needed
 
 // Start the server
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 console.log("Port: ", port);
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

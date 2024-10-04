@@ -2,7 +2,9 @@ import axios from "axios";
 import { toast } from 'react-hot-toast';
 import { constSelector } from "recoil";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+// const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL=process.env.REACT_APP_BACKEND_URL;
+console.log("backend:",BACKEND_URL)
 const API_URL = BACKEND_URL + "/api/auth";
 console.log("API URL:", API_URL);
 // const API_URL = 'https://jobx-32a058281844.herokuapp.com/api/auth';
@@ -78,6 +80,7 @@ export const registerUserAPI = async (signUpState) => {
       companyName: signUpState["companyName"],
     };
     console.log("data", data);
+    console.log(API_URL);
     const response = await axios.post(`${API_URL}/register`, data);
     console.log("Status:", response.status);
     console.log("Response:", response.data);

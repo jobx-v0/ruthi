@@ -2,8 +2,11 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const EmailService = require("../services/emailService");
+const { OAuth2Client } = require('google-auth-library');
+
 
 require("dotenv").config();
+
 
 // Register a new user
 register = async (req, res) => {
@@ -208,6 +211,88 @@ resendVerificationEmail = async (req, res) => {
   }
 };
 
+const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
+
+ googleAuth = async (req, res) => {
+  try {
+    const { token,role,companyName } = req.body;
+
+    // Verify the Google token
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.REACT_APP_GOOGLE_CLIENT_ID, // Ensure the Google Client ID is correct
+    });
+
+    const payload = ticket.getPayload();
+    console.log("Google Payload:", payload);
+
+    const { email, name, picture, sub } = payload;
+    const usernameFromEmail = email.split('@')[0];
+
+    
+
+    // Check if the user already exists in the database by email
+    let existingUser = await User.findOne({ email });
+
+    if (existingUser) {
+      // If user exists, generate a token and return it for login
+      const token = jwt.sign(
+        { _id: existingUser._id },
+        process.env.SESSION_SECRET,
+        { expiresIn: '1h' }
+      );
+
+      return res.json({
+        message: "Login successful",
+        token,
+        user: existingUser,
+      });
+    }
+
+    // Check if the username already exists, to prevent duplicates
+    let usernameExists = await User.findOne({ username: name });
+    if (usernameExists) {
+      return res.status(400).json({ message: "Username already taken. Please choose a different one." });
+    }
+
+    // Create a new user if they do not already exist
+    const newUser = new User({
+      _id: new mongoose.Types.ObjectId(),
+      username: usernameFromEmail,
+      email: email,
+      isVerified: true, // Since Google already verified their email
+      role: role, // Adjust role as needed
+      hashed_password: "", // No password for Google-authenticated users
+      salt: "", // No salt needed
+      isGoogleAuth: true, 
+      picture: picture, // Store profile picture from Google
+      created_at: Date.now(),
+      ...(role === 'recruiter' && { companyName }),
+    });
+
+    // Save the new user to the database
+    await newUser.save();
+
+    // Generate a JWT token for the new user
+    const newUsertoken = jwt.sign(
+      { _id: newUser._id },
+      process.env.SESSION_SECRET,
+      { expiresIn: '1h' }
+    );
+
+    // Return the newly created user and token
+    return res.json({
+      message: "Registration successful",
+      newUsertoken,
+      user: newUser,
+    });
+  } catch (err) {
+    console.error("Google OAuth error:", err);
+    return res.status(500).json({ message: "Server error", error: err.message });
+  }
+};
+
+
 const AuthController = {
   register,
   login,
@@ -216,6 +301,7 @@ const AuthController = {
   forgotPassword,
   resetPassword,
   resendVerificationEmail,
+  googleAuth,
 };
 
 module.exports = AuthController;

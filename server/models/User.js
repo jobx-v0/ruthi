@@ -48,6 +48,8 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'UserProfile'
   },
+  picture: { type: String }, // Stores the Google profile picture URL (imageUrl)
+  isGoogleAuth: { type: Boolean, default: false },
 });
 
 userSchema

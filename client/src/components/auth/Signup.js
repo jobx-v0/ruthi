@@ -11,10 +11,17 @@ import InputField from "../Input";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
 
+import { GoogleOAuthProvider } from '@react-oauth/google';
+import { GoogleLogin } from '@react-oauth/google';
+import { jwtDecode } from "jwt-decode";
+
+
+// import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
   const [isEmployer, setIsEmployer] = useState(false);
   const [signUpState, setSignUpState] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); 
+  const [role, setRole] = useState("candidate"); 
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,6 +29,7 @@ export default function Signup() {
     const initialState = {};
     fields.forEach((field) => (initialState[field.id] = ""));
     setSignUpState(initialState);
+    setRole(isEmployer ? "recruiter" : "candidate"); 
   }, [isEmployer]);
 
   const handleChange = (e) => {
@@ -137,6 +145,56 @@ export default function Signup() {
     }
   };
 
+  const extractCompanyNameFromEmail = (email) => {
+    // Extract the domain from the email
+    const domain = email.split('@')[1]; // e.g., 'ruthi.in'
+    
+    // Get the company name by splitting the domain and taking the first part
+    const companyName = domain.split('.')[0]; // e.g., 'ruthi'
+    
+    return companyName;
+  };
+
+//success handler for Google Auth
+  const handleSuccess = async(credentialResponse) => {
+    const selectedRole=role;
+    try {
+      console.log(credentialResponse);
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log("Decoded JWT:", decoded); // Log the decoded token
+
+      const email = decoded.email; // Assuming email is part of decoded JWT
+      const companyName = extractCompanyNameFromEmail(email);
+
+      // Send the token to your backend to validate and create a session
+      const response=await fetch('http://localhost:3001/api/auth/google-auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: credentialResponse.credential,
+          role:selectedRole,
+          companyName,
+         }),
+      })
+      console.log(response);
+        
+      if (!response.ok) {
+        throw new Error(`Network response was not ok: ${response.statusText}`);
+      }
+  
+      const data = await response.json();
+      localStorage.setItem("authToken",data.token);
+      console.log("Response from server:", data);
+      // Handle successful login, e.g., navigate or show a success message
+      navigate('/uploadResume', { replace: true });
+
+    } catch (error) {
+      console.error("Error during Google login:", error);
+      // Optionally show user-friendly error messages
+    }
+  };
+
   const fields = isEmployer ? employerSignupFields : candidateSignupFields;
   const words =
     "A platform for job-seekers to practice interviews and get evaluated. Hone your skills and get ready for your dream job with real-time feedback and tailored advice.";
@@ -223,6 +281,24 @@ export default function Signup() {
               Sign In
             </a>
           </p>
+
+          <div className="flex items-center my-4">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="px-3 text-gray-500 text-sm">OR</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+
+          {/* import google auth */}
+          <div className="flex justify-center">
+          <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+          <GoogleLogin
+            onSuccess={handleSuccess}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+          />
+          </GoogleOAuthProvider>
+          </div>
         </div>
       </div>
     </div>

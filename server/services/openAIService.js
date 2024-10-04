@@ -2,8 +2,9 @@ const OpenAI = require("openai");
 const { encoding_for_model } = require("tiktoken");
 const InterviewService = require("./interviewService");
 const ResultService = require("./resultService");
+require("dotenv").config();
 
-const openai = new OpenAI();
+const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
 class OpenAIServiceError extends Error {
   constructor(message, code) {

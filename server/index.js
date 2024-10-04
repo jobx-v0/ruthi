@@ -3,6 +3,8 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 const cors = require("cors");
 
+require("./cron-jobs/processCompletedInterviews");
+
 // Create an instance of the Express application
 const app = express();
 app.use(cors());

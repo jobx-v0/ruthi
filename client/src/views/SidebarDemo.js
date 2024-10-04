@@ -80,10 +80,18 @@ export default function SidebarDemo() {
   const [open, setOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("Basic Information");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [additionalSections, setAdditionalSections] = useState([]);
+  const [manuallyAddedSections, setManuallyAddedSections] = useState([]);
   const [errors, setErrors] = useState({});
   const personalInformation = useRecoilValue(personalInformationState);
   const educations = useRecoilValue(educationState);
+  const experiences = useRecoilValue(experienceState);
+  const skills = useRecoilValue(skillsState);
+  const publications = useRecoilValue(publicationsState);
+  const personalProjects = useRecoilValue(personalProjectsState);
+  const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
+  const positionsOfResponsibility = useRecoilValue(positionsOfResponsibilityState);
+  const competitions = useRecoilValue(competitionsState);
+  const extracurricularActivities = useRecoilValue(extracurricularActivitiesState);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
 
@@ -105,6 +113,8 @@ export default function SidebarDemo() {
   const setExtracurricularActivities = useSetRecoilState(
     extracurricularActivitiesState
   );
+
+  const [initialDataSections, setInitialDataSections] = useState([]);
 
   useEffect(() => {
     const getUserProfile = async () => {
@@ -138,28 +148,18 @@ export default function SidebarDemo() {
           userProfileData.extra_curricular_activities || []
         );
 
-        // Populate additional sections based on fetched data
-        const newAdditionalSections = [];
-        if (userProfileData.publications && userProfileData.publications.length > 0) {
-          newAdditionalSections.push("Publications");
-        }
-        if (userProfileData.personal_projects && userProfileData.personal_projects.length > 0) {
-          newAdditionalSections.push("Personal Projects");
-        }
-        if (userProfileData.awards_and_achievements && userProfileData.awards_and_achievements.length > 0) {
-          newAdditionalSections.push("Awards and Achievements");
-        }
-        if (userProfileData.position_of_responsibility && userProfileData.position_of_responsibility.length > 0) {
-          newAdditionalSections.push("Positions of Responsibility");
-        }
-        if (userProfileData.competitions && userProfileData.competitions.length > 0) {
-          newAdditionalSections.push("Competitions");
-        }
-        if (userProfileData.extra_curricular_activities && userProfileData.extra_curricular_activities.length > 0) {
-          newAdditionalSections.push("Extracurricular Activities");
-        }
+        // Determine which sections have data
+        const sectionsWithData = [];
+        if (userProfileData.publications?.length > 0) sectionsWithData.push("Publications");
+        if (userProfileData.personal_projects?.length > 0) sectionsWithData.push("Personal Projects");
+        if (userProfileData.awards_and_achievements?.length > 0) sectionsWithData.push("Awards and Achievements");
+        if (userProfileData.position_of_responsibility?.length > 0) sectionsWithData.push("Positions of Responsibility");
+        if (userProfileData.competitions?.length > 0) sectionsWithData.push("Competitions");
+        if (userProfileData.extra_curricular_activities?.length > 0) sectionsWithData.push("Extra-curricular Activities");
 
-        setAdditionalSections(newAdditionalSections);
+        setInitialDataSections(sectionsWithData);
+        setManuallyAddedSections(sectionsWithData);
+
       } catch (error) {
         console.error("Error fetching user profile:", error);
       }
@@ -209,44 +209,8 @@ export default function SidebarDemo() {
 
   const [links, setLinks] = useState(initialLinks);
 
-  const handleAddSection = (newSection) => {
-    if (!additionalSections.includes(newSection)) {
-      setAdditionalSections([...additionalSections, newSection]);
-      const IconComponent = sectionIcons[newSection] || IconPlus;
-      setLinks([
-        ...links.slice(0, -2),
-        {
-          label: newSection,
-          icon: <IconComponent />,
-          href: "#",
-          deletable: true,
-        },
-        ...links.slice(-2),
-      ]);
-      setSelectedSection(newSection); // Open the new section immediately
-    }
-  };
-
-  const handleDeleteSection = (sectionToDelete) => {
-    setAdditionalSections(
-      additionalSections.filter((section) => section !== sectionToDelete)
-    );
-    setLinks(links.filter((link) => link.label !== sectionToDelete));
-    if (selectedSection === sectionToDelete) {
-      setSelectedSection("Basic Information");
-    }
-  };
-
-  const navigate = useNavigate();
+  // New useEffect for updating sidebar links
   useEffect(() => {
-    if (!authToken) {
-      navigate("/login");
-    }
-  }, [authToken, navigate]);
-
-  // Update the links state when additionalSections change
-  useEffect(() => {
-    console.log("isSubmitted:", isSubmitted);
     if (isSubmitted) {
       setLinks([
         { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
@@ -258,21 +222,17 @@ export default function SidebarDemo() {
       ]);
     } else {
       const updatedLinks = [
-        ...initialLinks.slice(0, -2),
-        ...additionalSections.map((section) => ({
+        ...initialLinks.slice(0, -2), // Keep the first 4 default links
+        ...manuallyAddedSections.map((section) => ({
           label: section,
-          icon: sectionIcons[section] ? (
-            React.createElement(sectionIcons[section])
-          ) : (
-            <IconPlus />
-          ),
+          icon: sectionIcons[section] ? React.createElement(sectionIcons[section]) : <IconPlus />,
           href: "#",
-          deletable: true,
+          deletable: !initialDataSections.includes(section),
         })),
       ];
 
-      // Only add the "Add more" button if there are still sections available to add
-      if (additionalSections.length < availableSections.length) {
+      // Add the "Add more" button if there are still sections available to add
+      if (manuallyAddedSections.length < availableSections.length) {
         updatedLinks.push({
           label: "Add more",
           icon: <IconPlus />,
@@ -284,14 +244,39 @@ export default function SidebarDemo() {
       updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
       setLinks(updatedLinks);
     }
-  }, [additionalSections, isSubmitted]);
+  }, [manuallyAddedSections, isSubmitted, initialDataSections]);
+
+  const handleAddSection = (newSection) => {
+    if (!manuallyAddedSections.includes(newSection)) {
+      setManuallyAddedSections(prevSections => [...prevSections, newSection]);
+      setSelectedSection(newSection);
+    }
+  };
+
+  const handleDeleteSection = (sectionToDelete) => {
+    if (!initialDataSections.includes(sectionToDelete)) {
+      setManuallyAddedSections(prevSections => 
+        prevSections.filter(section => section !== sectionToDelete)
+      );
+      if (selectedSection === sectionToDelete) {
+        setSelectedSection("Basic Information");
+      }
+    }
+  };
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!authToken) {
+      navigate("/login");
+    }
+  }, [authToken, navigate]);
 
   const sections = [
     "Basic Information",
     "Education",
     "Experience",
     "Skills",
-    ...additionalSections,
+    ...manuallyAddedSections,
   ];
   const currentIndex = sections.indexOf(selectedSection);
 
@@ -497,7 +482,7 @@ export default function SidebarDemo() {
         <main className="flex-1 overflow-y-auto p-4">
           <Dashboard
             selectedSection={selectedSection}
-            additionalSections={additionalSections}
+            manuallyAddedSections={manuallyAddedSections}
             errors={errors}
           />
         </main>
@@ -527,14 +512,14 @@ export default function SidebarDemo() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddSection={handleAddSection}
-        selectedSections={additionalSections}
+        selectedSections={manuallyAddedSections}
         setSelectedSection={setSelectedSection}
       />
     </div>
   );
 }
 
-const Dashboard = ({ selectedSection, additionalSections, errors }) => {
+const Dashboard = ({ selectedSection, manuallyAddedSections, errors }) => {
   const isSubmitted = useRecoilValue(isSubmittedState);
   const personal_information = useRecoilValue(personalInformationState);
   const socials = useRecoilValue(socialsState);

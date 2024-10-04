@@ -202,7 +202,7 @@ export default function Signup() {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Remove NotificationBanner component */}
-      
+
       {/* Left Side */}
       <div className="w-full lg:w-[40%] text-white p-4 lg:p-6 flex flex-col items-center justify-center">
         <div className="flex items-center justify-center mr-14">
@@ -221,9 +221,26 @@ export default function Signup() {
       <div className="w-full lg:w-[60%] flex items-center justify-center p-4 lg:p-8 relative bg-gradient-to-l  from-blue-600 via-blue-500 to-transparent">
         {/* Form Container */}
         <div className="relative p-4 lg:p-6 rounded-xl w-full max-w-md z-10 lg:mr-8 overflow-auto shadow-2xl bg-white opacity-85">
-          <h1 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4">
+        <h1 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4">
             Create an Account
           </h1>
+             {/* import google auth */}
+      <div className="flex justify-center">
+          <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+          <GoogleLogin
+            onSuccess={handleSuccess}
+            onError={() => {
+              console.log('Login Failed');
+            }}
+          />
+          </GoogleOAuthProvider>
+          </div>
+
+          <div className="flex items-center my-4">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="px-3 text-gray-500 text-sm">OR</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
 
           <div className="flex space-x-3 mb-4">
             <button
@@ -282,23 +299,7 @@ export default function Signup() {
             </a>
           </p>
 
-          <div className="flex items-center my-4">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="px-3 text-gray-500 text-sm">OR</span>
-            <div className="flex-grow border-t border-gray-300"></div>
-          </div>
 
-          {/* import google auth */}
-          <div className="flex justify-center">
-          <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
-          <GoogleLogin
-            onSuccess={handleSuccess}
-            onError={() => {
-              console.log('Login Failed');
-            }}
-          />
-          </GoogleOAuthProvider>
-          </div>
         </div>
       </div>
     </div>

@@ -7,7 +7,6 @@ import {
   IconAward,
   IconCertificate,
   IconTrophy,
-  IconHeart,
   IconBrandGithub,
   IconBrandLinkedin,
   IconMail,
@@ -15,7 +14,6 @@ import {
   IconBallFootball,
 } from "@tabler/icons-react";
 import { Rocket, BookOpen } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 import { useRecoilState } from "recoil";
@@ -36,10 +34,6 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
 } from "../../store/atoms/userProfileSate";
-import {
-  fetchUserProfile,
-  saveUserProfileData,
-} from "../../api/userProfileApi";
 import { isValidData, hasAnyData } from "../../validators/validData";
 import axios from "axios";
 import Loader from "./Loader";

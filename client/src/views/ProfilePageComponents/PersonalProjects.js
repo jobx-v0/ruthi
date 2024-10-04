@@ -6,9 +6,6 @@ import { personalProjectsState } from "../../store/atoms/userProfileSate";
 import { Rocket, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { z } from "zod";
-import { saveUserProfileData } from '../../api/userProfileApi';
-import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
 
 const projectSchema = z.object({
   name: z.string()
@@ -45,7 +42,6 @@ export default function PersonalProjects() {
   const [projects, setProjects] = useRecoilState(personalProjectsState);
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
-  const { userInfo } = useAuth();
 
   useEffect(() => {
     // Format dates when projects are loaded or updated
@@ -114,35 +110,6 @@ export default function PersonalProjects() {
     return description.split('\n').filter(point => point.trim() !== '');
   };
 
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.');
-      return;
-    }
-
-    const formattedProjects = projects.map(project => ({
-      id: project.id,
-      name: project.name,
-      description: project.description,
-      link: project.link,
-      start_date: project.start_date ? new Date(project.start_date).toISOString() : null,
-      end_date: project.end_date ? new Date(project.end_date).toISOString() : null,
-    }));
-
-    const dataToSubmit = {
-      personal_projects: formattedProjects,
-    };
-
-    // console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success('Personal projects saved successfully!');
-    } catch (error) {
-      console.error('Failed to save personal projects:', error);
-      toast.error('Failed to save personal projects. Please try again.');
-    }
-  };
 
   return (
     <div className="container mx-auto p-2 space-y-4">
@@ -304,14 +271,6 @@ export default function PersonalProjects() {
             )}
           </div>
         </div>
-        <div className="mt-6 text-left">
-            <button
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-              onClick={handleSave}
-            >
-              Save
-            </button>
-          </div>
       </motion.div>
     </div>
   );

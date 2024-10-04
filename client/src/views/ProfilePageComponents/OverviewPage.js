@@ -43,6 +43,7 @@ import {
 import { isValidData, hasAnyData } from "../../validators/validData";
 import axios from "axios";
 import Loader from "./Loader";
+import { requiredFields } from "../../validators/validData";
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -89,6 +90,7 @@ export default function OverviewPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+
   
   useEffect(() => {
     const getUserInfo = async () => {
@@ -125,10 +127,54 @@ export default function OverviewPage() {
         extra_curricular_activities: extracurricularActivities,
       };
 
+      // Check for missing required fields only if there's data in the corresponding section
+      const missingFields = {};
+      Object.entries(requiredFields).forEach(([section, fields]) => {
+        const sectionData = dataToSubmit[section];
+        if (sectionData && (Array.isArray(sectionData) ? sectionData.length > 0 : Object.keys(sectionData).length > 0)) {
+          const missingInSection = fields.filter(field => {
+            if (Array.isArray(sectionData)) {
+              return sectionData.some(item => {
+                if (section === 'experience') {
+                  // Special check for experience section
+                  return !item[field] || (!item.currently_working && !item.end_date);
+                }
+                return !item[field];
+              });
+            }
+            return !sectionData[field];
+          });
+          if (missingInSection.length > 0) {
+            missingFields[section] = missingInSection;
+          }
+        }
+      });
+
+      // Special check for experience end date or currently working
+      if (dataToSubmit.experience && dataToSubmit.experience.length > 0) {
+        const invalidExperiences = dataToSubmit.experience.filter(exp => !exp.currently_working && !exp.end_date);
+        if (invalidExperiences.length > 0) {
+          if (!missingFields.experience) {
+            missingFields.experience = [];
+          }
+          missingFields.experience.push('end date or currently working status');
+        }
+      }
+
+      if (Object.keys(missingFields).length > 0) {
+        const missingFieldsMessage = Object.entries(missingFields)
+          .map(([section, fields]) => `${section}: ${fields.join(', ')}`)
+          .join('\n');
+        toast.error(`Please fill in the following required fields:\n${missingFieldsMessage}`);
+        setIsLoading(false);
+        return;
+      }
+
       console.log(
         "Data being submitted:",
         JSON.stringify(dataToSubmit, null, 2)
       );
+      
 
       // First, check if a profile exists
       try {
@@ -321,11 +367,12 @@ export default function OverviewPage() {
                   -
                   {exp.currently_working
                     ? " Present"
-                    : exp.end_date &&
-                      new Date(exp.end_date).toLocaleDateString("en-US", {
+                    : exp.end_date
+                    ? new Date(exp.end_date).toLocaleDateString("en-US", {
                         month: "short",
                         year: "numeric",
-                      })}
+                      })
+                    : " Present"}
                 </span>
               </div>
               <ul className="list-disc pl-5 text-gray-600">

@@ -29,3 +29,16 @@ export const hasAnyData = (profile) => {
     }
     return Object.values(profile).some(isValidData);
   };
+
+
+export const requiredFields = {
+  personal_information: ["first_name", "last_name", "email", "phone", "expected_salary"],
+  education: ["institution", "degree", "start_date", "end_date"],
+  experience: ["company", "position", "start_date"],
+  publications: ["name", "date"],
+  courses: ["course_name", "course_provider", "completion_date"],
+  skills: ["skill_name", "skill_proficiency"],
+  personal_projects: ["name", "description", "start_date", "end_date"],
+  position_of_responsibility: ["title", "organization", "start_date", "end_date"],
+  competitions: ["name", "description", "date"],
+};

@@ -42,7 +42,7 @@ register = async (req, res) => {
     await newUser.save();
 
     // Send verification email
-    await EmailService.sendVerificationEmail(newUser);
+    // await EmailService.sendVerificationEmail(newUser);
     console.log("New User Saved");
 
     res

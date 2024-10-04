@@ -5,9 +5,6 @@ import { experienceState } from "../../store/atoms/userProfileSate";
 import { IconBriefcase } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { z } from "zod";
-import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
-import { saveUserProfileData } from '../../api/userProfileApi';
 
 const experienceSchema = z.object({
   company: z.string()
@@ -32,17 +29,15 @@ export default function ExperienceForm() {
   const [experiences, setExperiences] = useRecoilState(experienceState);
   const newCardRef = useRef(null);
   const [errors, setErrors] = React.useState({});
-  const { userInfo } = useAuth();
 
   useEffect(() => {
-    // Format dates when experiences are loaded or updated
     const formattedExperiences = experiences.map(exp => ({
       ...exp,
       start_date: formatDateForInput(exp.start_date),
       end_date: formatDateForInput(exp.end_date),
     }));
     setExperiences(formattedExperiences);
-  }, []); // Empty dependency array means this runs once on mount
+  }, []);
 
   const validateField = (field, value, experienceId) => {
     try {
@@ -64,7 +59,7 @@ export default function ExperienceForm() {
       description: "",
       currently_working: false,
     };
-    setExperiences([...experiences, newExperience]);
+    setExperiences(prevExperiences => [...prevExperiences, newExperience]);
 
     setTimeout(() => {
       newCardRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,18 +67,17 @@ export default function ExperienceForm() {
   };
 
   const removeExperience = (id) => {
-    setExperiences(experiences.filter((experience) => experience.id !== id));
+    setExperiences(prevExperiences => prevExperiences.filter((experience) => experience.id !== id));
   };
 
   const handleInputChange = (id, field, value) => {
-    setExperiences((prevExperiences) =>
+    setExperiences(prevExperiences =>
       prevExperiences.map((experience) =>
         experience.id === id ? { ...experience, [field]: value } : experience
       )
     );
     validateField(field, value, id);
 
-    // Additional validation for end date
     if (field === 'end_date') {
       const currentExperience = experiences.find(exp => exp.id === id);
       if (currentExperience && new Date(value) <= new Date(currentExperience.start_date)) {
@@ -107,30 +101,6 @@ export default function ExperienceForm() {
     return description.split("\n").filter((point) => point.trim() !== "");
   };
 
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.');
-      return;
-    }
-
-    const formattedExperiences = experiences.map(exp => ({
-      ...exp,
-      start_date: exp.start_date ? new Date(exp.start_date).toISOString() : null,
-      end_date: exp.end_date ? new Date(exp.end_date).toISOString() : null,
-    }));
-
-    const dataToSubmit = {
-      experience: formattedExperiences,
-    };
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success('Data saved successfully!');
-    } catch (error) {
-      console.error('Failed to save data:', error);
-      toast.error('Failed to save data. Please try again.');
-    }
-  };
 
   return (
     <div className="container mx-auto p-4 space-y-8">
@@ -344,8 +314,8 @@ export default function ExperienceForm() {
                       </h4>
                       <ul className="list-disc pl-5 space-y-1">
                         {descriptionToBulletPoints(experience.description).map(
-                          (point, index) => (
-                            <li key={index} className="text-sm text-gray-600">
+                          (point, pointIndex) => (
+                            <li key={`${experience.id}-point-${pointIndex}`} className="text-sm text-gray-600">
                               {point}
                             </li>
                           )
@@ -357,15 +327,6 @@ export default function ExperienceForm() {
               </div>
             ))}
           </div>
-        </div>
-        {/* Add the Save button */}
-        <div className="mt-6 text-left">
-          <button
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-            onClick={handleSave}
-          >
-            Save
-          </button>
         </div>
       </motion.div>
     </div>

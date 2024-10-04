@@ -10,9 +10,6 @@ import { GraduationCap, BookOpen, Plus, Trash2 } from "lucide-react";
 import { IconBook } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { z } from "zod";
-import { saveUserProfileData } from '../../api/userProfileApi';
-import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
 
 const educationSchema = z.object({
   institution: z.string()
@@ -73,7 +70,6 @@ export default function Education() {
   const [activeTab, setActiveTab] = useState("education");
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
-  const { userInfo } = useAuth();
 
   const validateField = (schema, field, value) => {
     try {
@@ -177,55 +173,55 @@ export default function Education() {
     return seventyYearsAgo.toISOString().split('T')[0];
   };
 
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.');
-      return;
-    }
+  // const handleSave = async () => {
+  //   if (!userInfo || !userInfo._id) {
+  //     toast.error('User information not available.');
+  //     return;
+  //   }
 
-    const formattedEducations = educations.map(edu => {
-      if (!edu || typeof edu.id === 'undefined' || !edu.id) {
-        return null;
-      }
-      return {
-        id: edu.id.toString(),
-        institution: edu.institution,
-        degree: edu.degree,
-        start_date: edu.start_date ? new Date(edu.start_date).toISOString() : null,
-        end_date: edu.end_date ? new Date(edu.end_date).toISOString() : null,
-        cgpa_or_percentage: edu.cgpa_or_percentage,
-        description: edu.description,
-      };
-    }).filter(edu => edu !== null);
+  //   const formattedEducations = educations.map(edu => {
+  //     if (!edu || typeof edu.id === 'undefined' || !edu.id) {
+  //       return null;
+  //     }
+  //     return {
+  //       id: edu.id.toString(),
+  //       institution: edu.institution,
+  //       degree: edu.degree,
+  //       start_date: edu.start_date ? new Date(edu.start_date).toISOString() : null,
+  //       end_date: edu.end_date ? new Date(edu.end_date).toISOString() : null,
+  //       cgpa_or_percentage: edu.cgpa_or_percentage,
+  //       description: edu.description,
+  //     };
+  //   }).filter(edu => edu !== null);
 
-    const formattedCourses = courses.map(course => {
-      if (!course || typeof course.id === 'undefined' || !course.id) {
-        return null;
-      }
-      return {
-        id: course.id.toString(),
-        course_name: course.course_name,
-        course_provider: course.course_provider,
-        completion_date: course.completion_date ? new Date(course.completion_date).toISOString() : null,
-        course_link: course.course_link,
-      };
-    }).filter(course => course !== null);
+  //   const formattedCourses = courses.map(course => {
+  //     if (!course || typeof course.id === 'undefined' || !course.id) {
+  //       return null;
+  //     }
+  //     return {
+  //       id: course.id.toString(),
+  //       course_name: course.course_name,
+  //       course_provider: course.course_provider,
+  //       completion_date: course.completion_date ? new Date(course.completion_date).toISOString() : null,
+  //       course_link: course.course_link,
+  //     };
+  //   }).filter(course => course !== null);
 
-    const dataToSubmit = {
-      education: formattedEducations,
-      courses: formattedCourses
-    };
+  //   const dataToSubmit = {
+  //     education: formattedEducations,
+  //     courses: formattedCourses
+  //   };
 
-    console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));
+  //   console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));
 
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success('Education and courses saved successfully!');
-    } catch (error) {
-      console.error('Failed to save data:', error);
-      toast.error('Failed to save education and courses. Please try again.');
-    }
-  };
+  //   try {
+  //     await saveUserProfileData(userInfo._id, dataToSubmit);
+  //     toast.success('Education and courses saved successfully!');
+  //   } catch (error) {
+  //     console.error('Failed to save data:', error);
+  //     toast.error('Failed to save education and courses. Please try again.');
+  //   }
+  // };
 
   return (
     <div className="container mx-auto p-2 space-y-4">
@@ -543,14 +539,14 @@ export default function Education() {
             </div>
           )}
         </div>
-        <div className="mt-6 text-left">
+        {/* <div className="mt-6 text-left">
         <button
           className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
           onClick={handleSave}
         >
           Save
-        </button>
-      </div>
+        </button> */}
+      {/* </div> */}
       </motion.div>
     </div>
   );

@@ -6,9 +6,7 @@ import { competitionsState } from "../../store/atoms/userProfileSate";
 import { Flag, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-import { saveUserProfileData } from "../../api/userProfileApi";
-import { useAuth } from "../../context/AuthContext";
-import { toast } from "react-toastify";
+
 
 const competitionSchema = z.object({
   name: z.string()
@@ -36,7 +34,6 @@ export default function Competitions() {
   const [expandedId, setExpandedId] = useState(null);
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
-  const { userInfo } = useAuth();
 
   useEffect(() => {
     // Format dates when competitions are loaded or updated
@@ -63,7 +60,7 @@ export default function Competitions() {
 
   const addCompetition = () => {
     const newCompetition = {
-      id: Date.now(),
+      id: Date.now().toString(),
       name: "",
       description: "",
       date: "",
@@ -99,30 +96,6 @@ export default function Competitions() {
       return [];
     }
     return description.split('\n').filter(point => point.trim() !== '');
-  };
-
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error("User information not available.");
-      return;
-    }
-
-    const formattedCompetitions = competitions.map(comp => ({
-      ...comp,
-      date: comp.date ? new Date(comp.date).toISOString() : null,
-    }));
-
-    const dataToSubmit = {
-      competitions: formattedCompetitions,
-    };
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success("Competitions saved successfully!");
-    } catch (error) {
-      console.error("Failed to save competitions:", error);
-      toast.error("Failed to save competitions. Please try again.");
-    }
   };
 
   return (
@@ -267,16 +240,6 @@ export default function Competitions() {
                 </AnimatePresence>
               </div>
             ))}
-          </div>
-
-          {/* Add the save button */}
-          <div className="mt-6 text-left">
-            <button
-              onClick={handleSave}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-            >
-              Save
-            </button>
           </div>
         </div>
       </motion.div>

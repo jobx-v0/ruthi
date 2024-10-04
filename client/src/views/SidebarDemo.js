@@ -75,6 +75,8 @@ const availableSections = [
 ];
 
 export default function SidebarDemo() {
+  const { authToken } = useAuth();
+  const { fetchUserInfo } = useAuth();
   const [open, setOpen] = useState(false);
   const [selectedSection, setSelectedSection] = useState("Basic Information");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -84,12 +86,6 @@ export default function SidebarDemo() {
   const educations = useRecoilValue(educationState);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
-  // const setPersonalInformation = useSetRecoilState(personalInformationState);
-  // const setEducation = useSetRecoilState(educationState);
-  // const setExperience = useSetRecoilState(experienceState);
-  // const setSkills = useSetRecoilState(skillsState);
-  const { authToken } = useAuth();
-  const { fetchUserInfo } = useAuth();
 
   const setPersonalInformation = useSetRecoilState(personalInformationState);
   const setSocials = useSetRecoilState(socialsState);
@@ -141,9 +137,31 @@ export default function SidebarDemo() {
         setExtracurricularActivities(
           userProfileData.extra_curricular_activities || []
         );
+
+        // Populate additional sections based on fetched data
+        const newAdditionalSections = [];
+        if (userProfileData.publications && userProfileData.publications.length > 0) {
+          newAdditionalSections.push("Publications");
+        }
+        if (userProfileData.personal_projects && userProfileData.personal_projects.length > 0) {
+          newAdditionalSections.push("Personal Projects");
+        }
+        if (userProfileData.awards_and_achievements && userProfileData.awards_and_achievements.length > 0) {
+          newAdditionalSections.push("Awards and Achievements");
+        }
+        if (userProfileData.position_of_responsibility && userProfileData.position_of_responsibility.length > 0) {
+          newAdditionalSections.push("Positions of Responsibility");
+        }
+        if (userProfileData.competitions && userProfileData.competitions.length > 0) {
+          newAdditionalSections.push("Competitions");
+        }
+        if (userProfileData.extra_curricular_activities && userProfileData.extra_curricular_activities.length > 0) {
+          newAdditionalSections.push("Extracurricular Activities");
+        }
+
+        setAdditionalSections(newAdditionalSections);
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        // toast.error("Failed to load user profile. Please try again later.");
       }
     };
 
@@ -228,33 +246,45 @@ export default function SidebarDemo() {
 
   // Update the links state when additionalSections change
   useEffect(() => {
-    const updatedLinks = [
-      ...initialLinks.slice(0, -2),
-      ...additionalSections.map((section) => ({
-        label: section,
-        icon: sectionIcons[section] ? (
-          React.createElement(sectionIcons[section])
-        ) : (
-          <IconPlus />
-        ),
-        href: "#",
-        deletable: true,
-      })),
-    ];
+    console.log("isSubmitted:", isSubmitted);
+    if (isSubmitted) {
+      setLinks([
+        { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
+        {
+          label: "Logout",
+          icon: <IconArrowLeft />,
+          href: "http://localhost:3000/",
+        },
+      ]);
+    } else {
+      const updatedLinks = [
+        ...initialLinks.slice(0, -2),
+        ...additionalSections.map((section) => ({
+          label: section,
+          icon: sectionIcons[section] ? (
+            React.createElement(sectionIcons[section])
+          ) : (
+            <IconPlus />
+          ),
+          href: "#",
+          deletable: true,
+        })),
+      ];
 
-    // Only add the "Add more" button if there are still sections available to add
-    if (additionalSections.length < availableSections.length) {
-      updatedLinks.push({
-        label: "Add more",
-        icon: <IconPlus />,
-        href: "#",
-        onClick: () => setIsModalOpen(true),
-      });
+      // Only add the "Add more" button if there are still sections available to add
+      if (additionalSections.length < availableSections.length) {
+        updatedLinks.push({
+          label: "Add more",
+          icon: <IconPlus />,
+          href: "#",
+          onClick: () => setIsModalOpen(true),
+        });
+      }
+
+      updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
+      setLinks(updatedLinks);
     }
-
-    updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
-    setLinks(updatedLinks);
-  }, [additionalSections]);
+  }, [additionalSections, isSubmitted]);
 
   const sections = [
     "Basic Information",
@@ -505,6 +535,24 @@ export default function SidebarDemo() {
 }
 
 const Dashboard = ({ selectedSection, additionalSections, errors }) => {
+  const isSubmitted = useRecoilValue(isSubmittedState);
+  const personal_information = useRecoilValue(personalInformationState);
+  const socials = useRecoilValue(socialsState);
+  const courses = useRecoilValue(coursesState);
+  const education = useRecoilValue(educationState);
+  const experience = useRecoilValue(experienceState);
+  const publications = useRecoilValue(publicationsState);
+  const skills = useRecoilValue(skillsState);
+  const personalProjects = useRecoilValue(personalProjectsState);
+  const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
+  const positionsOfResponsibility = useRecoilValue(positionsOfResponsibilityState);
+  const competitions = useRecoilValue(competitionsState);
+  const extracurricularActivities = useRecoilValue(extracurricularActivitiesState);
+
+  if (isSubmitted) {
+    return <OverviewPage />;
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -532,9 +580,24 @@ const Dashboard = ({ selectedSection, additionalSections, errors }) => {
               case "Extra-curricular Activities":
                 return <ExtraCurricularActivities />;
               case "Overview":
-                return <Overview />;
+                return (
+                  <Overview
+                    personal_information={personal_information}
+                    socials={socials}
+                    courses={courses}
+                    education={education}
+                    experience={experience}
+                    publications={publications}
+                    skills={skills}
+                    personalProjects={personalProjects}
+                    awardsAndAchievements={awardsAndAchievements} 
+                    positionsOfResponsibility={positionsOfResponsibility}
+                    competitions={competitions}
+                    extracurricularActivities={extracurricularActivities}
+                  />
+                );
               default:
-                return <div>Hehe</div>;
+                return <div>Select a section</div>;
             }
           })()}
         </div>
@@ -573,11 +636,11 @@ export const LogoIcon = () => {
   );
 };
 
-const Overview = () => {
+const Overview = (props) => {
   return (
     <div className="h-full overflow-y-auto">
       <h2 className="text-2xl font-bold text-black">Overview</h2>
-      <OverviewPage />
+      <OverviewPage {...props} />
     </div>
   );
 };

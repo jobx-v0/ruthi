@@ -1,6 +1,5 @@
 import axios from "axios";
 import { toast } from 'react-hot-toast';
-import { constSelector } from "recoil";
 
 // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const BACKEND_URL=process.env.REACT_APP_BACKEND_URL;

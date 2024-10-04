@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState} from "react";
 import { loginFields } from "../../constants/formFields";
 import FormAction from "../FormAction";
 import InputField from "../Input";
@@ -15,7 +15,7 @@ let fieldsState = {};
 fields.forEach((field) => (fieldsState[field.id] = ""));
 
 export default function Login() {
-  const { setToken, setUserInfo } = useAuth();
+  const { setToken} = useAuth();
   const [loginState, setLoginState] = useState(fieldsState);
   const navigate = useNavigate();
 
@@ -25,17 +25,24 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await loginUserAPI(loginState);
-    if (result.success) {
-      setToken(result.token);
-      if (result.hasProfile) {
-        navigate("/home");
+    try {
+      const result = await loginUserAPI(loginState);
+      if (result.success) {
+        setToken(result.token);        
+        // Delay navigation to allow toast to be visible
+        setTimeout(() => {
+          if (result.hasProfile) {
+            navigate("/home");
+          } else {
+            navigate("/uploadResume");
+          }
+        }, 1000); // 1 second delay
       } else {
-        navigate("/uploadResume");
+        toast.error(result.error || 'Login failed. Please try again.');
       }
-    } else {
-      // Error handling is already done in loginUserAPI using toast
-      console.error(result.error);
+    } catch (error) {
+      console.error(error);
+      toast.error('An unexpected error occurred. Please try again later.');
     }
   };
 
@@ -48,7 +55,16 @@ export default function Login() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
 
       {/* Left Side Content*/}
       <div className="w-full lg:w-[55%] text-white p-4 lg:p-6 flex flex-col items-center justify-center bg-gradient-to-r from-blue-600 via-blue-500 to-transparent">
@@ -59,9 +75,9 @@ export default function Login() {
             className="w-24 lg:w-64 h-auto mb-3"
           />
         </div>
-        <p className="text-base lg:text-xl leading-relaxed text-start">
+        <div className="text-base lg:text-xl leading-relaxed text-start">
           <TextGenerateEffect duration={2} filter={false} words={words} />
-        </p>
+        </div>
       </div>
 
       {/* Right Side Form */}

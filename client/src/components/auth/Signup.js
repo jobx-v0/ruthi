@@ -129,11 +129,23 @@ export default function Signup() {
 
     if (is_valid) {
       setIsSubmitting(true);
-      const success = await registerUserAPI({ ...signUpState, role: isEmployer ? "recruiter" : "candidate" });
-      if (success) {
-        navigate("/login");
+      try {
+        const success = await registerUserAPI({ ...signUpState, role: isEmployer ? "recruiter" : "candidate" });
+        if (success) {
+          // toast.success("Account created successfully! Redirecting to login...");
+          setTimeout(() => {
+            navigate("/login");
+          }, 1000); // Delay navigation by 2 seconds
+        } else {
+          toast.error("Failed to create account. Please try again.");
+        }
+      } catch (error) {
+        toast.error("An error occurred. Please try again later.");
+      } finally {
+        setIsSubmitting(false);
       }
-      setIsSubmitting(false);
+    } else {
+      toast.error("Please correct the errors in the form.");
     }
   };
 
@@ -154,9 +166,9 @@ export default function Signup() {
             className="w-24 lg:w-64 h-auto mb-3"
           />
         </div>
-        <p className="text-base lg:text-xl leading-relaxed text-start">
+        <div className="text-base lg:text-xl leading-relaxed text-start">
           <TextGenerateEffect duration={2} filter={false} words={words} />
-        </p>
+        </div>
       </div>
 
       {/* Right Side */}

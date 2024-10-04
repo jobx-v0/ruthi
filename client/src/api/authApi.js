@@ -63,7 +63,7 @@ export const loginUserAPI = async (loginState) => {
     } else {
       toast.error("An unexpected error occurred. Please try again.");
     }
-    return { success: false, error: error.message };
+    return { success: false};
   }
 };
 

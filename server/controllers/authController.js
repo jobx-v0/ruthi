@@ -48,12 +48,10 @@ register = async (req, res) => {
     // await EmailService.sendVerificationEmail(newUser);
     console.log("New User Saved");
 
-    res
-      .status(201)
-      .json({
-        message:
-          "Registration successful! Please check your email to verify your account.",
-      });
+    res.status(201).json({
+      message:
+        "Registration successful! Please check your email to verify your account.",
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Registration failed. Please try again." });
@@ -63,6 +61,8 @@ register = async (req, res) => {
 // Log in an existing user
 login = async (req, res) => {
   try {
+    console.log(req.body);
+
     // Retrieve user data from the request body
     const { username, password } = req.body;
 

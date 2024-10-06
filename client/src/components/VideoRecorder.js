@@ -1,173 +1,210 @@
-import { useRef, useState, useCallback, useEffect } from "react";
-import Webcam from "react-webcam";
-import axios from "axios";
+import { useRef, useState, useEffect } from "react";
+import { getSasURL, uploadChunkToAzureAPI } from "../api/azureApi";
+import { useAuth } from "../context/AuthContext";
+import { saveChunksLengthAPI } from "../api/interviewApi";
 
-const CHUNK_SIZE = 1024 * 1024; // 1MB chunks
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API_URL = BACKEND_URL + "/api/";
+const CHUNK_SIZE = 5 * 1024 * 1024;
 
 const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
-  const webcamRef = useRef(null);
+  const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [capturing, setCapturing] = useState(false);
-  const [recordedChunks, setRecordedChunks] = useState([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [thinkingTime, setThinkingTime] = useState(30); // 30 seconds for thinking
-  const [recordingTime, setRecordingTime] = useState(150); // 2 mins 30 seconds for recording
+  const [thinkingTime, setThinkingTime] = useState(30);
+  const [recordingTime, setRecordingTime] = useState(150);
   const [timerActive, setTimerActive] = useState(true);
   const [showRecordingIcon, setShowRecordingIcon] = useState(false);
 
-  // Effect to notify parent component of timerActive changes
+  const [stream, setStream] = useState(null);
+  const videoChunks = useRef([]);
+  const accumulatedChunks = useRef([]);
+  const chunkSizeRef = useRef(0);
+  const chunkNumberRef = useRef(1);
+
+  const [showCaptureButtons, setShowCaptureButtons] = useState(true);
+  const [showTimer, setShowTimer] = useState(true);
+
+  const { authToken } = useAuth();
+
   useEffect(() => {
     onTimerActiveChange(timerActive);
   }, [timerActive, onTimerActiveChange]);
 
   useEffect(() => {
-    // Reset or perform actions when questionId changes
     setCapturing(false);
-    setRecordedChunks([]);
-    setThinkingTime(30); // Reset thinking time if needed
-    setRecordingTime(150); // Reset recording time if needed
+    setThinkingTime(30);
+    setRecordingTime(150);
     setTimerActive(true);
     setShowRecordingIcon(false);
+    setShowTimer(true);
+    setShowCaptureButtons(true);
   }, [questionId]);
 
-  const handleDataAvailable = useCallback(
-    ({ data }) => {
-      if (data.size > 0) {
-        setRecordedChunks((prev) => [...prev, data]);
-      }
-    },
-    [recordedChunks]
-  );
+  const getUserMedia = (constraints) => {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      return navigator.mediaDevices.getUserMedia(constraints);
+    }
 
-  const handleStopCaptureClick = useCallback(() => {
+    const getUserMediaFallback =
+      navigator.getUserMedia ||
+      navigator.webkitGetUserMedia ||
+      navigator.mozGetUserMedia ||
+      navigator.msGetUserMedia;
+    if (getUserMediaFallback) {
+      return new Promise((resolve, reject) =>
+        getUserMediaFallback.call(navigator, constraints, resolve, reject)
+      );
+    }
+
+    return Promise.reject(
+      new Error("Your browser does not support media recording.")
+    );
+  };
+
+  const uploadChunkToAzure = async (blob, chunkNumber) => {
+    try {
+      console.log(`Uploading chunk ${chunkNumber}...`);
+
+      const response = await getSasURL(
+        authToken,
+        userId,
+        jobId,
+        questionId,
+        chunkNumber
+      );
+      const sasUrl = response.data.sasUrl;
+
+      await uploadChunkToAzureAPI(sasUrl, blob);
+    } catch (error) {
+      console.error("Error uploading chunk:", error);
+    }
+  };
+
+  const saveChunksLength = async (length) => {
+    try {
+      saveChunksLengthAPI(authToken, userId, jobId, questionId, length);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleStopCaptureClick = () => {
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.stop();
       setCapturing(false);
       setRecordingTime(0);
       setShowRecordingIcon(false);
       setTimerActive(false);
+      setShowTimer(false);
+      setShowCaptureButtons(false);
+      saveChunksLength(chunkNumberRef.current);
     }
-  }, []);
 
-  const handleStartCaptureClick = useCallback(() => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+  };
+
+  const handleStartCaptureClick = () => {
     setCapturing(true);
     setThinkingTime(0);
     setShowRecordingIcon(true);
-    mediaRecorderRef.current = new MediaRecorder(webcamRef.current.stream, {
-      mimeType: "video/webm",
-    });
-    mediaRecorderRef.current.addEventListener(
-      "dataavailable",
-      handleDataAvailable
-    );
-    mediaRecorderRef.current.start();
-  }, [handleDataAvailable]);
-
-  const uploadChunk = async (chunk, index, totalChunks) => {
-    const formData = new FormData();
-    formData.append("video", chunk, "video-chunk");
-    formData.append("userId", userId);
-    formData.append("jobId", jobId);
-    formData.append("questionId", questionId);
-    formData.append("chunkIndex", index);
-    formData.append("totalChunks", totalChunks);
-
-    try {
-      await axios.post(API_URL + "/upload/chunk", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setUploadProgress(
-            (prevProgress) => prevProgress + percentCompleted / totalChunks
-          );
-        },
-      });
-      console.log(`Chunk ${index + 1}/${totalChunks} uploaded successfully`);
-    } catch (error) {
-      console.error("Error uploading chunk:", error);
-      throw error;
-    }
-  };
-
-  const uploadVideo = async (blob) => {
-    const totalChunks = Math.ceil(blob.size / CHUNK_SIZE);
-    setUploadProgress(0);
-
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * CHUNK_SIZE;
-      const end = Math.min(start + CHUNK_SIZE, blob.size);
-      const chunk = blob.slice(start, end);
-      await uploadChunk(chunk, i, totalChunks);
-    }
-
-    try {
-      await axios.post(API_URL + "/upload/finalize", {
-        userId,
-        jobId,
-        questionId,
-        totalChunks,
-      });
-      console.log("Upload finalized");
-      setUploadProgress(100);
-    } catch (error) {
-      console.error("Error finalizing upload:", error);
-    }
-  };
-
-  const uploadToAzure = async (blob) => {
-    try {
-      // Fetch the SAS URL from your server
-      const response = await axios.get(
-        `${API_URL}/azure/sas/${userId}/${jobId}/${questionId}`
-      );
-      const { sasUrl } = response.data;
-
-      console.log("SAS URL:", sasUrl);
-
-      // Upload the blob to Azure Blob Storage using the SAS URL
-      await axios.put(sasUrl, blob, {
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-        },
-      });
-
-      console.log("Upload to Azure Blob Storage successful");
-    } catch (error) {
-      console.error("Error uploading to Azure Blob Storage:", error);
-    }
-  };
-
-  useEffect(() => {
-    if (!capturing && recordedChunks.length > 0) {
-      const blob = new Blob(recordedChunks, { type: "video/webm" });
-      // uploadToAzure(blob);
-      uploadVideo(blob);
-      setRecordedChunks([]);
-    }
-  }, [recordedChunks, capturing]);
-
-  useEffect(() => {
-    if (timerActive) {
-      const thinkingTimer = setTimeout(() => {
-        if (!capturing) {
-          handleStartCaptureClick();
+    getUserMedia({ video: true, audio: true })
+      .then((stream) => {
+        setStream(stream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
-        const recordingTimer = setTimeout(() => {
-          if (capturing) {
-            handleStopCaptureClick();
-          }
-        }, recordingTime * 1000);
 
-        return () => clearTimeout(recordingTimer);
-      }, thinkingTime * 1000);
+        if (window.MediaRecorder) {
+          const mediaRecorder = new MediaRecorder(stream, {
+            mimeType: "video/webm",
+          });
+          mediaRecorderRef.current = mediaRecorder;
+          videoChunks.current = [];
+          accumulatedChunks.current = [];
+          chunkSizeRef.current = 0;
 
-      return () => clearTimeout(thinkingTimer);
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0) {
+              accumulatedChunks.current.push(event.data);
+              chunkSizeRef.current += event.data.size;
+
+              if (chunkSizeRef.current >= CHUNK_SIZE) {
+                console.log("Successfully collected 5MB of data.");
+
+                const chunkBlob = new Blob(accumulatedChunks.current, {
+                  type: "video/webm",
+                });
+
+                uploadChunkToAzure(chunkBlob, chunkNumberRef.current);
+
+                chunkNumberRef.current += 1;
+
+                accumulatedChunks.current = [];
+                chunkSizeRef.current = 0;
+              }
+
+              videoChunks.current.push(event.data);
+            }
+          };
+
+          mediaRecorder.onstop = () => {
+            if (chunkSizeRef.current > 0) {
+              console.log(
+                `Collected remaining ${(
+                  chunkSizeRef.current /
+                  (1024 * 1024)
+                ).toFixed(2)}MB of data.`
+              );
+
+              const remainingChunkBlob = new Blob(accumulatedChunks.current, {
+                type: "video/webm",
+              });
+
+              uploadChunkToAzure(remainingChunkBlob, chunkNumberRef.current);
+
+              videoChunks.current = [];
+              accumulatedChunks.current = [];
+              chunkSizeRef.current = 0;
+              chunkNumberRef.current = 1;
+              setRecordingTime(150);
+              setThinkingTime(30);
+            }
+          };
+
+          mediaRecorder.start(1000);
+        }
+      })
+      .catch((error) => {
+        alert("Unable to access media devices: " + error.message);
+      });
+  };
+
+  useEffect(() => {
+    let interval;
+
+    if (timerActive) {
+      if (thinkingTime > 0) {
+        interval = setInterval(() => {
+          setThinkingTime((prev) => prev - 1);
+        }, 1000);
+      } else if (recordingTime > 0 && capturing) {
+        interval = setInterval(() => {
+          setRecordingTime((prev) => prev - 1);
+        }, 1000);
+      }
+
+      if (thinkingTime === 0 && !capturing) {
+        handleStartCaptureClick();
+      }
+
+      if (recordingTime === 0 && capturing) {
+        handleStopCaptureClick();
+      }
     }
+
+    return () => clearInterval(interval);
   }, [
     thinkingTime,
     recordingTime,
@@ -177,27 +214,13 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
     handleStopCaptureClick,
   ]);
 
-  useEffect(() => {
-    let interval;
-    if (timerActive && thinkingTime > 0) {
-      interval = setInterval(() => {
-        setThinkingTime((prev) => prev - 1);
-      }, 1000);
-    } else if (timerActive && recordingTime > 0 && capturing) {
-      interval = setInterval(() => {
-        setRecordingTime((prev) => prev - 1);
-      }, 1000);
-    }
-    return () => clearInterval(interval);
-  }, [thinkingTime, recordingTime, timerActive, capturing]);
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 ">
-      <div className="w-[98%] h-full mb-4 relative">
-        <Webcam
-          audio={true}
-          ref={webcamRef}
-          muted={true}
+      <div className="w-[100%] h-full mb-4 relative">
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
           className="w-full h-full rounded-lg shadow-lg border-10 border-gray-300 "
         />
         {showRecordingIcon && (
@@ -206,14 +229,17 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
           </div>
         )}
         <div className="absolute bottom-0 left-0 m-2 p-2 bg-white text-black rounded-lg">
-          {thinkingTime > 0 && !capturing
-            ? `Recording will start in ${thinkingTime} seconds`
-            : recordingTime > 0 &&
-              `Recording will stop in ${recordingTime} seconds`}
+          {showTimer
+            ? thinkingTime > 0 && !capturing
+              ? `Recording will start in ${thinkingTime} seconds`
+              : recordingTime > 0 &&
+                `Recording will stop in ${recordingTime} seconds`
+            : null}
         </div>
       </div>
+
       <div className="flex space-x-4">
-        {thinkingTime > 0 && !capturing && (
+        {showCaptureButtons && thinkingTime > 0 && !capturing && (
           <button
             onClick={handleStartCaptureClick}
             className="px-4 py-2 bg-green-500 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-300"
@@ -221,7 +247,7 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
             Start Capture
           </button>
         )}
-        {recordingTime > 0 && capturing && (
+        {showCaptureButtons && recordingTime > 0 && capturing && (
           <button
             onClick={handleStopCaptureClick}
             className="px-4 py-2 bg-red-500 text-white rounded-lg shadow-md hover:bg-red-700 transition duration-300"

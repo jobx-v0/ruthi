@@ -56,11 +56,60 @@ const getQuestionsBySkills = async (req, res) => {
   }
 };
 
+const saveChunkNumber = async (req, res) => {
+  const { userID, jobID, questionID, numberOfChunks } = req.body;
+  try {
+    // Find the interview based on user_id and job_id
+    let interview = await Interview.findOne({ user_id: userID, job_id: jobID });
+
+    if (!interview) {
+      // If no interview exists
+      return res.status(400).json({ message: "No Interview Exists!" });
+    }
+
+    // If interview exists, find the specific question in the data array
+    const questionIndex = interview.data.findIndex(
+      (item) => item.question.toString() === questionID.toString()
+    );
+
+    if (questionIndex > -1) {
+      // If question already exists, update the number of chunks
+      interview.data[questionIndex].number_of_chunks = numberOfChunks;
+
+      // Save the interview document after updating
+      await interview.save();
+      return res
+        .status(200)
+        .json({ message: "Number of chunks saved successfully!" });
+    } else {
+      // If the question doesn't exist in the interview
+      return res
+        .status(400)
+        .json({ message: "Question doesn't exist in the interview!" });
+    }
+  } catch (error) {
+    console.error("Error saving number of chunks");
+    return res.status(500).json({ error: "Error saving number of chunks" });
+  }
+};
+
 const submitInterview = async (req, res) => {
   const { userId, jobId } = req.body;
   try {
     // Trigger async processes
-    triggerAsyncProcessing(userId, jobId);
+    // triggerAsyncProcessing(userId, jobId);
+
+    const interview = await Interview.findOne({
+      user_id: userId,
+      job_id: jobId,
+    });
+    if (!interview) {
+      return res.status(400).json({ message: "No interview found!" });
+    }
+
+    interview.isCompleted = true;
+
+    await interview.save();
 
     res.status(200).json({ message: "Interview submitted successfully" });
   } catch (error) {
@@ -130,7 +179,7 @@ const createInterview = async (req, res) => {
     await InterviewService.checkExistingInterview(user_id, job_id);
 
     const data = InterviewService.createInterviewData(question_ids);
-    console.log("data: ", data);
+    // console.log("data: ", data);
     const interview = await InterviewService.saveInterview(
       user_id,
       job_id,
@@ -144,7 +193,9 @@ const createInterview = async (req, res) => {
   } catch (error) {
     console.error("Error creating interview:", error);
     if (error.message === "Interview already exists for this user and job") {
-      res.status(400).json({ message: error.message });
+      res
+        .status(400)
+        .json({ message: "Interview already exists for this user and job" });
     } else {
       res
         .status(500)
@@ -175,6 +226,7 @@ const getCurrentCountOfInterviews = async (req, res) => {
 const InterviewController = {
   getQuestions,
   getQuestionsBySkills,
+  saveChunkNumber,
   submitInterview,
   getCurrentCountOfInterviews,
   createInterview,

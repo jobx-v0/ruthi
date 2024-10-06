@@ -20,8 +20,6 @@ import {
   IconLayoutDashboard,
 } from "@tabler/icons-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { cn } from "../ui/lib/utils";
 import Ruthi_Logo1 from "../assets/Ruthi_Logo1.svg";
 import BasicInformationForm from "./ProfilePageComponents/BasicInformationForm";
 import Education from "./ProfilePageComponents/Education";
@@ -189,6 +187,11 @@ export default function SidebarDemo() {
     }
   }, [isSubmitted, setSelectedSection]);
 
+  const handleLogout = ()=>{
+    localStorage.clear();
+    window.location.href = "/";
+  }
+
   const initialLinks = [
     { label: "Basic Information", icon: <IconUserCheck />, href: "#" },
     { label: "Education", icon: <IconBook />, href: "#" },
@@ -203,7 +206,7 @@ export default function SidebarDemo() {
     {
       label: "Logout",
       icon: <IconArrowLeft />,
-      href: "http://localhost:3000/",
+      onClick: handleLogout
     },
   ];
 

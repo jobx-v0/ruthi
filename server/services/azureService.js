@@ -279,11 +279,23 @@ const processVideoForAllQuestions = async (userId, jobId) => {
   }
 };
 
-// Initialize Azure Blob service client
-const blobServiceClient = BlobServiceClient.fromConnectionString(
-  AZURE_STORAGE_CONNECTION_STRING
-);
+let blobServiceClient;
 
+if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
+  // Use the connection string if available
+  blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
+  console.log('Using connection string for BlobServiceClient.');
+} else if (accountName) {
+  // Use DefaultAzureCredential if the connection string is not available
+  const credential = new DefaultAzureCredential();
+  blobServiceClient = new BlobServiceClient(
+    `https://${accountName}.blob.core.windows.net`,
+    credential
+  );
+  console.log('Using DefaultAzureCredential for BlobServiceClient.');
+} else {
+  throw new Error('Neither AZURE_STORAGE_CONNECTION_STRING nor AZURE_STORAGE_ACCOUNT_NAME is set.');
+}
 // Fetch chunks from Azure Blob Storage
 const fetchChunksFromAzure = async (prefix) => {
   const containerClient = blobServiceClient.getContainerClient(containerName);

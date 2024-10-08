@@ -23,7 +23,6 @@ const azureRoutes = require("./routes/azure");
 const openAIRoutes = require("./routes/openAI");
 const userProfileRoutes = require("./routes/userProfiles");
 
-
 // Use your authentication routes
 app.use("/api/auth", authRoutes);
 

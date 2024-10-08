@@ -1,21 +1,6 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-// Helper function to create a Map with default values
-function createMapWithDefault(defaultValue) {
-  return {
-    type: Map,
-    of: Number,
-    default: new Map(),
-    get: function (map) {
-      return new Proxy(map, {
-        get: (target, name) => (name in target ? target[name] : defaultValue),
-      });
-    },
-  };
-}
-
-// Result Schema
 const resultSchema = new Schema({
   interview_id: {
     type: Schema.Types.ObjectId,
@@ -29,13 +14,21 @@ const resultSchema = new Schema({
         ref: "Question",
         required: true,
       },
-      scores: createMapWithDefault(0),
+      scores: {
+        type: Map,
+        of: Number,
+        default: {},
+      },
       feedback: { type: String, required: true },
       _id: false,
     },
   ],
-  total_score_in_each_category: createMapWithDefault(0),
-  total_score: { type: Number, required: true },
+  total_score_in_each_category: {
+    type: Map,
+    of: Number,
+    default: {},
+  },
+  total_score: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
 });
 

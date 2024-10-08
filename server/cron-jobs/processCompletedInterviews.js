@@ -1,23 +1,28 @@
 const Interview = require("../models/Interview");
 const AzureService = require("../services/azureService");
+const OpenAIService = require("../services/openAIService");
 
 const processInterview = async (interview) => {
   try {
     for (const item of interview.data) {
       const { question } = item;
-      await AzureService.combineAllChunksInToOneVideo(
-        (userId = interview.user_id.toString()),
-        (jobId = interview.job_id.toString()),
-        (questionId = question.toString())
+      const transcription = await AzureService.combineAllChunksInToOneVideo(
+        interview.user_id.toString(),
+        interview.job_id.toString(),
+        question.toString()
+      );
+
+      await OpenAIService.evaluateTranscriptionForAllQuestions(
+        interview._id,
+        question,
+        transcription
       );
     }
 
+    await OpenAIService.calculateTotalScore(interview._id);
+
     interview.evaluation = "completed";
     await interview.save();
-
-    console.log(
-      `Completed evaluation for userId: ${interview.userId}, jobId: ${interview.jobId} `
-    );
   } catch (error) {
     console.error(error);
   }
@@ -33,7 +38,7 @@ const checkCompletedInterviews = async () => {
     if (interview) {
       interview.evaluation = "in process";
       await interview.save();
-      processInterview(interview);
+      await processInterview(interview);
     } else {
       console.log("No pending interviews found to evaluate at this time.");
     }

@@ -1,7 +1,11 @@
 const OpenAI = require("openai");
 const { encoding_for_model } = require("tiktoken");
+const mongoose = require("mongoose");
 const InterviewService = require("./interviewService");
 const ResultService = require("./resultService");
+const Result = require("../models/Result");
+const Question = require("../models/Question");
+const Interview = require("../models/Interview");
 require("dotenv").config();
 
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
@@ -147,85 +151,122 @@ const evaluateAnswer = async (interviewText) => {
 
   const response = await callOpenAIAPI(messages, model, maxTokens);
   const processedResponse = processAPIResponse(response, model);
-  console.log("Processed response:", processedResponse);
 
   return processedResponse.result;
 };
 
-const evaluateTranscriptionForAllQuestions = async (userId, jobId) => {
-  try {
-    const interviewText = await InterviewService.getInterviewText(
-      userId,
-      jobId
-    );
-    const result = await ResultService.findResultByInterviewId(
-      interviewText[0].interviewId
-    );
+const updateOrCreateResult = async (
+  interviewId,
+  questionId,
+  scores,
+  feedback = ""
+) => {
+  let result = await ResultService.findResultByInterviewId(interviewId);
 
-    if (result) {
-      return result;
+  const questionData = {
+    question_id: questionId,
+    scores: scores,
+    feedback: feedback,
+  };
+
+  if (!result) {
+    await Result.create({
+      interview_id: interviewId,
+      question_scores: [questionData],
+    });
+  } else {
+    result.question_scores.push(questionData);
+    await result.save();
+  }
+};
+
+const evaluateTranscriptionForAllQuestions = async (
+  interviewId,
+  questionId,
+  transcription
+) => {
+  if (!questionId) {
+    console.log("Skipping empty question or answer");
+    return;
+  }
+
+  if (!transcription || transcription === "") {
+    let defaultScores = {
+      communication_skills: 0,
+      subject_expertise: 0,
+      relevancy: 0,
+    };
+    await updateOrCreateResult(interviewId, questionId, defaultScores);
+    return;
+  }
+
+  const questionDoc = await Question.findById(questionId);
+
+  const question = questionDoc.question;
+
+  const response = await evaluateAnswer({ question, answer: transcription });
+
+  const scores = response.scores;
+  const feedback = response.feedback;
+
+  await updateOrCreateResult(interviewId, questionId, scores, feedback);
+
+  return;
+};
+
+const calculateTotalScore = async (interviewId) => {
+  try {
+    const result = await Result.findOne({ interview_id: interviewId });
+
+    if (!result) {
+      throw new Error("Result not found for the given interview_id");
     }
 
-    const questionScores = [];
-    let totalScoreInEachCategory = new Map();
+    const interviewTextLength = result.question_scores.length;
     let totalScore = 0;
+    let totalScoreInEachCategory = new Map();
 
-    for (const { questionId, question, answer } of interviewText) {
-      if (!question || !answer || answer === "") {
-        console.log("Skipping empty question or answer");
-        questionScores.push({
-          question_id: questionId,
-          scores: new Map(),
-          feedback: "",
-        });
-        continue;
-      }
+    result.question_scores.forEach(({ scores }) => {
+      for (const [category, score] of scores) {
+        if (!totalScoreInEachCategory.has(category)) {
+          totalScoreInEachCategory.set(category, 0);
+        }
 
-      const evaluationResult = await evaluateAnswer({ question, answer });
-
-      questionScores.push({
-        question_id: questionId,
-        scores: new Map(Object.entries(evaluationResult.scores)),
-        feedback: evaluationResult.feedback,
-      });
-
-      // Update total scores
-      for (const [category, score] of Object.entries(evaluationResult.scores)) {
         totalScoreInEachCategory.set(
           category,
-          (totalScoreInEachCategory.get(category) || 0) + score
+          totalScoreInEachCategory.get(category) + score
         );
+
         totalScore += score;
       }
-    }
+    });
 
-    // Calculate average scores
     for (const [category, score] of totalScoreInEachCategory) {
-      totalScoreInEachCategory.set(category, score / interviewText.length);
+      totalScoreInEachCategory.set(category, score / interviewTextLength);
     }
 
-    // Calculate total score
     totalScore =
       Math.round(
-        (totalScore / interviewText.length / totalScoreInEachCategory.size) *
-          100
+        (totalScore / interviewTextLength / totalScoreInEachCategory.size) * 100
       ) / 100;
 
     totalScore = (totalScore / 5) * 100;
 
-    const savedResult = await ResultService.saveResult({
-      interview_id: interviewText[0].interviewId,
-      question_scores: questionScores,
-      total_score_in_each_category: totalScoreInEachCategory,
-      total_score: totalScore,
-    });
-
-    return savedResult;
-  } catch (error) {
-    throw new OpenAIServiceError(
-      `Error evaluating all questions: ${error.message}`,
-      "EVALUATION_ERROR"
+    const totalScoreInEachCategoryObject = Object.fromEntries(
+      totalScoreInEachCategory
     );
+
+    await Result.updateOne(
+      { interview_id: interviewId },
+      {
+        total_score: totalScore,
+        total_score_in_each_category: totalScoreInEachCategoryObject,
+      }
+    );
+
+    return;
+  } catch (error) {
+    console.error("Error calculating total scores:", error);
   }
 };
 
@@ -235,6 +276,7 @@ const OpenAIService = {
   calculatePrice,
   evaluateAnswer,
   evaluateTranscriptionForAllQuestions,
+  calculateTotalScore,
 };
 
 module.exports = OpenAIService;

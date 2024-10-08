@@ -4,6 +4,7 @@ const OpenAIService = require("../services/openAIService");
 
 const processInterview = async (interview) => {
   try {
+    const results = [];
     for (const item of interview.data) {
       const { question } = item;
       const transcription = await AzureService.combineAllChunksInToOneVideo(
@@ -12,12 +13,18 @@ const processInterview = async (interview) => {
         question.toString()
       );
 
-      await OpenAIService.evaluateTranscriptionForAllQuestions(
-        interview._id,
-        question,
-        transcription
-      );
+      const evaluationResult =
+        await OpenAIService.evaluateTranscriptionForQuestion(
+          question,
+          transcription
+        );
+      results.push({
+        questionId: question,
+        ...evaluationResult,
+      });
     }
+
+    await OpenAIService.createOrUpdateResults(interview._id, results);
 
     await OpenAIService.calculateTotalScore(interview._id);
 

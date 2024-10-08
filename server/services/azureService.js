@@ -283,8 +283,10 @@ let blobServiceClient;
 
 if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
   // Use the connection string if available
-  blobServiceClient = BlobServiceClient.fromConnectionString(process.env.AZURE_STORAGE_CONNECTION_STRING);
-  console.log('Using connection string for BlobServiceClient.');
+  blobServiceClient = BlobServiceClient.fromConnectionString(
+    process.env.AZURE_STORAGE_CONNECTION_STRING
+  );
+  console.log("Using connection string for BlobServiceClient.");
 } else if (accountName) {
   // Use DefaultAzureCredential if the connection string is not available
   const credential = new DefaultAzureCredential();
@@ -292,9 +294,11 @@ if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
     `https://${accountName}.blob.core.windows.net`,
     credential
   );
-  console.log('Using DefaultAzureCredential for BlobServiceClient.');
+  console.log("Using DefaultAzureCredential for BlobServiceClient.");
 } else {
-  throw new Error('Neither AZURE_STORAGE_CONNECTION_STRING nor AZURE_STORAGE_ACCOUNT_NAME is set.');
+  throw new Error(
+    "Neither AZURE_STORAGE_CONNECTION_STRING nor AZURE_STORAGE_ACCOUNT_NAME is set."
+  );
 }
 // Fetch chunks from Azure Blob Storage
 const fetchChunksFromAzure = async (prefix) => {
@@ -471,12 +475,12 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
   );
   console.log("Updated answer in DB successfully");
 
-  // await uploadFinalVideoToAzure(
-  //   combinedVideoPath,
-  //   `${userId}/${jobId}/${questionId}/${combinedVideoName}`
-  // );
+  await uploadFinalVideoToAzure(
+    combinedVideoPath,
+    `${userId}/${jobId}/${questionId}/${combinedVideoName}`
+  );
 
-  // await deleteChunksFromAzure(chunks);
+  await deleteChunksFromAzure(chunks);
 
   await new Promise((resolve) => setTimeout(resolve, 2000));
 

@@ -20,6 +20,7 @@ const resultSchema = new Schema({
         default: {},
       },
       feedback: { type: String, required: true },
+      review: { type: String, required: true },
       _id: false,
     },
   ],

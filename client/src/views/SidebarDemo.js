@@ -18,7 +18,7 @@ import {
   IconBallFootball,
   IconTrash,
   IconLayoutDashboard,
-} from "@tabler/icons-react"; 
+} from "@tabler/icons-react";
 import Ruthi_Logo1 from "../assets/Ruthi_Logo1.svg";
 import BasicInformationForm from "./ProfilePageComponents/BasicInformationForm";
 import Education from "./ProfilePageComponents/Education";
@@ -53,7 +53,31 @@ import {
 } from "../store/atoms/userProfileSate";
 import ThankyouCard from "./ProfilePageComponents/ThankyouCard";
 import { useNavigate } from "react-router-dom";
-import { Link } from 'react-router-dom';
+import { Link } from "react-router-dom";
+
+// Update this function outside of the SidebarDemo component
+const checkAtomContent = (atoms) => {
+  const isEmptyObject = (obj) => {
+    return Object.values(obj).every(value => 
+      value === '' || 
+      (Array.isArray(value) && value.length === 0)
+    );
+  };
+
+  for (const atom of atoms) {
+    if (Array.isArray(atom)) {
+      if (atom.length > 0 && atom.some(item => !isEmptyObject(item))) {
+        return true;
+      }
+    } else if (typeof atom === 'object' && atom !== null) {
+      if (!isEmptyObject(atom)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 
 const sectionIcons = {
   Publications: IconNotebook,
@@ -73,12 +97,10 @@ const availableSections = [
   "Extra-curricular Activities",
 ];
 
-
 export default function SidebarDemo() {
   const { authToken } = useAuth();
   const { fetchUserInfo } = useAuth();
   const [open, setOpen] = useState(false);
-  const [selectedSection, setSelectedSection] = useState("Basic Information");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [manuallyAddedSections, setManuallyAddedSections] = useState([]);
   const [errors, setErrors] = useState({});
@@ -89,11 +111,30 @@ export default function SidebarDemo() {
   const publications = useRecoilValue(publicationsState);
   const personalProjects = useRecoilValue(personalProjectsState);
   const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
-  const positionsOfResponsibility = useRecoilValue(positionsOfResponsibilityState);
+  const positionsOfResponsibility = useRecoilValue(
+    positionsOfResponsibilityState
+  );
   const competitions = useRecoilValue(competitionsState);
-  const extracurricularActivities = useRecoilValue(extracurricularActivitiesState);
-  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+  const extracurricularActivities = useRecoilValue(
+    extracurricularActivitiesState
+  );
+  const [selectedSection, setSelectedSection] = useState(() => {
+    const hasContent = checkAtomContent([
+      personalInformation,
+      educations,
+      experiences,
+      skills,
+      publications,
+      personalProjects,
+      awardsAndAchievements,
+      positionsOfResponsibility,
+      competitions,
+      extracurricularActivities,
+    ]);
 
+    return hasContent ? "Overview" : "Basic Information";
+  });
+  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
   const setPersonalInformation = useSetRecoilState(personalInformationState);
   const setSocials = useSetRecoilState(socialsState);
@@ -115,7 +156,6 @@ export default function SidebarDemo() {
   );
 
   const [initialDataSections, setInitialDataSections] = useState([]);
-  const [showThankyouCard, setShowThankyouCard] = useState(false);
 
   useEffect(() => {
     const getUserProfile = async () => {
@@ -128,44 +168,90 @@ export default function SidebarDemo() {
           return;
         }
 
+        // Check atoms for existing data
+        const sectionsWithData = [];
+        if (publications.length > 0) sectionsWithData.push("Publications");
+        if (personalProjects.length > 0)
+          sectionsWithData.push("Personal Projects");
+        if (awardsAndAchievements.length > 0)
+          sectionsWithData.push("Awards and Achievements");
+        if (positionsOfResponsibility.length > 0)
+          sectionsWithData.push("Positions of Responsibility");
+        if (competitions.length > 0) sectionsWithData.push("Competitions");
+        if (extracurricularActivities.length > 0)
+          sectionsWithData.push("Extra-curricular Activities");
+
+        // If there's existing data, set the initial states
+        if (sectionsWithData.length > 0) {
+          setInitialDataSections(sectionsWithData);
+          setManuallyAddedSections(sectionsWithData);
+          setSelectedSection("Overview");
+        }
+
+        // Fetch user profile data
         const userProfileData = await fetchUserProfile(userInfo._id);
         console.log("userProfileData:", userProfileData);
 
         // Set all profile sections
-        setPersonalInformation(userProfileData.personal_information || {});
-        setSocials(userProfileData.socials || {});
-        setCourses(userProfileData.courses || []);
-        setEducation(userProfileData.education || []);
-        setExperience(userProfileData.experience || []);
-        setPublications(userProfileData.publications || []);
-        setSkills(userProfileData.skills || []);
-        setPersonalProjects(userProfileData.personal_projects || []);
-        setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
+        setPersonalInformation(userProfileData.personal_information);
+        setSocials(userProfileData.socials);
+        setCourses(userProfileData.courses);
+        setEducation(userProfileData.education);
+        setExperience(userProfileData.experience);
+        setPublications(userProfileData.publications);
+        setSkills(userProfileData.skills);
+        setPersonalProjects(userProfileData.personal_projects);
+        setAwardsAndAchievements(userProfileData.awards_and_achievements);
         setPositionsOfResponsibility(
-          userProfileData.position_of_responsibility || []
+          userProfileData.position_of_responsibility
         );
-        setCompetitions(userProfileData.competitions || []);
+        setCompetitions(userProfileData.competition);
         setExtracurricularActivities(
-          userProfileData.extra_curricular_activities || []
+          userProfileData.extra_curricular_activities
         );
 
-        // Determine which sections have data
-        const sectionsWithData = [];
-        if (userProfileData.publications?.length > 0) sectionsWithData.push("Publications");
-        if (userProfileData.personal_projects?.length > 0) sectionsWithData.push("Personal Projects");
-        if (userProfileData.awards_and_achievements?.length > 0) sectionsWithData.push("Awards and Achievements");
-        if (userProfileData.position_of_responsibility?.length > 0) sectionsWithData.push("Positions of Responsibility");
-        if (userProfileData.competitions?.length > 0) sectionsWithData.push("Competitions");
-        if (userProfileData.extra_curricular_activities?.length > 0) sectionsWithData.push("Extra-curricular Activities");
+        // Update sectionsWithData based on fetched data
+        if (
+          userProfileData.publications?.length > 0 &&
+          !sectionsWithData.includes("Publications")
+        )
+          sectionsWithData.push("Publications");
+        if (
+          userProfileData.personal_projects?.length > 0 &&
+          !sectionsWithData.includes("Personal Projects")
+        )
+          sectionsWithData.push("Personal Projects");
+        if (
+          userProfileData.awards_and_achievements?.length > 0 &&
+          !sectionsWithData.includes("Awards and Achievements")
+        )
+          sectionsWithData.push("Awards and Achievements");
+        if (
+          userProfileData.position_of_responsibility?.length > 0 &&
+          !sectionsWithData.includes("Positions of Responsibility")
+        )
+          sectionsWithData.push("Positions of Responsibility");
+        if (
+          userProfileData.competitions?.length > 0 &&
+          !sectionsWithData.includes("Competitions")
+        )
+          sectionsWithData.push("Competitions");
+        if (
+          userProfileData.extra_curricular_activities?.length > 0 &&
+          !sectionsWithData.includes("Extra-curricular Activities")
+        )
+          sectionsWithData.push("Extra-curricular Activities");
 
         setInitialDataSections(sectionsWithData);
         setManuallyAddedSections(sectionsWithData);
 
         // If there's any data, set the selected section to "Overview"
-        if (sectionsWithData.length > 0 || Object.keys(userProfileData.personal_information || {}).length > 0) {
+        if (
+          sectionsWithData.length > 0 ||
+          Object.keys(userProfileData.personal_information || {}).length > 0
+        ) {
           setSelectedSection("Overview");
         }
-
       } catch (error) {
         console.error("Error fetching user profile:", error);
       }
@@ -195,10 +281,10 @@ export default function SidebarDemo() {
     }
   }, [isSubmitted, setSelectedSection]);
 
-  const handleLogout = ()=>{
+  const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/";
-  }
+  };
 
   const initialLinks = [
     { label: "Basic Information", icon: <IconUserCheck />, href: "#" },
@@ -214,7 +300,7 @@ export default function SidebarDemo() {
     {
       label: "Logout",
       icon: <IconArrowLeft />,
-      onClick: handleLogout
+      onClick: handleLogout,
     },
   ];
 
@@ -228,7 +314,7 @@ export default function SidebarDemo() {
         {
           label: "Logout",
           icon: <IconArrowLeft />,
-          onClick: handleLogout
+          onClick: handleLogout,
         },
       ]);
     } else {
@@ -236,7 +322,11 @@ export default function SidebarDemo() {
         ...initialLinks.slice(0, -2), // Keep the first 4 default links
         ...manuallyAddedSections.map((section) => ({
           label: section,
-          icon: sectionIcons[section] ? React.createElement(sectionIcons[section]) : <IconPlus />,
+          icon: sectionIcons[section] ? (
+            React.createElement(sectionIcons[section])
+          ) : (
+            <IconPlus />
+          ),
           href: "#",
           deletable: !initialDataSections.includes(section),
         })),
@@ -259,15 +349,15 @@ export default function SidebarDemo() {
 
   const handleAddSection = (newSection) => {
     if (!manuallyAddedSections.includes(newSection)) {
-      setManuallyAddedSections(prevSections => [...prevSections, newSection]);
+      setManuallyAddedSections((prevSections) => [...prevSections, newSection]);
       setSelectedSection(newSection);
     }
   };
 
   const handleDeleteSection = (sectionToDelete) => {
     if (!initialDataSections.includes(sectionToDelete)) {
-      setManuallyAddedSections(prevSections => 
-        prevSections.filter(section => section !== sectionToDelete)
+      setManuallyAddedSections((prevSections) =>
+        prevSections.filter((section) => section !== sectionToDelete)
       );
       if (selectedSection === sectionToDelete) {
         setSelectedSection("Basic Information");
@@ -416,13 +506,13 @@ export default function SidebarDemo() {
   };
 
   const getVisibleLinks = () => {
-    if (showThankyouCard) {
+    if (isSubmitted) {
       return [
         { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
         {
           label: "Logout",
           icon: <IconArrowLeft />,
-          href: "http://localhost:3000/",
+          onClick: handleLogout,
         },
       ];
     }
@@ -494,11 +584,11 @@ export default function SidebarDemo() {
             selectedSection={selectedSection}
             manuallyAddedSections={manuallyAddedSections}
             errors={errors}
-            showThankyouCard={showThankyouCard}
-            setShowThankyouCard={setShowThankyouCard}
+            isSubmitted={isSubmitted}
+            setIsSubmitted={setIsSubmitted}
           />
         </main>
-        {!showThankyouCard && selectedSection !== "Overview" && (
+        {!isSubmitted && selectedSection !== "Overview" && (
           <div className="p-4 bg-transparent z-10">
             <div className="max-w-4xl mx-auto w-full flex justify-between">
               <button
@@ -531,24 +621,7 @@ export default function SidebarDemo() {
   );
 }
 
-const Dashboard = ({ selectedSection, manuallyAddedSections, errors, showThankyouCard, setShowThankyouCard }) => {
-  const personal_information = useRecoilValue(personalInformationState);
-  const socials = useRecoilValue(socialsState);
-  const courses = useRecoilValue(coursesState);
-  const education = useRecoilValue(educationState);
-  const experience = useRecoilValue(experienceState);
-  const publications = useRecoilValue(publicationsState);
-  const skills = useRecoilValue(skillsState);
-  const personalProjects = useRecoilValue(personalProjectsState);
-  const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
-  const positionsOfResponsibility = useRecoilValue(positionsOfResponsibilityState);
-  const competitions = useRecoilValue(competitionsState);
-  const extracurricularActivities = useRecoilValue(extracurricularActivitiesState);
-
-  if (showThankyouCard) {
-    return <ThankyouCard onEditProfile={() => setShowThankyouCard(false)} />;
-  }
-
+const Dashboard = ({ selectedSection, errors }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -576,23 +649,7 @@ const Dashboard = ({ selectedSection, manuallyAddedSections, errors, showThankyo
               case "Extra-curricular Activities":
                 return <ExtraCurricularActivities />;
               case "Overview":
-                return (
-                  <OverviewPage
-                    personal_information={personal_information}
-                    socials={socials}
-                    courses={courses}
-                    education={education}
-                    experience={experience}
-                    publications={publications}
-                    skills={skills}
-                    personalProjects={personalProjects}
-                    awardsAndAchievements={awardsAndAchievements} 
-                    positionsOfResponsibility={positionsOfResponsibility}
-                    competitions={competitions}
-                    extracurricularActivities={extracurricularActivities}
-                    onSubmit={() => setShowThankyouCard(true)}
-                  />
-                );
+                return <OverviewPage />;
               default:
                 return <div>Select a section</div>;
             }
@@ -605,10 +662,7 @@ const Dashboard = ({ selectedSection, manuallyAddedSections, errors, showThankyo
 
 export const Logo = () => {
   return (
-    <a
-      href="/"
-      className="flex items-center justify-center relative z-20"
-    >
+    <a href="/" className="flex items-center justify-center relative z-20">
       <img
         src={Ruthi_Logo1}
         alt="Ruthi Logo"
@@ -620,24 +674,12 @@ export const Logo = () => {
 
 export const LogoIcon = () => {
   return (
-    <a
-      href="/"
-      className="flex items-center justify-center relative z-20"
-    >
+    <a href="/" className="flex items-center justify-center relative z-20">
       <img
         src={Ruthi_Logo1}
         alt="Ruthi Logo"
         className="h-9 w-10 object-contain"
       />
     </a>
-  );
-};
-
-const Overview = (props) => {
-  return (
-    <div className="h-full overflow-y-auto">
-      <h2 className="text-2xl font-bold text-black">Overview</h2>
-      <OverviewPage {...props} />
-    </div>
   );
 };

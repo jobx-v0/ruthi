@@ -18,8 +18,7 @@ import {
   IconBallFootball,
   IconTrash,
   IconLayoutDashboard,
-} from "@tabler/icons-react";
-import { Link } from "react-router-dom";
+} from "@tabler/icons-react"; 
 import Ruthi_Logo1 from "../assets/Ruthi_Logo1.svg";
 import BasicInformationForm from "./ProfilePageComponents/BasicInformationForm";
 import Education from "./ProfilePageComponents/Education";
@@ -36,7 +35,6 @@ import OverviewPage from "./ProfilePageComponents/OverviewPage";
 import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
 import { Toaster, toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { fetchUserProfile } from "../api/userProfileApi";
 import {
   personalInformationState,
@@ -53,6 +51,9 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
 } from "../store/atoms/userProfileSate";
+import ThankyouCard from "./ProfilePageComponents/ThankyouCard";
+import { useNavigate } from "react-router-dom";
+import { Link } from 'react-router-dom';
 
 const sectionIcons = {
   Publications: IconNotebook,
@@ -71,6 +72,7 @@ const availableSections = [
   "Competitions",
   "Extra-curricular Activities",
 ];
+
 
 export default function SidebarDemo() {
   const { authToken } = useAuth();
@@ -113,6 +115,7 @@ export default function SidebarDemo() {
   );
 
   const [initialDataSections, setInitialDataSections] = useState([]);
+  const [showThankyouCard, setShowThankyouCard] = useState(false);
 
   useEffect(() => {
     const getUserProfile = async () => {
@@ -157,6 +160,11 @@ export default function SidebarDemo() {
 
         setInitialDataSections(sectionsWithData);
         setManuallyAddedSections(sectionsWithData);
+
+        // If there's any data, set the selected section to "Overview"
+        if (sectionsWithData.length > 0 || Object.keys(userProfileData.personal_information || {}).length > 0) {
+          setSelectedSection("Overview");
+        }
 
       } catch (error) {
         console.error("Error fetching user profile:", error);
@@ -220,7 +228,7 @@ export default function SidebarDemo() {
         {
           label: "Logout",
           icon: <IconArrowLeft />,
-          href: "http://localhost:3000/",
+          onClick: handleLogout
         },
       ]);
     } else {
@@ -385,7 +393,7 @@ export default function SidebarDemo() {
     }
 
     if (direction === "next" && currentIndex === sections.length - 1) {
-      handleOverview();
+      setSelectedSection("Overview");
       return;
     }
 
@@ -400,7 +408,6 @@ export default function SidebarDemo() {
   const handleOverview = () => {
     setSelectedSection("Overview");
     setIsModalOpen(false);
-    setIsSubmitted(true);
   };
 
   const handleStartAddingDetails = () => {
@@ -409,7 +416,7 @@ export default function SidebarDemo() {
   };
 
   const getVisibleLinks = () => {
-    if (isSubmitted) {
+    if (showThankyouCard) {
       return [
         { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
         {
@@ -487,9 +494,11 @@ export default function SidebarDemo() {
             selectedSection={selectedSection}
             manuallyAddedSections={manuallyAddedSections}
             errors={errors}
+            showThankyouCard={showThankyouCard}
+            setShowThankyouCard={setShowThankyouCard}
           />
         </main>
-        {!isSubmitted && selectedSection !== "Overview" && (
+        {!showThankyouCard && selectedSection !== "Overview" && (
           <div className="p-4 bg-transparent z-10">
             <div className="max-w-4xl mx-auto w-full flex justify-between">
               <button
@@ -522,8 +531,7 @@ export default function SidebarDemo() {
   );
 }
 
-const Dashboard = ({ selectedSection, manuallyAddedSections, errors }) => {
-  const isSubmitted = useRecoilValue(isSubmittedState);
+const Dashboard = ({ selectedSection, manuallyAddedSections, errors, showThankyouCard, setShowThankyouCard }) => {
   const personal_information = useRecoilValue(personalInformationState);
   const socials = useRecoilValue(socialsState);
   const courses = useRecoilValue(coursesState);
@@ -537,8 +545,8 @@ const Dashboard = ({ selectedSection, manuallyAddedSections, errors }) => {
   const competitions = useRecoilValue(competitionsState);
   const extracurricularActivities = useRecoilValue(extracurricularActivitiesState);
 
-  if (isSubmitted) {
-    return <OverviewPage />;
+  if (showThankyouCard) {
+    return <ThankyouCard onEditProfile={() => setShowThankyouCard(false)} />;
   }
 
   return (
@@ -569,7 +577,7 @@ const Dashboard = ({ selectedSection, manuallyAddedSections, errors }) => {
                 return <ExtraCurricularActivities />;
               case "Overview":
                 return (
-                  <Overview
+                  <OverviewPage
                     personal_information={personal_information}
                     socials={socials}
                     courses={courses}
@@ -582,6 +590,7 @@ const Dashboard = ({ selectedSection, manuallyAddedSections, errors }) => {
                     positionsOfResponsibility={positionsOfResponsibility}
                     competitions={competitions}
                     extracurricularActivities={extracurricularActivities}
+                    onSubmit={() => setShowThankyouCard(true)}
                   />
                 );
               default:
@@ -596,31 +605,31 @@ const Dashboard = ({ selectedSection, manuallyAddedSections, errors }) => {
 
 export const Logo = () => {
   return (
-    <Link
-      to="#"
-      className="flex items-center justify-center relative z-20 py-1"
+    <a
+      href="/"
+      className="flex items-center justify-center relative z-20"
     >
       <img
         src={Ruthi_Logo1}
         alt="Ruthi Logo"
-        className="h-9 w-13 object-contain"
+        className="h-11 w-15 object-contain"
       />
-    </Link>
+    </a>
   );
 };
 
 export const LogoIcon = () => {
   return (
-    <Link
-      to="#"
-      className="flex items-center justify-center relative z-20 py-0.5"
+    <a
+      href="/"
+      className="flex items-center justify-center relative z-20"
     >
       <img
         src={Ruthi_Logo1}
         alt="Ruthi Logo"
-        className="h-8 w-8 object-contain"
+        className="h-9 w-10 object-contain"
       />
-    </Link>
+    </a>
   );
 };
 

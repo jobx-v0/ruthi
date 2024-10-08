@@ -28,6 +28,29 @@ export const createInterviewAPI = async (
   );
 };
 
+export const saveChunksLengthAPI = async (
+  authToken,
+  userId,
+  jobId,
+  questionId,
+  length
+) => {
+  return await axios.post(
+    `${API_URL}/save-chunk-number`,
+    {
+      userID: userId,
+      jobID: jobId,
+      questionID: questionId,
+      numberOfChunks: length,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    }
+  );
+};
+
 export const submitInterviewAPI = async (authToken, userId, jobId) => {
   return axios.post(
     `${API_URL}/submit-interview`,

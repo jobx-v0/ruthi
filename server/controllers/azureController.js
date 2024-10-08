@@ -1,4 +1,5 @@
 const path = require("path");
+const fs = require("fs");
 const AzureService = require("../services/azureService");
 
 const handleError = (res, error) => {
@@ -35,10 +36,10 @@ const handleTranscriptionForOneQuestion = async (req, res) => {
 };
 
 const generateSasToken = async (req, res) => {
-  const { userId, jobId, questionId } = req.params;
+  const { userId, jobId, questionId, chunkNo } = req.params;
   try {
     const sasUrl = await AzureService.generateSasTokenForBlob(
-      `${userId}/${jobId}/${questionId}.webm`
+      `${userId}/${jobId}/${questionId}/${chunkNo}.webm`
     );
     res.json({ sasUrl });
   } catch (error) {
@@ -49,7 +50,9 @@ const generateSasToken = async (req, res) => {
 const generateSasTokenForUser = async (req, res) => {
   const { userId } = req.params;
   try {
-    const sasUrl = await AzureService.generateSasTokenForBlob(`${userId}/resume.pdf`);
+    const sasUrl = await AzureService.generateSasTokenForBlob(
+      `${userId}/resume.pdf`
+    );
     res.json({ sasUrl });
   } catch (error) {
     handleError(res, error);
@@ -65,12 +68,51 @@ const downloadAudio = async (req, res) => {
   }
 };
 
+const combineVideo = async (req, res) => {
+  const { userId, jobId, questionId } = req.body;
+
+  try {
+    // Fetch all chunks from Azure
+    // const chunks = await AzureService.fetchChunksFromAzure(
+    //   `${userId}/${jobId}/${questionId}`.toString()
+    // ); // working verified
+    // if (chunks.length === 0) {
+    //   return res.status(404).json({ message: "No chunks found." });
+    // }
+
+    // console.log(chunks);
+
+    // Download chunks to local temp directory
+    await AzureService.combineAllChunksInToOneVideo(userId, jobId, questionId); // working verified
+
+    // // Combine chunks into a single video file
+    // const combinedVideoPath = path.join(tempDir, outputVideoName);
+    // combineChunks(chunkPaths, combinedVideoPath);
+    // console.log("Video chunks combined.");
+
+    // // Upload the combined video back to Azure
+    // await uploadFinalVideoToAzure(combinedVideoPath, outputVideoName);
+
+    // // Delete the chunks from Azure
+    // await deleteChunksFromAzure(chunks);
+
+    // // Clean up local chunk files
+    // chunkPaths.forEach((chunkPath) => fs.unlinkSync(chunkPath));
+
+    res.json({ message: "Video combined and uploaded successfully!" });
+  } catch (error) {
+    console.error("Error combining video:", error);
+    res.status(500).json({ error: "An error occurred while combining video." });
+  }
+};
+
 const AzureController = {
   generateSasToken,
   generateSasTokenForUser,
   handleTranscriptionForOneQuestion,
   handleTranscriptionForAllQuestions,
   downloadAudio,
+  combineVideo,
 };
 
 module.exports = AzureController;

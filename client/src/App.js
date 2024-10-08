@@ -14,15 +14,15 @@ import Jobs from "./views/Jobs";
 import VideoRecorder from "./components/VideoRecorder";
 import NewInterview from "./views/NewInterview";
 import LandingPage from "./components/Test";
-import LandingTest from "./components/LandingTest"
+import LandingTest from "./components/LandingTest";
 import VerificationPage from "./views/Verification";
 import VerifyEmailPrompt from "./views/VerifyEmail";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
 import SidebarDemo from "./views/SidebarDemo";
 import UploadResume from "./views/UploadResume";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
@@ -42,7 +42,10 @@ function App() {
             <Route path="/thank-you" element={<ThankYouPage />} />
             <Route path="/new-interview" element={<NewInterview />} />
             <Route path="/verification" element={<VerificationPage />} />
-            <Route path="/verify-email-prompt" element={<VerifyEmailPrompt />} />
+            <Route
+              path="/verify-email-prompt"
+              element={<VerifyEmailPrompt />}
+            />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/profile" element={<SidebarDemo />} />

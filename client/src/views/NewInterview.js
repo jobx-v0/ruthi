@@ -46,8 +46,6 @@ const InterviewPage = () => {
       .then((response) => {
         const questionsResponse = response.data.Questions;
         setQuestions(questionsResponse);
-        // setUserAnswers(Array(questionsResponse.length).fill(""));
-        console.log(response.data);
       })
       .catch((error) => {
         console.error("Error fetching questions:", error);
@@ -56,9 +54,6 @@ const InterviewPage = () => {
   };
 
   useEffect(() => {
-    console.log("inside useeffect interview");
-    console.log("jobId: ", jobId);
-    // If there is no authToken in the context, retrieve it from localStorage
     const storedAuthToken = localStorage.getItem("authToken");
     if (storedAuthToken) {
       setToken(storedAuthToken);
@@ -80,7 +75,7 @@ const InterviewPage = () => {
   useEffect(() => {
     if (
       authToken &&
-      userInfo._id &&
+      userInfo?._id &&
       jobId &&
       questions.length > 0 &&
       !hasCreatedInterview.current
@@ -93,10 +88,9 @@ const InterviewPage = () => {
         }
       );
     }
-  }, [authToken, userInfo._id, jobId, questions.length]);
+  }, [authToken, userInfo?._id, jobId, questions.length]);
 
   const handleNextQuestion = () => {
-    console.log("Next button clicked: ", currentQuestionIndex);
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setQuestionPrevMoved(false);
@@ -104,10 +98,8 @@ const InterviewPage = () => {
   };
 
   const handleSubmit = () => {
-    console.log("Submit button clicked");
     submitInterviewAPI(authToken, userInfo._id, jobId)
       .then((response) => {
-        console.log("Interview submitted successfully:", response);
         navigate("/thank-you");
       })
       .catch((error) => {
@@ -170,7 +162,7 @@ const InterviewPage = () => {
           }
           jobId={jobId}
           onTimerActiveChange={handleTimerActiveChange}
-          userId={userInfo._id}
+          userId={userInfo?._id}
         />
 
         {!isTimerActive ? (

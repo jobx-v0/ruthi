@@ -29,7 +29,20 @@ router.post("/responses", authMiddleware, InterviewController.submitInterview);
 //     router.get('/evaluate', authMiddleware, InterviewController.evaluateInterview);
 // }
 
-router.post("/create-interview", InterviewController.createInterview);
+router.post("/create-interview", InterviewController.createInterview); // verified. It takes input in this format:
+// {
+//     "user_id":"66f590458326f7c16ba3e97a",
+//     "job_id":"66f65a32020744c01dd2d902",
+//     "question_ids":["654e76feddc03d85cd1ae411",
+//                     "654e76feddc03d85cd1ae4a2",
+//                     "654e76feddc03d85cd1ae4d4",
+//                     "654e76feddc03d85cd1ae4d2",
+//                     "654e76feddc03d85cd1ae4ad",
+//                     "654e76feddc03d85cd1ae3f9"]
+// }
+
+router.post("/save-chunk-number", InterviewController.saveChunkNumber);
+
 router.post("/submit-interview", InterviewController.submitInterview);
 
 router.post("/update-answer", InterviewController.updateAnswer);

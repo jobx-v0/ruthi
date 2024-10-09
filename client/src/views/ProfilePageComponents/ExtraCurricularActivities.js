@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlusIcon, XIcon } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { Trash2 } from "react-feather";
 import { IconBallFootball } from "@tabler/icons-react";
-import { useRecoilState, useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import { extracurricularActivitiesState } from "../../store/atoms/userProfileSate";
 import { z } from "zod";
-import { saveUserProfileData } from '../../api/userProfileApi';
-import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
 
 const activitySchema = z.string()
   .min(1, "Activity name is required")
@@ -19,7 +16,6 @@ export default function ExtraCurricularActivities() {
   const [activities, setActivities] = useRecoilState(extracurricularActivitiesState);
   const [newActivity, setNewActivity] = useState("");
   const [error, setError] = useState(null);
-  const { userInfo } = useAuth();
 
   useEffect(() => {
     console.log("Current activities:", activities);
@@ -59,27 +55,6 @@ export default function ExtraCurricularActivities() {
 
   const removeActivity = (index) => {
     setActivities(activities.filter((_, i) => i !== index));
-  };
-
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.');
-      return;
-    }
-
-    const dataToSubmit = {
-      extra_curricular_activities: activities
-    };
-
-    console.log("Saving data:", dataToSubmit);
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success('Extra-curricular activities saved successfully!');
-    } catch (error) {
-      console.error('Failed to save extra-curricular activities:', error);
-      toast.error('Failed to save extra-curricular activities. Please try again.');
-    }
   };
 
   return (
@@ -150,15 +125,6 @@ export default function ExtraCurricularActivities() {
               </p>
             )}
           </AnimatePresence>
-        </div>
-
-        <div className="mt-6 text-left">
-          <button
-            onClick={handleSave}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-          >
-            Save
-          </button>
         </div>
       </motion.div>
     </div>

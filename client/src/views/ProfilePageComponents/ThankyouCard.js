@@ -11,6 +11,7 @@ export default function ThankyouCard() {
 
   const handleEditProfile = () => {
     setIsSubmitted(false);
+    localStorage.setItem('isSubmitted', 'false');
   };
 
   return (

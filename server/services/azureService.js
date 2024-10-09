@@ -15,6 +15,8 @@ require("dotenv").config();
 
 const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
+const AZURE_STORAGE_CONNECTION_STRING =
+  process.env.AZURE_STORAGE_CONNECTION_STRING;
 const credential = new DefaultAzureCredential();
 
 class AzureServiceError extends Error {
@@ -94,12 +96,12 @@ const transcribeAudio = async (audioPath) => {
       let transcription = "";
 
       recognizer.recognizing = (s, e) => {
-        console.log(`RECOGNIZING: Text=${e.result.text}`);
+        // console.log(`RECOGNIZING: Text=${e.result.text}`);
       };
 
       recognizer.recognized = (s, e) => {
         if (e.result.reason === sdk.ResultReason.RecognizedSpeech) {
-          console.log(`RECOGNIZED: Text=${e.result.text}`);
+          // console.log(`RECOGNIZED: Text=${e.result.text}`);
           transcription += `${e.result.text} `;
         } else if (e.result.reason === sdk.ResultReason.NoMatch) {
           console.log("NOMATCH: Speech could not be recognized.");
@@ -277,10 +279,225 @@ const processVideoForAllQuestions = async (userId, jobId) => {
   }
 };
 
+let blobServiceClient;
+
+if (process.env.AZURE_STORAGE_CONNECTION_STRING) {
+  // Use the connection string if available
+  blobServiceClient = BlobServiceClient.fromConnectionString(
+    process.env.AZURE_STORAGE_CONNECTION_STRING
+  );
+  console.log("Using connection string for BlobServiceClient.");
+} else if (accountName) {
+  // Use DefaultAzureCredential if the connection string is not available
+  const credential = new DefaultAzureCredential();
+  blobServiceClient = new BlobServiceClient(
+    `https://${accountName}.blob.core.windows.net`,
+    credential
+  );
+  console.log("Using DefaultAzureCredential for BlobServiceClient.");
+} else {
+  throw new Error(
+    "Neither AZURE_STORAGE_CONNECTION_STRING nor AZURE_STORAGE_ACCOUNT_NAME is set."
+  );
+}
+// Fetch chunks from Azure Blob Storage
+const fetchChunksFromAzure = async (prefix) => {
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  let blobs = [];
+  for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+    blobs.push(blob.name);
+  }
+  return blobs;
+};
+
+// Download each chunk from Azure
+const downloadChunk = async (blobName, localPath) => {
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  const blobClient = containerClient.getBlobClient(blobName);
+  const downloadBlockBlobResponse = await blobClient.download(0);
+  const writeStream = fs.createWriteStream(localPath);
+  await new Promise((resolve, reject) => {
+    downloadBlockBlobResponse.readableStreamBody.pipe(writeStream);
+    downloadBlockBlobResponse.readableStreamBody.on("end", resolve);
+    downloadBlockBlobResponse.readableStreamBody.on("error", reject);
+  });
+};
+
+// Ensure directory exists
+const ensureDirectoryExists = (dirPath) => {
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+};
+
+// Combine chunks into one video
+const combineChunks = (chunkPaths, outputFilePath) => {
+  return new Promise((resolve, reject) => {
+    const writeStream = fs.createWriteStream(outputFilePath);
+
+    chunkPaths.forEach((chunkPath) => {
+      if (fs.existsSync(chunkPath)) {
+        const data = fs.readFileSync(chunkPath);
+        writeStream.write(data);
+      } else {
+        console.error(`Chunk file not found: ${chunkPath}`);
+      }
+    });
+
+    writeStream.end();
+
+    writeStream.on("finish", () => {
+      resolve();
+    });
+
+    writeStream.on("error", (err) => {
+      reject(`Error combining chunks: ${err.message}`);
+    });
+  });
+};
+
+// Upload final video to Azure Blob Storage
+const uploadFinalVideoToAzure = async (videoPath, videoName) => {
+  console.log("Uploading video to Azure storage cloud...");
+
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  const blockBlobClient = containerClient.getBlockBlobClient(videoName);
+  const uploadBlobResponse = await blockBlobClient.uploadFile(videoPath);
+  console.log("Final video uploaded to Azure:", uploadBlobResponse.requestId);
+};
+
+// Delete chunks from Azure Blob Storage
+const deleteChunksFromAzure = async (chunks) => {
+  console.log("Deleting chunks from the Azure cloud storage...");
+
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+  for (const chunk of chunks) {
+    const blockBlobClient = containerClient.getBlockBlobClient(chunk);
+    await blockBlobClient.delete();
+    console.log(`Deleted chunk: ${chunk}`);
+  }
+};
+
+const getChunks = async (userId, jobId, questionId) => {
+  const chunks = await fetchChunksFromAzure(
+    `${userId}/${jobId}/${questionId}`.toString()
+  );
+
+  if (chunks.length === 0) {
+    console.log(`No chunks found for question ${questionId}.`);
+  } else {
+    console.log(`Got Chunks for questionId ${questionId}:`, chunks.length);
+    return chunks;
+  }
+};
+
+const deleteChunksFromLocalDir = async (
+  chunkPaths,
+  userId,
+  jobId,
+  questionId
+) => {
+  chunkPaths.forEach((chunkPath) => {
+    try {
+      fs.unlinkSync(chunkPath);
+    } catch (err) {
+      console.error(`Error deleting chunk ${chunkPath}:`, err);
+    }
+  });
+
+  const questionDir = path.join(
+    __dirname,
+    "tempChunks",
+    userId,
+    jobId,
+    questionId
+  );
+  const jobDir = path.join(__dirname, "tempChunks", userId, jobId);
+
+  try {
+    fs.rmSync(questionDir, { recursive: true, force: true });
+  } catch (err) {
+    console.error(`Error deleting questionId directory ${questionDir}:`, err);
+  }
+
+  if (fs.existsSync(jobDir) && fs.readdirSync(jobDir).length === 0) {
+    try {
+      fs.rmSync(jobDir, { recursive: true, force: true });
+    } catch (err) {
+      console.error(`Error deleting jobId directory ${jobDir}:`, err);
+    }
+  }
+
+  console.log("Directories cleaned up.");
+};
+
+// Download all chunks and save them locally in the proper directory
+const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
+  const chunks = await getChunks(userId, jobId, questionId);
+
+  const tempDir = path.join(__dirname, "tempChunks", userId, jobId, questionId);
+
+  ensureDirectoryExists(tempDir);
+
+  const chunkPaths = [];
+  for (const chunk of chunks) {
+    const localPath = path.join(__dirname, "tempChunks", chunk);
+    await downloadChunk(chunk, localPath);
+    chunkPaths.push(localPath);
+  }
+
+  const combinedVideoName = `${userId}${jobId}${questionId}.webm`;
+  const combinedVideoPath = path.join(tempDir, combinedVideoName);
+  const audioPath = path.join(tempDir, `${userId}${jobId}${questionId}.wav`);
+
+  combineChunks(chunkPaths, combinedVideoPath);
+  console.log("Video chunks combined.");
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  if (!fs.existsSync(combinedVideoPath)) {
+    throw new Error(
+      `Error combining video: ${combinedVideoPath} does not exist.`
+    );
+  }
+
+  console.log(combinedVideoPath);
+
+  await extractAudio(combinedVideoPath, audioPath);
+
+  const transcription = await transcribeAudio(audioPath);
+
+  await InterviewService.updateAnswer(
+    userId,
+    jobId,
+    questionId,
+    transcription.toString().trim()
+  );
+  console.log("Updated answer in DB successfully");
+
+  await uploadFinalVideoToAzure(
+    combinedVideoPath,
+    `${userId}/${jobId}/${questionId}/${combinedVideoName}`
+  );
+
+  await deleteChunksFromAzure(chunks);
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  await deleteChunksFromLocalDir(chunkPaths, userId, jobId, questionId);
+
+  return transcription.toString().trim();
+};
+
 const AzureService = {
   generateSasTokenForBlob,
   processVideo,
   processVideoForAllQuestions,
+  fetchChunksFromAzure,
+  downloadChunk,
+  combineAllChunksInToOneVideo,
+  extractAudio,
+  transcribeAudio,
 };
 
 module.exports = AzureService;

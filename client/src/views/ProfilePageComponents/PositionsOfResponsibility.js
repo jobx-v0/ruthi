@@ -9,14 +9,9 @@ import {
   Trash2,
   ChevronDown,
   ChevronUp,
-  Building,
-  Calendar,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-import { saveUserProfileData } from "../../api/userProfileApi";
-import { useAuth } from "../../context/AuthContext";
-import { toast } from "react-toastify";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
@@ -45,7 +40,7 @@ export default function PositionsOfResponsibility() {
   const [expandedId, setExpandedId] = useState(null);
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
-  const { userInfo } = useAuth();
+  // const { userInfo } = useAuth();
 
   useEffect(() => {
     console.log("Current positions:", positions);
@@ -80,7 +75,7 @@ export default function PositionsOfResponsibility() {
 
   const addPosition = () => {
     const newPosition = {
-      id: Date.now(),
+      id: Date.now().toString(),
       title: "",
       organization: "",
       start_date: "",
@@ -122,34 +117,6 @@ export default function PositionsOfResponsibility() {
   const descriptionToBulletPoints = (description) => {
     if (typeof description !== "string") return [];
     return description.split("\n").filter((point) => point.trim() !== "");
-  };
-
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error("User information not available.");
-      return;
-    }
-
-    const formattedPositions = positions.map(position => ({
-      ...position,
-      start_date: position.start_date ? new Date(position.start_date).toISOString() : null,
-      end_date: position.end_date ? new Date(position.end_date).toISOString() : null,
-    }));
-
-    const dataToSubmit = {
-      position_of_responsibility: formattedPositions,
-    };
-    console.log("positions", positions);
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success("Positions of responsibility saved successfully!");
-    } catch (error) {
-      console.error("Failed to save positions of responsibility:", error);
-      toast.error(
-        "Failed to save positions of responsibility. Please try again."
-      );
-    }
   };
 
   return (
@@ -394,16 +361,6 @@ export default function PositionsOfResponsibility() {
                 No positions added. Click the plus button to add a position.
               </div>
             )}
-          </div>
-
-          {/* Add the save button */}
-          <div className="mt-6 text-left">
-            <button
-              onClick={handleSave}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-            >
-              Save
-            </button>
           </div>
         </div>
       </motion.div>

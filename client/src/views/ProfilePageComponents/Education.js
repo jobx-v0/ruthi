@@ -1,70 +1,101 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRecoilState } from "recoil";
 import {
   educationState,
   coursesState,
 } from "../../store/atoms/userProfileSate";
 import { GraduationCap, BookOpen, Plus, Trash2 } from "lucide-react";
-import { IconBook } from "@tabler/icons-react";
 import { motion } from "framer-motion";
 import { z } from "zod";
-import { saveUserProfileData } from '../../api/userProfileApi';
-import { useAuth } from '../../context/AuthContext';
-import { toast } from 'react-toastify';
 
 const educationSchema = z.object({
-  institution: z.string()
+  institution: z
+    .string()
     .min(1, "Institution is required")
-    .regex(/^[a-zA-Z\s.,'-]+$/, "Institution should only contain letters, spaces, and common punctuation"),
-  degree: z.string()
+    .regex(
+      /^[a-zA-Z\s.,'-]+$/,
+      "Institution should only contain letters, spaces, and common punctuation"
+    ),
+  degree: z
+    .string()
     .min(1, "Degree is required")
-    .regex(/^[a-zA-Z\s.,'-]+$/, "Degree should only contain letters, spaces, and common punctuation"),
+    .regex(
+      /^[a-zA-Z\s.,'-]+$/,
+      "Degree should only contain letters, spaces, and common punctuation"
+    ),
   start_date: z.string().refine(
     (date) => {
       const selectedDate = new Date(date);
       const today = new Date();
-      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth(), today.getDate());
+      const seventyYearsAgo = new Date(
+        today.getFullYear() - 70,
+        today.getMonth(),
+        today.getDate()
+      );
       return selectedDate >= seventyYearsAgo && selectedDate <= today;
     },
-    { message: "Start date must be within the last 70 years and not in the future" }
+    {
+      message:
+        "Start date must be within the last 70 years and not in the future",
+    }
   ),
-  end_date: z.string().refine(
-    (date) => {
-      const selectedDate = new Date(date);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "End date cannot be in the future" }
-  ).optional(),
-  cgpa_or_percentage: z.string().regex(/^(\d{1,2}(\.\d{1,2})?|100)$/, "Invalid CGPA or percentage"),
+  end_date: z
+    .string()
+    .refine(
+      (date) => {
+        const selectedDate = new Date(date);
+        const today = new Date();
+        return selectedDate <= today;
+      },
+      { message: "End date cannot be in the future" }
+    )
+    .optional(),
+  cgpa_or_percentage: z
+    .string()
+    .regex(/^(\d{1,2}(\.\d{1,2})?|100)$/, "Invalid CGPA or percentage"),
   description: z.string().optional(),
 });
 
 const courseSchema = z.object({
-  course_name: z.string()
+  course_name: z
+    .string()
     .min(1, "Course name is required")
-    .regex(/^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'-]+$/, "Course name must contain at least one letter and can include letters, numbers, spaces, and common punctuation"),
-  course_provider: z.string()
+    .regex(
+      /^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'-]+$/,
+      "Course name must contain at least one letter and can include letters, numbers, spaces, and common punctuation"
+    ),
+  course_provider: z
+    .string()
     .min(1, "Course provider is required")
-    .regex(/^[a-zA-Z\s.,'-]+$/, "Course provider should only contain letters, spaces, and common punctuation"),
+    .regex(
+      /^[a-zA-Z\s.,'-]+$/,
+      "Course provider should only contain letters, spaces, and common punctuation"
+    ),
   completion_date: z.string().refine(
     (date) => {
       const selectedDate = new Date(date);
       const today = new Date();
-      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth(), today.getDate());
+      const seventyYearsAgo = new Date(
+        today.getFullYear() - 70,
+        today.getMonth(),
+        today.getDate()
+      );
       return selectedDate >= seventyYearsAgo && selectedDate <= today;
     },
-    { message: "Completion date must be within the last 70 years and not in the future" }
+    {
+      message:
+        "Completion date must be within the last 70 years and not in the future",
+    }
   ),
   course_link: z.string().url("Invalid URL").or(z.literal("")),
 });
 
 const formatDate = (dateString) => {
-  if (!dateString) return '';
+  if (!dateString) return "";
   const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return date.toISOString().split("T")[0];
 };
 
 export default function Education() {
@@ -73,7 +104,6 @@ export default function Education() {
   const [activeTab, setActiveTab] = useState("education");
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
-  const { userInfo } = useAuth();
 
   const validateField = (schema, field, value) => {
     try {
@@ -91,16 +121,16 @@ export default function Education() {
     setEducations(updatedEducations);
 
     const error = validateField(educationSchema, field, value);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [`education-${index}-${field}`]: error
+      [`education-${index}-${field}`]: error,
     }));
 
-    if (field === 'end_date' && updatedEducations[index].start_date) {
+    if (field === "end_date" && updatedEducations[index].start_date) {
       if (new Date(value) < new Date(updatedEducations[index].start_date)) {
-        setErrors(prev => ({
+        setErrors((prev) => ({
           ...prev,
-          [`education-${index}-${field}`]: "End date must be after start date"
+          [`education-${index}-${field}`]: "End date must be after start date",
         }));
       }
     }
@@ -113,9 +143,9 @@ export default function Education() {
     setCourses(updatedCourses);
 
     const error = validateField(courseSchema, field, value);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
-      [`course-${index}-${field}`]: error
+      [`course-${index}-${field}`]: error,
     }));
   };
 
@@ -160,71 +190,25 @@ export default function Education() {
   };
 
   const descriptionToBulletPoints = (description) => {
-    if (!description || typeof description !== 'string') {
+    if (!description || typeof description !== "string") {
       return [];
     }
-    return description.split('\n').filter(point => point.trim() !== '');
+    return description.split("\n").filter((point) => point.trim() !== "");
   };
 
   const getCurrentDate = () => {
     const today = new Date();
-    return today.toISOString().split('T')[0];
+    return today.toISOString().split("T")[0];
   };
 
   const getDateLimit = () => {
     const today = new Date();
-    const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth(), today.getDate());
-    return seventyYearsAgo.toISOString().split('T')[0];
-  };
-
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.');
-      return;
-    }
-
-    const formattedEducations = educations.map(edu => {
-      if (!edu || typeof edu.id === 'undefined' || !edu.id) {
-        return null;
-      }
-      return {
-        id: edu.id.toString(),
-        institution: edu.institution,
-        degree: edu.degree,
-        start_date: edu.start_date ? new Date(edu.start_date).toISOString() : null,
-        end_date: edu.end_date ? new Date(edu.end_date).toISOString() : null,
-        cgpa_or_percentage: edu.cgpa_or_percentage,
-        description: edu.description,
-      };
-    }).filter(edu => edu !== null);
-
-    const formattedCourses = courses.map(course => {
-      if (!course || typeof course.id === 'undefined' || !course.id) {
-        return null;
-      }
-      return {
-        id: course.id.toString(),
-        course_name: course.course_name,
-        course_provider: course.course_provider,
-        completion_date: course.completion_date ? new Date(course.completion_date).toISOString() : null,
-        course_link: course.course_link,
-      };
-    }).filter(course => course !== null);
-
-    const dataToSubmit = {
-      education: formattedEducations,
-      courses: formattedCourses
-    };
-
-    console.log('Data being submitted:', JSON.stringify(dataToSubmit, null, 2));
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit);
-      toast.success('Education and courses saved successfully!');
-    } catch (error) {
-      console.error('Failed to save data:', error);
-      toast.error('Failed to save education and courses. Please try again.');
-    }
+    const seventyYearsAgo = new Date(
+      today.getFullYear() - 70,
+      today.getMonth(),
+      today.getDate()
+    );
+    return seventyYearsAgo.toISOString().split("T")[0];
   };
 
   return (
@@ -300,14 +284,24 @@ export default function Education() {
                         type="text"
                         id={`institute-${education.id}`}
                         value={education.institution}
-                        onChange={(e) => handleEducationChange(index, "institution", e.target.value)}
+                        onChange={(e) =>
+                          handleEducationChange(
+                            index,
+                            "institution",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`education-${index}-institution`] ? "border-red-500" : "border-gray-300"
+                          errors[`education-${index}-institution`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                         required
                       />
                       {errors[`education-${index}-institution`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`education-${index}-institution`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`education-${index}-institution`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -321,14 +315,20 @@ export default function Education() {
                         type="text"
                         id={`degree-${education.id}`}
                         value={education.degree}
-                        onChange={(e) => handleEducationChange(index, "degree", e.target.value)}
+                        onChange={(e) =>
+                          handleEducationChange(index, "degree", e.target.value)
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`education-${index}-degree`] ? "border-red-500" : "border-gray-300"
+                          errors[`education-${index}-degree`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                         required
                       />
                       {errors[`education-${index}-degree`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`education-${index}-degree`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`education-${index}-degree`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -344,14 +344,24 @@ export default function Education() {
                         value={formatDate(education.start_date)}
                         min={getDateLimit()}
                         max={getCurrentDate()}
-                        onChange={(e) => handleEducationChange(index, "start_date", e.target.value)}
+                        onChange={(e) =>
+                          handleEducationChange(
+                            index,
+                            "start_date",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`education-${index}-start_date`] ? "border-red-500" : "border-gray-300"
+                          errors[`education-${index}-start_date`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                         required
                       />
                       {errors[`education-${index}-start_date`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`education-${index}-start_date`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`education-${index}-start_date`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -367,13 +377,23 @@ export default function Education() {
                         value={formatDate(education.end_date)}
                         min={education.start_date}
                         max={getCurrentDate()}
-                        onChange={(e) => handleEducationChange(index, "end_date", e.target.value)}
+                        onChange={(e) =>
+                          handleEducationChange(
+                            index,
+                            "end_date",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`education-${index}-end_date`] ? "border-red-500" : "border-gray-300"
+                          errors[`education-${index}-end_date`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                       />
                       {errors[`education-${index}-end_date`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`education-${index}-end_date`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`education-${index}-end_date`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -387,14 +407,24 @@ export default function Education() {
                         type="text"
                         id={`cgpa-or-percentage-${education.id}`}
                         value={education.cgpa_or_percentage}
-                        onChange={(e) => handleEducationChange(index, "cgpa_or_percentage", e.target.value)}
+                        onChange={(e) =>
+                          handleEducationChange(
+                            index,
+                            "cgpa_or_percentage",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`education-${index}-cgpa_or_percentage`] ? "border-red-500" : "border-gray-300"
+                          errors[`education-${index}-cgpa_or_percentage`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                         required
                       />
                       {errors[`education-${index}-cgpa_or_percentage`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`education-${index}-cgpa_or_percentage`]}</p>
+                        <div className="text-red-500 text-xs mt-1">
+                          {errors[`education-${index}-cgpa_or_percentage`]}
+                        </div>
                       )}
                     </div>
                     <div className="md:col-span-2">
@@ -406,8 +436,14 @@ export default function Education() {
                       </label>
                       <textarea
                         id={`description-${education.id}`}
-                        value={education.description || ''}
-                        onChange={(e) => handleEducationChange(index, "description", e.target.value)}
+                        value={education.description || ""}
+                        onChange={(e) =>
+                          handleEducationChange(
+                            index,
+                            "description",
+                            e.target.value
+                          )
+                        }
                         rows={3}
                         className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         placeholder="Enter description, one per line"
@@ -419,11 +455,13 @@ export default function Education() {
                           Description Preview:
                         </h4>
                         <ul className="list-disc pl-5 space-y-1">
-                          {descriptionToBulletPoints(education.description).map((point, index) => (
-                            <li key={index} className="text-sm text-gray-600">
-                              {point}
-                            </li>
-                          ))}
+                          {descriptionToBulletPoints(education.description).map(
+                            (point, index) => (
+                              <li key={index} className="text-sm text-gray-600">
+                                {point}
+                              </li>
+                            )
+                          )}
                         </ul>
                       </div>
                     )}
@@ -460,13 +498,23 @@ export default function Education() {
                         type="text"
                         id={`course-name-${course.id}`}
                         value={course.course_name}
-                        onChange={(e) => handleCourseChange(index, "course_name", e.target.value)}
+                        onChange={(e) =>
+                          handleCourseChange(
+                            index,
+                            "course_name",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`course-${index}-course_name`] ? "border-red-500" : "border-gray-300"
+                          errors[`course-${index}-course_name`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                       />
                       {errors[`course-${index}-course_name`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`course-${index}-course_name`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`course-${index}-course_name`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -480,13 +528,23 @@ export default function Education() {
                         type="text"
                         id={`provider-${course.id}`}
                         value={course.course_provider}
-                        onChange={(e) => handleCourseChange(index, "course_provider", e.target.value)}
+                        onChange={(e) =>
+                          handleCourseChange(
+                            index,
+                            "course_provider",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`course-${index}-course_provider`] ? "border-red-500" : "border-gray-300"
+                          errors[`course-${index}-course_provider`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                       />
                       {errors[`course-${index}-course_provider`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`course-${index}-course_provider`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`course-${index}-course_provider`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -502,13 +560,23 @@ export default function Education() {
                         value={formatDate(course.completion_date)}
                         min={getDateLimit()}
                         max={getCurrentDate()}
-                        onChange={(e) => handleCourseChange(index, "completion_date", e.target.value)}
+                        onChange={(e) =>
+                          handleCourseChange(
+                            index,
+                            "completion_date",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`course-${index}-completion_date`] ? "border-red-500" : "border-gray-300"
+                          errors[`course-${index}-completion_date`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                       />
                       {errors[`course-${index}-completion_date`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`course-${index}-completion_date`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`course-${index}-completion_date`]}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -522,14 +590,24 @@ export default function Education() {
                         type="url"
                         id={`course-link-${course.id}`}
                         value={course.course_link}
-                        onChange={(e) => handleCourseChange(index, "course_link", e.target.value)}
+                        onChange={(e) =>
+                          handleCourseChange(
+                            index,
+                            "course_link",
+                            e.target.value
+                          )
+                        }
                         className={`w-full px-3 py-2 text-sm border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors[`course-${index}-course_link`] ? "border-red-500" : "border-gray-300"
+                          errors[`course-${index}-course_link`]
+                            ? "border-red-500"
+                            : "border-gray-300"
                         }`}
                         placeholder="https://example.com/course"
                       />
                       {errors[`course-${index}-course_link`] && (
-                        <p className="text-red-500 text-xs mt-1">{errors[`course-${index}-course_link`]}</p>
+                        <p className="text-red-500 text-xs mt-1">
+                          {errors[`course-${index}-course_link`]}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -543,14 +621,14 @@ export default function Education() {
             </div>
           )}
         </div>
-        <div className="mt-6 text-left">
+        {/* <div className="mt-6 text-left">
         <button
           className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
           onClick={handleSave}
         >
           Save
-        </button>
-      </div>
+        </button> */}
+        {/* </div> */}
       </motion.div>
     </div>
   );

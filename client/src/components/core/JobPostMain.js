@@ -6,6 +6,10 @@ import { useNavigate } from "react-router-dom";
 import DeleteConfirmationModel from "./DeleteConfirmationModal";
 import StartInterviewModal from "../home/StartInterviewModal";
 import NewInterview from "../../views/NewInterview";
+import axios from "axios";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL + "/api";
 
 const SkillTag = ({ skill }) => {
   return (
@@ -47,7 +51,6 @@ export default function JobPostMain({
     //   return;
     // }
 
-    console.log("Interview Started");
     navigate("/new-interview", { state: { jobId: id } });
   };
 

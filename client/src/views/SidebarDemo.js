@@ -19,9 +19,6 @@ import {
   IconTrash,
   IconLayoutDashboard,
 } from "@tabler/icons-react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { cn } from "../ui/lib/utils";
 import Ruthi_Logo1 from "../assets/Ruthi_Logo1.svg";
 import BasicInformationForm from "./ProfilePageComponents/BasicInformationForm";
 import Education from "./ProfilePageComponents/Education";
@@ -38,7 +35,6 @@ import OverviewPage from "./ProfilePageComponents/OverviewPage";
 import { useRecoilValue, useSetRecoilState, useRecoilState } from "recoil";
 import { Toaster, toast } from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { fetchUserProfile } from "../api/userProfileApi";
 import {
   personalInformationState,
@@ -55,6 +51,33 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
 } from "../store/atoms/userProfileSate";
+import ThankyouCard from "./ProfilePageComponents/ThankyouCard";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+
+// Update this function outside of the SidebarDemo component
+const checkAtomContent = (atoms) => {
+  const isEmptyObject = (obj) => {
+    return Object.values(obj).every(value => 
+      value === '' || 
+      (Array.isArray(value) && value.length === 0)
+    );
+  };
+
+  for (const atom of atoms) {
+    if (Array.isArray(atom)) {
+      if (atom.length > 0 && atom.some(item => !isEmptyObject(item))) {
+        return true;
+      }
+    } else if (typeof atom === 'object' && atom !== null) {
+      if (!isEmptyObject(atom)) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
 
 const sectionIcons = {
   Publications: IconNotebook,
@@ -75,21 +98,43 @@ const availableSections = [
 ];
 
 export default function SidebarDemo() {
+  const { authToken } = useAuth();
+  const { fetchUserInfo } = useAuth();
   const [open, setOpen] = useState(false);
-  const [selectedSection, setSelectedSection] = useState("Basic Information");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [additionalSections, setAdditionalSections] = useState([]);
+  const [manuallyAddedSections, setManuallyAddedSections] = useState([]);
   const [errors, setErrors] = useState({});
   const personalInformation = useRecoilValue(personalInformationState);
   const educations = useRecoilValue(educationState);
-  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+  const experiences = useRecoilValue(experienceState);
+  const skills = useRecoilValue(skillsState);
+  const publications = useRecoilValue(publicationsState);
+  const personalProjects = useRecoilValue(personalProjectsState);
+  const awardsAndAchievements = useRecoilValue(awardsAndAchievementsState);
+  const positionsOfResponsibility = useRecoilValue(
+    positionsOfResponsibilityState
+  );
+  const competitions = useRecoilValue(competitionsState);
+  const extracurricularActivities = useRecoilValue(
+    extracurricularActivitiesState
+  );
+  const [selectedSection, setSelectedSection] = useState(() => {
+    const hasContent = checkAtomContent([
+      personalInformation,
+      educations,
+      experiences,
+      skills,
+      publications,
+      personalProjects,
+      awardsAndAchievements,
+      positionsOfResponsibility,
+      competitions,
+      extracurricularActivities,
+    ]);
 
-  // const setPersonalInformation = useSetRecoilState(personalInformationState);
-  // const setEducation = useSetRecoilState(educationState);
-  // const setExperience = useSetRecoilState(experienceState);
-  // const setSkills = useSetRecoilState(skillsState);
-  const { authToken } = useAuth();
-  const { fetchUserInfo } = useAuth();
+    return hasContent ? "Overview" : "Basic Information";
+  });
+  const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
 
   const setPersonalInformation = useSetRecoilState(personalInformationState);
   const setSocials = useSetRecoilState(socialsState);
@@ -110,6 +155,8 @@ export default function SidebarDemo() {
     extracurricularActivitiesState
   );
 
+  const [initialDataSections, setInitialDataSections] = useState([]);
+
   useEffect(() => {
     const getUserProfile = async () => {
       if (!authToken) return;
@@ -121,29 +168,92 @@ export default function SidebarDemo() {
           return;
         }
 
+        // Check atoms for existing data
+        const sectionsWithData = [];
+        if (publications.length > 0) sectionsWithData.push("Publications");
+        if (personalProjects.length > 0)
+          sectionsWithData.push("Personal Projects");
+        if (awardsAndAchievements.length > 0)
+          sectionsWithData.push("Awards and Achievements");
+        if (positionsOfResponsibility.length > 0)
+          sectionsWithData.push("Positions of Responsibility");
+        if (competitions.length > 0) sectionsWithData.push("Competitions");
+        if (extracurricularActivities.length > 0)
+          sectionsWithData.push("Extra-curricular Activities");
+
+        // If there's existing data, set the initial states
+        if (sectionsWithData.length > 0) {
+          setInitialDataSections(sectionsWithData);
+          setManuallyAddedSections(sectionsWithData);
+          setSelectedSection("Overview");
+        }
+
+        // Fetch user profile data
         const userProfileData = await fetchUserProfile(userInfo._id);
         console.log("userProfileData:", userProfileData);
 
         // Set all profile sections
-        setPersonalInformation(userProfileData.personal_information || {});
-        setSocials(userProfileData.socials || {});
-        setCourses(userProfileData.courses || []);
-        setEducation(userProfileData.education || []);
-        setExperience(userProfileData.experience || []);
-        setPublications(userProfileData.publications || []);
-        setSkills(userProfileData.skills || []);
-        setPersonalProjects(userProfileData.personal_projects || []);
-        setAwardsAndAchievements(userProfileData.awards_and_achievements || []);
+        setPersonalInformation(userProfileData.personal_information);
+        setSocials(userProfileData.socials);
+        setCourses(userProfileData.courses);
+        setEducation(userProfileData.education);
+        setExperience(userProfileData.experience);
+        setPublications(userProfileData.publications);
+        setSkills(userProfileData.skills);
+        setPersonalProjects(userProfileData.personal_projects);
+        setAwardsAndAchievements(userProfileData.awards_and_achievements);
         setPositionsOfResponsibility(
-          userProfileData.position_of_responsibility || []
+          userProfileData.position_of_responsibility
         );
-        setCompetitions(userProfileData.competitions || []);
+        setCompetitions(userProfileData.competition);
         setExtracurricularActivities(
-          userProfileData.extra_curricular_activities || []
+          userProfileData.extra_curricular_activities
         );
+
+        // Update sectionsWithData based on fetched data
+        if (
+          userProfileData.publications?.length > 0 &&
+          !sectionsWithData.includes("Publications")
+        )
+          sectionsWithData.push("Publications");
+        if (
+          userProfileData.personal_projects?.length > 0 &&
+          !sectionsWithData.includes("Personal Projects")
+        )
+          sectionsWithData.push("Personal Projects");
+        if (
+          userProfileData.awards_and_achievements?.length > 0 &&
+          !sectionsWithData.includes("Awards and Achievements")
+        )
+          sectionsWithData.push("Awards and Achievements");
+        if (
+          userProfileData.position_of_responsibility?.length > 0 &&
+          !sectionsWithData.includes("Positions of Responsibility")
+        )
+          sectionsWithData.push("Positions of Responsibility");
+        if (
+          userProfileData.competitions?.length > 0 &&
+          !sectionsWithData.includes("Competitions")
+        )
+          sectionsWithData.push("Competitions");
+        if (
+          userProfileData.extra_curricular_activities?.length > 0 &&
+          !sectionsWithData.includes("Extra-curricular Activities")
+        )
+          sectionsWithData.push("Extra-curricular Activities");
+
+        setInitialDataSections(sectionsWithData);
+        setManuallyAddedSections(sectionsWithData);
+
+        // If there's any data, set the selected section to "Overview"
+        if (
+          sectionsWithData.length > 0 ||
+          Object.keys(userProfileData.personal_information || {}).length > 0
+        ) {
+          setSelectedSection("Overview");
+        }
       } catch (error) {
         console.error("Error fetching user profile:", error);
-        // toast.error("Failed to load user profile. Please try again later.");
       }
     };
 
@@ -171,6 +281,11 @@ export default function SidebarDemo() {
     }
   }, [isSubmitted, setSelectedSection]);
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.href = "/";
+  };
+
   const initialLinks = [
     { label: "Basic Information", icon: <IconUserCheck />, href: "#" },
     { label: "Education", icon: <IconBook />, href: "#" },
@@ -185,37 +300,68 @@ export default function SidebarDemo() {
     {
       label: "Logout",
       icon: <IconArrowLeft />,
-      href: "http://localhost:3000/",
+      onClick: handleLogout,
     },
   ];
 
   const [links, setLinks] = useState(initialLinks);
 
-  const handleAddSection = (newSection) => {
-    if (!additionalSections.includes(newSection)) {
-      setAdditionalSections([...additionalSections, newSection]);
-      const IconComponent = sectionIcons[newSection] || IconPlus;
+  // New useEffect for updating sidebar links
+  useEffect(() => {
+    if (isSubmitted) {
       setLinks([
-        ...links.slice(0, -2),
+        { label: "Overview", icon: <IconLayoutDashboard />, href: "#" },
         {
-          label: newSection,
-          icon: <IconComponent />,
-          href: "#",
-          deletable: true,
+          label: "Logout",
+          icon: <IconArrowLeft />,
+          onClick: handleLogout,
         },
-        ...links.slice(-2),
       ]);
-      setSelectedSection(newSection); // Open the new section immediately
+    } else {
+      const updatedLinks = [
+        ...initialLinks.slice(0, -2), // Keep the first 4 default links
+        ...manuallyAddedSections.map((section) => ({
+          label: section,
+          icon: sectionIcons[section] ? (
+            React.createElement(sectionIcons[section])
+          ) : (
+            <IconPlus />
+          ),
+          href: "#",
+          deletable: !initialDataSections.includes(section),
+        })),
+      ];
+
+      // Add the "Add more" button if there are still sections available to add
+      if (manuallyAddedSections.length < availableSections.length) {
+        updatedLinks.push({
+          label: "Add more",
+          icon: <IconPlus />,
+          href: "#",
+          onClick: () => setIsModalOpen(true),
+        });
+      }
+
+      updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
+      setLinks(updatedLinks);
+    }
+  }, [manuallyAddedSections, isSubmitted, initialDataSections]);
+
+  const handleAddSection = (newSection) => {
+    if (!manuallyAddedSections.includes(newSection)) {
+      setManuallyAddedSections((prevSections) => [...prevSections, newSection]);
+      setSelectedSection(newSection);
     }
   };
 
   const handleDeleteSection = (sectionToDelete) => {
-    setAdditionalSections(
-      additionalSections.filter((section) => section !== sectionToDelete)
-    );
-    setLinks(links.filter((link) => link.label !== sectionToDelete));
-    if (selectedSection === sectionToDelete) {
-      setSelectedSection("Basic Information");
+    if (!initialDataSections.includes(sectionToDelete)) {
+      setManuallyAddedSections((prevSections) =>
+        prevSections.filter((section) => section !== sectionToDelete)
+      );
+      if (selectedSection === sectionToDelete) {
+        setSelectedSection("Basic Information");
+      }
     }
   };
 
@@ -226,42 +372,12 @@ export default function SidebarDemo() {
     }
   }, [authToken, navigate]);
 
-  // Update the links state when additionalSections change
-  useEffect(() => {
-    const updatedLinks = [
-      ...initialLinks.slice(0, -2),
-      ...additionalSections.map((section) => ({
-        label: section,
-        icon: sectionIcons[section] ? (
-          React.createElement(sectionIcons[section])
-        ) : (
-          <IconPlus />
-        ),
-        href: "#",
-        deletable: true,
-      })),
-    ];
-
-    // Only add the "Add more" button if there are still sections available to add
-    if (additionalSections.length < availableSections.length) {
-      updatedLinks.push({
-        label: "Add more",
-        icon: <IconPlus />,
-        href: "#",
-        onClick: () => setIsModalOpen(true),
-      });
-    }
-
-    updatedLinks.push(initialLinks[initialLinks.length - 1]); // Add the "Logout" link
-    setLinks(updatedLinks);
-  }, [additionalSections]);
-
   const sections = [
     "Basic Information",
     "Education",
     "Experience",
     "Skills",
-    ...additionalSections,
+    ...manuallyAddedSections,
   ];
   const currentIndex = sections.indexOf(selectedSection);
 
@@ -367,7 +483,7 @@ export default function SidebarDemo() {
     }
 
     if (direction === "next" && currentIndex === sections.length - 1) {
-      handleOverview();
+      setSelectedSection("Overview");
       return;
     }
 
@@ -382,7 +498,6 @@ export default function SidebarDemo() {
   const handleOverview = () => {
     setSelectedSection("Overview");
     setIsModalOpen(false);
-    setIsSubmitted(true);
   };
 
   const handleStartAddingDetails = () => {
@@ -397,7 +512,7 @@ export default function SidebarDemo() {
         {
           label: "Logout",
           icon: <IconArrowLeft />,
-          href: "http://localhost:3000/",
+          onClick: handleLogout,
         },
       ];
     }
@@ -467,8 +582,10 @@ export default function SidebarDemo() {
         <main className="flex-1 overflow-y-auto p-4">
           <Dashboard
             selectedSection={selectedSection}
-            additionalSections={additionalSections}
+            manuallyAddedSections={manuallyAddedSections}
             errors={errors}
+            isSubmitted={isSubmitted}
+            setIsSubmitted={setIsSubmitted}
           />
         </main>
         {!isSubmitted && selectedSection !== "Overview" && (
@@ -497,14 +614,14 @@ export default function SidebarDemo() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAddSection={handleAddSection}
-        selectedSections={additionalSections}
+        selectedSections={manuallyAddedSections}
         setSelectedSection={setSelectedSection}
       />
     </div>
   );
 }
 
-const Dashboard = ({ selectedSection, additionalSections, errors }) => {
+const Dashboard = ({ selectedSection, errors }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -532,9 +649,9 @@ const Dashboard = ({ selectedSection, additionalSections, errors }) => {
               case "Extra-curricular Activities":
                 return <ExtraCurricularActivities />;
               case "Overview":
-                return <Overview />;
+                return <OverviewPage />;
               default:
-                return <div>Hehe</div>;
+                return <div>Select a section</div>;
             }
           })()}
         </div>
@@ -545,39 +662,24 @@ const Dashboard = ({ selectedSection, additionalSections, errors }) => {
 
 export const Logo = () => {
   return (
-    <Link
-      to="#"
-      className="flex items-center justify-center relative z-20 py-1"
-    >
+    <a href="/" className="flex items-center justify-center relative z-20">
       <img
         src={Ruthi_Logo1}
         alt="Ruthi Logo"
-        className="h-9 w-13 object-contain"
+        className="h-11 w-15 object-contain"
       />
-    </Link>
+    </a>
   );
 };
 
 export const LogoIcon = () => {
   return (
-    <Link
-      to="#"
-      className="flex items-center justify-center relative z-20 py-0.5"
-    >
+    <a href="/" className="flex items-center justify-center relative z-20">
       <img
         src={Ruthi_Logo1}
         alt="Ruthi Logo"
-        className="h-8 w-8 object-contain"
+        className="h-9 w-10 object-contain"
       />
-    </Link>
-  );
-};
-
-const Overview = () => {
-  return (
-    <div className="h-full overflow-y-auto">
-      <h2 className="text-2xl font-bold text-black">Overview</h2>
-      <OverviewPage />
-    </div>
+    </a>
   );
 };

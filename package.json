@@ -13,6 +13,7 @@
     "install-all": "npm run install-client && npm run install-server"
   },
   "dependencies": {
-    "concurrently": "^7.0.0"
+    "concurrently": "^7.0.0",
+    "js-yaml": "^4.1.0"
   }
 }

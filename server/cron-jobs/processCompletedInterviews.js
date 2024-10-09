@@ -54,4 +54,4 @@ const checkCompletedInterviews = async () => {
   }
 };
 
-setInterval(checkCompletedInterviews, 30 * 60 * 1000);
+// setInterval(checkCompletedInterviews, 30 * 60 * 1000);

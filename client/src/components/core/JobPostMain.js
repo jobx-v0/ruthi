@@ -51,7 +51,6 @@ export default function JobPostMain({
     //   return;
     // }
 
-    console.log("Interview Started");
     navigate("/new-interview", { state: { jobId: id } });
   };
 

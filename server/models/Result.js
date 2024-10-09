@@ -31,8 +31,8 @@ const resultSchema = new Schema({
   },
   total_score: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
+  final_review: { type: String },
 });
 
 const Result = mongoose.model("Result", resultSchema);
-
 module.exports = Result;

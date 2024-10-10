@@ -61,7 +61,7 @@ export default function Component() {
       navigate("/login");
       return;
     }
-  }, [file]);
+  }, [file, navigate]);
 
   useEffect(() => {
     let interval;
@@ -72,6 +72,10 @@ export default function Component() {
     }
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  const handleSkipClick = () => {
+    navigate("/profile");
+  };
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -105,7 +109,8 @@ export default function Component() {
   const handleContinueClick = async () => {
     setIsParsedResume(true);
     const userInfo = await fetchUserInfo();
-    const userId = userInfo._id;
+    console.log("User Info fecthed from fetchUserInfo:",userInfo);
+    const userId = userInfo._id || userInfo.id;
     if (file) {
       setIsLoading(true);
       console.log("File uploaded:", file);
@@ -292,9 +297,7 @@ export default function Component() {
               <div className="flex justify-between items-center mt-8">
                 <button
                   className="text-gray-600 hover:text-orange-600 font-medium"
-                  onClick={() => {
-                    window.location.href = "/profile";
-                  }}
+                  onClick={handleSkipClick}
                 >
                   Skip for now
                 </button>

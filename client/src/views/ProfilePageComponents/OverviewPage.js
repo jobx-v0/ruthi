@@ -14,7 +14,6 @@ import {
   IconBallFootball,
 } from "@tabler/icons-react";
 import { Rocket, BookOpen } from "lucide-react";
-import { toast } from "react-toastify";
 import { useAuth } from "../../context/AuthContext";
 import { useRecoilState } from "recoil";
 import ThankyouCard from "./ThankyouCard";
@@ -33,11 +32,13 @@ import {
   competitionsState,
   extracurricularActivitiesState,
   isSubmittedState,
+  isParsedResumeState,
 } from "../../store/atoms/userProfileSate";
 import { isValidData, hasAnyData } from "../../validators/validData";
 import axios from "axios";
 import Loader from "./Loader";
 import { requiredFields } from "../../validators/validData";
+import { useCustomToast } from "../../components/utils/useCustomToast";
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -61,9 +62,32 @@ const ResumePage = ({ content }) => (
     {content}
   </div>
 );
-const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL + "/api/user-profile";
+const REACT_APP_BACKEND_URL =
+  process.env.REACT_APP_BACKEND_URL + "/api/user-profile";
+
+const renderDescription = (description) => {
+  if (
+    !description ||
+    description === "" ||
+    (Array.isArray(description) && description.length === 0)
+  ) {
+    return null;
+  }
+
+  if (Array.isArray(description)) {
+    return description.map((item, idx) => <li key={idx}>{item}</li>);
+  } else if (typeof description === "string") {
+    return description
+      .split("\n")
+      .filter((item) => item.trim() !== "")
+      .map((item, idx) => <li key={idx}>{item}</li>);
+  } else {
+    return <li>{String(description)}</li>;
+  }
+};
 
 export default function OverviewPage() {
+  const showToast = useCustomToast();
   const { fetchUserInfo, authToken } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
   const personal_information = useRecoilValue(personalInformationState);
@@ -84,8 +108,8 @@ export default function OverviewPage() {
   );
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+  const [isParsed, setIsParsed] = useRecoilState(isParsedResumeState);
 
-  
   useEffect(() => {
     const getUserInfo = async () => {
       if (authToken) {
@@ -93,9 +117,15 @@ export default function OverviewPage() {
         setUserInfo(info);
       }
     };
-
+    if (isParsed) {
+      showToast(
+        "We've worked our magic with our resume parser! We've done our best to extract your information.",
+        "success"
+      );
+      setIsParsed(false);
+    }
     getUserInfo();
-  }, [authToken, fetchUserInfo]);
+  }, [authToken, fetchUserInfo, isParsed]);
 
   console.log("rendering again");
 
@@ -125,13 +155,20 @@ export default function OverviewPage() {
       const missingFields = {};
       Object.entries(requiredFields).forEach(([section, fields]) => {
         const sectionData = dataToSubmit[section];
-        if (sectionData && (Array.isArray(sectionData) ? sectionData.length > 0 : Object.keys(sectionData).length > 0)) {
-          const missingInSection = fields.filter(field => {
+        if (
+          sectionData &&
+          (Array.isArray(sectionData)
+            ? sectionData.length > 0
+            : Object.keys(sectionData).length > 0)
+        ) {
+          const missingInSection = fields.filter((field) => {
             if (Array.isArray(sectionData)) {
-              return sectionData.some(item => {
-                if (section === 'experience') {
+              return sectionData.some((item) => {
+                if (section === "experience") {
                   // Special check for experience section
-                  return !item[field] || (!item.currently_working && !item.end_date);
+                  return (
+                    !item[field] || (!item.currently_working && !item.end_date)
+                  );
                 }
                 return !item[field];
               });
@@ -146,20 +183,25 @@ export default function OverviewPage() {
 
       // Special check for experience end date or currently working
       if (dataToSubmit.experience && dataToSubmit.experience.length > 0) {
-        const invalidExperiences = dataToSubmit.experience.filter(exp => !exp.currently_working && !exp.end_date);
+        const invalidExperiences = dataToSubmit.experience.filter(
+          (exp) => !exp.currently_working && !exp.end_date
+        );
         if (invalidExperiences.length > 0) {
           if (!missingFields.experience) {
             missingFields.experience = [];
           }
-          missingFields.experience.push('end date or currently working status');
+          missingFields.experience.push("end date or currently working status");
         }
       }
 
       if (Object.keys(missingFields).length > 0) {
         const missingFieldsMessage = Object.entries(missingFields)
-          .map(([section, fields]) => `${section}: ${fields.join(', ')}`)
-          .join('\n');
-        toast.error(`Please fill in the following required fields:\n${missingFieldsMessage}`);
+          .map(([section, fields]) => `${section}: ${fields.join(", ")}`)
+          .join("\n");
+        showToast(
+          `Please fill in the following required fields:\n${missingFieldsMessage}`,
+          "error"
+        );
         setIsLoading(false);
         return;
       }
@@ -168,7 +210,6 @@ export default function OverviewPage() {
         "Data being submitted:",
         JSON.stringify(dataToSubmit, null, 2)
       );
-      
 
       // First, check if a profile exists
       try {
@@ -207,23 +248,25 @@ export default function OverviewPage() {
         }
       }
 
-      toast.success("Profile submitted successfully!");
+      showToast("Profile submitted successfully!", "success");
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting profile:", error);
       if (error.response) {
         console.error("Error response:", error.response.data);
-        toast.error(
+        showToast(
           `Failed to submit profile: ${
             error.response.data.message || "Unknown error"
-          }`
+          }`,
+          "error"
         );
       } else if (error.request) {
-        toast.error(
-          "Failed to submit profile. No response received from server."
+        showToast(
+          "Failed to submit profile. No response received from server.",
+          "error"
         );
       } else {
-        toast.error("Failed to submit profile. Please try again.");
+        showToast("Failed to submit profile. Please try again.", "error");
       }
     } finally {
       setIsLoading(false);
@@ -333,7 +376,7 @@ export default function OverviewPage() {
                 {edu.cgpa_or_percentage && (
                   <li>CGPA/Percentage: {edu.cgpa_or_percentage}</li>
                 )}
-                {edu.description && <li>{edu.description}</li>}
+                {renderDescription(edu.description)}
               </ul>
             </div>
           ))}
@@ -370,11 +413,7 @@ export default function OverviewPage() {
                 </span>
               </div>
               <ul className="list-disc pl-5 text-gray-600">
-                {Array.isArray(exp.description) ? (
-                  exp.description.map((item, idx) => <li key={idx}>{item}</li>)
-                ) : (
-                  <li>{exp.description}</li>
-                )}
+                {renderDescription(exp.description)}
               </ul>
             </div>
           ))}
@@ -463,7 +502,7 @@ export default function OverviewPage() {
                     position.description.map((item, idx) => (
                       <li key={idx}>{item}</li>
                     ))
-                  ) : typeof position.description === 'string' ? (
+                  ) : typeof position.description === "string" ? (
                     <li>{position.description}</li>
                   ) : null}
                 </ul>

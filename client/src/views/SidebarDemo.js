@@ -51,9 +51,8 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
 } from "../store/atoms/userProfileSate";
-import ThankyouCard from "./ProfilePageComponents/ThankyouCard";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useCustomToast } from '../components/utils/useCustomToast';
 
 // Update this function outside of the SidebarDemo component
 const checkAtomContent = (atoms) => {
@@ -156,6 +155,7 @@ export default function SidebarDemo() {
   );
 
   const [initialDataSections, setInitialDataSections] = useState([]);
+  const customToast = useCustomToast();
 
   useEffect(() => {
     const getUserProfile = async () => {
@@ -230,6 +230,7 @@ export default function SidebarDemo() {
           userProfileData.position_of_responsibility?.length > 0 &&
           !sectionsWithData.includes("Positions of Responsibility")
         )
+        console.log("sectionsWithData:",userProfileData.position_of_responsibility);
           sectionsWithData.push("Positions of Responsibility");
         if (
           userProfileData.competitions?.length > 0 &&
@@ -367,6 +368,7 @@ export default function SidebarDemo() {
 
   const navigate = useNavigate();
   useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
     if (!authToken) {
       navigate("/login");
     }
@@ -388,14 +390,12 @@ export default function SidebarDemo() {
     if (!personalInformation.last_name)
       newErrors.last_name = "Last name is required";
 
-    // Phone number validation
     if (!personalInformation.phone) {
       newErrors.phone = "Phone number is required";
     } else if (!/^\d{10}$/.test(personalInformation.phone)) {
       newErrors.phone = "Phone number must be exactly 10 digits";
     }
 
-    // Expected salary validation
     if (!personalInformation.expected_salary) {
       newErrors.expected_salary = "Expected salary is required";
     } else {
@@ -408,11 +408,7 @@ export default function SidebarDemo() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
-      // Dismiss any existing toasts
-      toast.dismiss();
-
-      // Display error toast
-      toast.error(
+      customToast(
         <div>
           <strong>Please fix the following errors:</strong>
           <ul className="mt-2 list-disc list-inside">
@@ -421,10 +417,7 @@ export default function SidebarDemo() {
             ))}
           </ul>
         </div>,
-        {
-          duration: 5000,
-          position: "top-right",
-        }
+        'error'
       );
       return false;
     }
@@ -433,7 +426,7 @@ export default function SidebarDemo() {
 
   const validateEducation = () => {
     if (educations.length === 0) {
-      toast.error("Please add at least one education entry");
+      customToast("Please add at least one education entry", 'error');
       return false;
     }
 
@@ -449,7 +442,7 @@ export default function SidebarDemo() {
     );
 
     if (missingFields.length > 0) {
-      toast.error(
+      customToast(
         <div>
           <strong>Please fill in all required fields for education:</strong>
           <ul className="mt-2 list-disc list-inside">
@@ -458,10 +451,7 @@ export default function SidebarDemo() {
             ))}
           </ul>
         </div>,
-        {
-          duration: 5000,
-          position: "top-right",
-        }
+        'error'
       );
       return false;
     }
@@ -469,17 +459,23 @@ export default function SidebarDemo() {
     return true;
   };
 
+  // Add this new function to validate the current section
+  const validateCurrentSection = () => {
+    switch (selectedSection) {
+      case "Basic Information":
+        return validateBasicInfo();
+      case "Education":
+        return validateEducation();
+      // Add more cases for other sections if needed
+      default:
+        return true;
+    }
+  };
+
+  // Update the handleNavigation function
   const handleNavigation = (direction) => {
     if (direction === "next") {
-      switch (selectedSection) {
-        case "Basic Information":
-          if (!validateBasicInfo()) return;
-          break;
-        case "Education":
-          if (!validateEducation()) return;
-          break;
-        // Add more cases for other sections if needed
-      }
+      if (!validateCurrentSection()) return;
     }
 
     if (direction === "next" && currentIndex === sections.length - 1) {

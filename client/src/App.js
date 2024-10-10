@@ -23,6 +23,7 @@ import SidebarDemo from "./views/SidebarDemo";
 import UploadResume from "./views/UploadResume";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Toaster } from "react-hot-toast";
 
 function App() {
   return (
@@ -53,10 +54,33 @@ function App() {
           </Routes>
         </BrowserRouter>
       </NextUIProvider>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 2000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+          success: {
+            duration: 2000,
+            theme: {
+              primary: "green",
+              secondary: "black",
+            },
+          },
+          error: {
+            duration: 2000,
+            theme: {
+              primary: "red",
+              secondary: "black",
+            },
+          },
+        }}
+      />{" "}
       <ToastContainer position="top-right" autoClose={3000} />
       {/* <div className="min-h-full h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8"> */}
-
       {/* </div>
     </div> */}
     </AuthProvider>

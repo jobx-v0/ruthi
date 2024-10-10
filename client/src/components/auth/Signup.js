@@ -15,6 +15,8 @@ import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { toast } from "react-hot-toast";
+import { fetchUserProfile } from '../../api/userProfileApi';
+import { useAuth } from "../../context/AuthContext";
 
 // import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
@@ -24,6 +26,7 @@ export default function Signup() {
   const [role, setRole] = useState("candidate");
   const navigate = useNavigate();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const {setToken} = useAuth();
 
   useEffect(() => {
     const fields = isEmployer ? employerSignupFields : candidateSignupFields;
@@ -195,17 +198,33 @@ export default function Signup() {
 
       // Check if the response contains a token
       if (response.data && (response.data.token || response.data.newUsertoken)) {
-        localStorage.setItem("authToken",response.data.token || response.data.newUsertoken);
-        // toast.success("Account created successfully! Redirecting...");
+        const authToken = response.data.token || response.data.newUsertoken;
+        setToken(authToken);
+        
         await toast.promise(
-          new Promise(resolve => setTimeout(resolve, 2000)), // 2 seconds delay
+          new Promise(resolve => setTimeout(resolve, 2000)),
           { 
             loading: 'Creating account...',
             success: 'Account created successfully! Redirecting...',
             error: 'An error occurred',
           }
         );
-        navigate("/uploadResume", { replace: true });
+
+        console.log("response.data.userId", response.data);
+
+        // Fetch user profile to check if it exists
+        try {
+          const userProfile = await fetchUserProfile(response.data.user.id || response.data.user._id);
+          if (userProfile && Object.keys(userProfile).length > 0) {
+            navigate("/profile", { replace: true });
+          } else {
+            navigate("/uploadResume", { replace: true });
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // If there's an error fetching the profile, assume it doesn't exist
+          navigate("/uploadResume", { replace: true });
+        }
       } else {
         throw new Error("No token received from server");
       }

@@ -8,16 +8,22 @@ import { useAuth } from "../../context/AuthContext";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
 import { Checkbox } from "@nextui-org/react";
-import { toast, Toaster } from 'react-hot-toast';
+import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { fetchUserProfile } from '../../api/userProfileApi';
+import { useCustomToast } from "../utils/useCustomToast"; // Import the custom hook
 
 const fields = loginFields;
 let fieldsState = {};
 fields.forEach((field) => (fieldsState[field.id] = ""));
 
 export default function Login() {
-  const { setToken} = useAuth();
+  const { setToken } = useAuth();
   const [loginState, setLoginState] = useState(fieldsState);
   const navigate = useNavigate();
+  const customToast = useCustomToast();
+  const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   const handleChange = (e) => {
     setLoginState({ ...loginState, [e.target.id]: e.target.value });
@@ -29,6 +35,7 @@ export default function Login() {
       const result = await loginUserAPI(loginState);
       if (result.success) {
         setToken(result.token);        
+        customToast('Login successful!', 'success');
         // Delay navigation to allow toast to be visible
         setTimeout(() => {
           if (result.hasProfile) {
@@ -38,11 +45,11 @@ export default function Login() {
           }
         }, 1000); // 1 second delay
       } else {
-        toast.error(result.error || 'Login failed. Please try again.');
+        customToast(result.error || 'Login failed. Please try again.', 'error');
       }
     } catch (error) {
       console.error(error);
-      toast.error('An unexpected error occurred. Please try again later.');
+      customToast('An unexpected error occurred. Please try again later.', 'error');
     }
   };
 
@@ -51,11 +58,46 @@ export default function Login() {
     navigate("/forgot-password");
   };
 
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+      const response = await axios.post(
+        `${REACT_APP_BACKEND_URL}/api/auth/google-auth`,
+        {
+          token: credentialResponse.credential,
+        }
+      );
+
+      if (response.data && response.data.token) {
+        setToken(response.data.token);
+        
+        customToast('Login successful!', 'success');
+
+        try {
+          const userProfile = await fetchUserProfile(response.data.user.id);
+          if (userProfile && Object.keys(userProfile).length > 0) {
+            navigate("/home", { replace: true });
+          } else {
+            navigate("/uploadResume", { replace: true });
+          }
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          navigate("/uploadResume", { replace: true });
+        }
+      } else {
+        throw new Error("No token received from server");
+      }
+    } catch (error) {
+      console.error("Error during Google login:", error);
+      customToast('Authentication failed. Please Signup as a new user/admin', 'error');
+    }
+  };
+
   const words = "Welcome back! Please enter your details.";
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
-      <Toaster 
+      {/* <Toaster 
         position="top-right" 
         toastOptions={{
           duration: 5000,
@@ -64,7 +106,7 @@ export default function Login() {
             color: '#fff',
           },
         }}
-      />
+      /> */}
 
       {/* Left Side Content*/}
       <div className="w-full lg:w-[55%] text-white p-4 lg:p-6 flex flex-col items-center justify-center bg-gradient-to-r from-blue-600 via-blue-500 to-transparent">
@@ -83,9 +125,28 @@ export default function Login() {
       {/* Right Side Form */}
       <div className="w-full lg:w-[45%] flex items-center justify-center p-4 lg:p-8 relative">
         <div className="relative p-4 lg:p-6 rounded-lg w-full max-w-md z-10 lg:mr-8 shadow-2xl bg-white opacity-85">
-          <h2 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4">
+          <h2 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4 text-center">
             Sign In
           </h2>
+          
+          {/* Google Auth Button */}
+          <div className="flex justify-center mb-4">
+            <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => {
+                  customToast('Google Login Failed', 'error');
+                }}
+              />
+            </GoogleOAuthProvider>
+          </div>
+
+          <div className="flex items-center my-4">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="px-3 text-gray-500 text-sm">OR</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-3 mb-2">
             {fields.map((field) => (
               <InputField

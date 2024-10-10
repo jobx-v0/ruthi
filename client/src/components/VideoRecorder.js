@@ -62,8 +62,6 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
 
   const uploadChunkToAzure = async (blob, chunkNumber) => {
     try {
-      console.log(`Uploading chunk ${chunkNumber}...`);
-
       const response = await getSasURL(
         authToken,
         userId,
@@ -131,8 +129,6 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
               chunkSizeRef.current += event.data.size;
 
               if (chunkSizeRef.current >= CHUNK_SIZE) {
-                console.log("Successfully collected 5MB of data.");
-
                 const chunkBlob = new Blob(accumulatedChunks.current, {
                   type: "video/webm",
                 });
@@ -151,13 +147,6 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
 
           mediaRecorder.onstop = () => {
             if (chunkSizeRef.current > 0) {
-              console.log(
-                `Collected remaining ${(
-                  chunkSizeRef.current /
-                  (1024 * 1024)
-                ).toFixed(2)}MB of data.`
-              );
-
               const remainingChunkBlob = new Blob(accumulatedChunks.current, {
                 type: "video/webm",
               });

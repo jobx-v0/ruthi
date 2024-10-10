@@ -23,6 +23,7 @@ import SidebarDemo from "./views/SidebarDemo";
 import UploadResume from "./views/UploadResume";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import InterviewPreview from "./components/interview/InterviewPreview";
 import { Toaster } from "react-hot-toast";
 
 function App() {
@@ -41,6 +42,7 @@ function App() {
             <Route path="/home" element={<Home />} />
             {/* <Route path="/interview" element={<InterviewPage />} /> */}
             <Route path="/thank-you" element={<ThankYouPage />} />
+            <Route path="/interview-preview" element={<InterviewPreview />} />
             <Route path="/new-interview" element={<NewInterview />} />
             <Route path="/verification" element={<VerificationPage />} />
             <Route

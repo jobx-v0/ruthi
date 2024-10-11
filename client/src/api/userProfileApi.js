@@ -7,16 +7,15 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_URL = BACKEND_URL + "/api/user-profile";
 
 // save user profile data
-export const saveUserProfileData = async (userId, data) => {
-  const token = localStorage.getItem("authToken");
-  if (!token || !userId) {
+export const saveUserProfileData = async (authToken, data) => {
+  if (!authToken) {
     toast.error("You must be logged in to save your profile.");
     throw new Error("Authentication required");
   }
 
   try {
-    const response = await axios.put(`${API_URL}/${userId}`, data, {
-      headers: { Authorization: `Bearer ${token}` },
+    const response = await axios.put(`${API_URL}}`, data, {
+      headers: { Authorization: `Bearer ${authToken}` },
     });
     
     return response.data;

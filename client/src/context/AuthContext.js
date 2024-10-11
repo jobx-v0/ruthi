@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
   const setToken = useCallback((token) => {
     setAuthToken(token);
     if (token) {
+      console.log("Set token:", token);
       localStorage.setItem("authToken", token);
     } else {
       localStorage.removeItem("authToken");

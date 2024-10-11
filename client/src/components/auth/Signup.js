@@ -214,7 +214,7 @@ export default function Signup() {
 
         // Fetch user profile to check if it exists
         try {
-          const userProfile = await fetchUserProfile(response.data.user.id || response.data.user._id);
+          const userProfile = await fetchUserProfile(authToken);
           if (userProfile && Object.keys(userProfile).length > 0) {
             navigate("/profile", { replace: true });
           } else {

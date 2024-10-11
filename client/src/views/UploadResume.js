@@ -35,6 +35,7 @@ import { toast } from "react-toastify";
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
 const RESUME_PARSER_URL = process.env.REACT_APP_RESUME_PARSER_URL + "/api/resume";
+console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
 
 
 export default function Component() {

@@ -9,7 +9,9 @@ const ffmpeg = require("fluent-ffmpeg");
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
 const path = require("path");
+const fsExtra = require("fs-extra");
 const InterviewService = require("./interviewService");
+const Face_Recognition = require("./facial_recognition");
 
 require("dotenv").config();
 
@@ -391,12 +393,16 @@ const getChunks = async (userId, jobId, questionId) => {
   }
 };
 
-const deleteChunksFromLocalDir = async (
-  chunkPaths,
-  userId,
-  jobId,
-  questionId
-) => {
+const deleteTimeStampPhotos = async (timeStampImagesPath) => {
+  try {
+    fsExtra.removeSync(timeStampImagesPath);
+    console.log(`Successfully deleted ${timeStampImagesPath}`);
+  } catch (err) {
+    console.error(`Error deleting directory ${timeStampImagesPath}:`, err);
+  }
+};
+
+const deleteChunksFromLocalDir = async (chunkPaths) => {
   chunkPaths.forEach((chunkPath) => {
     try {
       fs.unlinkSync(chunkPath);
@@ -404,31 +410,53 @@ const deleteChunksFromLocalDir = async (
       console.error(`Error deleting chunk ${chunkPath}:`, err);
     }
   });
+};
 
-  const questionDir = path.join(
-    __dirname,
-    "tempChunks",
-    userId,
-    jobId,
-    questionId
-  );
-  const jobDir = path.join(__dirname, "tempChunks", userId, jobId);
+const deleteVideoFromLocalDir = async (videoPath) => {
+  try {
+    fs.unlinkSync(videoPath);
+  } catch (err) {
+    console.error(`Error deleting chunk ${videoPath}:`, err);
+  }
+};
+
+const deleteAudioFromLocalDir = async (audioPath) => {
+  try {
+    fs.unlinkSync(audioPath);
+  } catch (err) {
+    console.error(`Error deleting chunk ${audioPath}:`, err);
+  }
+};
+
+const deleteUserIdDir = async (userId) => {
+  const userIdDir = path.join(__dirname, "tempChunks", userId);
 
   try {
-    fs.rmSync(questionDir, { recursive: true, force: true });
+    fs.rmSync(userIdDir, { recursive: true, force: true });
   } catch (err) {
-    console.error(`Error deleting questionId directory ${questionDir}:`, err);
+    console.error(`Error deleting userId directory ${userIdDir}:`, err);
   }
+};
 
-  if (fs.existsSync(jobDir) && fs.readdirSync(jobDir).length === 0) {
-    try {
-      fs.rmSync(jobDir, { recursive: true, force: true });
-    } catch (err) {
-      console.error(`Error deleting jobId directory ${jobDir}:`, err);
-    }
-  }
+// Get the length (duration) of an audio file
+const getAudioDuration = (audioPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(audioPath, (err, metadata) => {
+      if (err) {
+        return reject(`Error retrieving audio info: ${err.message}`);
+      }
 
-  console.log("Directories cleaned up.");
+      const audioStream = metadata.streams.find(
+        (stream) => stream.codec_type === "audio"
+      );
+
+      if (!audioStream || !metadata.format || !metadata.format.duration) {
+        return reject(new Error("Unable to retrieve audio duration"));
+      }
+
+      resolve(metadata.format.duration);
+    });
+  });
 };
 
 // Download all chunks and save them locally in the proper directory
@@ -450,8 +478,7 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
   const combinedVideoPath = path.join(tempDir, combinedVideoName);
   const audioPath = path.join(tempDir, `${userId}${jobId}${questionId}.wav`);
 
-  combineChunks(chunkPaths, combinedVideoPath);
-  console.log("Video chunks combined.");
+  await combineChunks(chunkPaths, combinedVideoPath);
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
@@ -461,9 +488,35 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
     );
   }
 
-  console.log(combinedVideoPath);
+  await deleteChunksFromLocalDir(chunkPaths);
 
   await extractAudio(combinedVideoPath, audioPath);
+
+  const duration = await getAudioDuration(audioPath);
+
+  const timeStampImagesPath = path.join(tempDir, "photos");
+  ensureDirectoryExists(timeStampImagesPath);
+
+  await Face_Recognition.captureRandomFrames(
+    duration,
+    combinedVideoPath,
+    timeStampImagesPath
+  );
+
+  const trust_score = await Face_Recognition.processImages(timeStampImagesPath);
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  await deleteTimeStampPhotos(timeStampImagesPath);
+
+  await uploadFinalVideoToAzure(
+    combinedVideoPath,
+    `${userId}/${jobId}/${questionId}/${combinedVideoName}`
+  );
+
+  await deleteChunksFromAzure(chunks);
+
+  await deleteVideoFromLocalDir(combinedVideoPath);
 
   const transcription = await transcribeAudio(audioPath);
 
@@ -473,20 +526,12 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
     questionId,
     transcription.toString().trim()
   );
-  console.log("Updated answer in DB successfully");
 
-  await uploadFinalVideoToAzure(
-    combinedVideoPath,
-    `${userId}/${jobId}/${questionId}/${combinedVideoName}`
-  );
+  await deleteAudioFromLocalDir(audioPath);
 
-  await deleteChunksFromAzure(chunks);
+  await deleteUserIdDir(userId);
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  await deleteChunksFromLocalDir(chunkPaths, userId, jobId, questionId);
-
-  return transcription.toString().trim();
+  return { trust_score, transcription: transcription.toString().trim() };
 };
 
 const AzureService = {

@@ -300,11 +300,18 @@ const overAllCandidatePerformance = async (interviewId) => {
       system_prompt
     );
 
-    // console.log(response.final_review);
-    result.final_review = response.final_review;
-    await result.save();
+    let totalTrustScore = 0;
 
-    console.log("Final review updated successfully!");
+    result.question_scores.forEach((score) => {
+      totalTrustScore += score.trust_score || 0;
+    });
+
+    const finalTrustScore = totalTrustScore / 10;
+
+    result.final_trust_score = finalTrustScore;
+    result.final_review = response.final_review;
+
+    await result.save();
   } catch (error) {
     console.error("Error in overAllCandidatePerformance:", error);
   }

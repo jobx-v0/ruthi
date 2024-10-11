@@ -43,16 +43,6 @@ export default function PersonalProjects() {
   const newItemRef = useRef(null);
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    // Format dates when projects are loaded or updated
-    const formattedProjects = projects.map(project => ({
-      ...project,
-      start_date: formatDateForInput(project.start_date),
-      end_date: formatDateForInput(project.end_date),
-    }));
-    setProjects(formattedProjects);
-  }, []); // Empty dependency array means this runs once on mount
-
   const getCurrentDate = () => {
     return new Date().toISOString().split("T")[0];
   };

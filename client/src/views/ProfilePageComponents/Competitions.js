@@ -7,7 +7,6 @@ import { Flag, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
 
-
 const competitionSchema = z.object({
   name: z.string()
     .min(1, "Competition name is required")
@@ -36,12 +35,17 @@ export default function Competitions() {
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    // Format dates when competitions are loaded or updated
-    const formattedCompetitions = competitions.map(comp => ({
-      ...comp,
-      date: formatDateForInput(comp.date),
-    }));
-    setCompetitions(formattedCompetitions);
+    // Ensure competitions is an array before formatting
+    if (Array.isArray(competitions)) {
+      const formattedCompetitions = competitions.map(comp => ({
+        ...comp,
+        date: formatDateForInput(comp.date),
+      }));
+      setCompetitions(formattedCompetitions);
+    } else {
+      // Initialize with an empty array if competitions is undefined
+      setCompetitions([]);
+    }
   }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
@@ -121,7 +125,7 @@ export default function Competitions() {
           </div>
 
           <div className="space-y-4">
-            {competitions.map((competition, index) => (
+            {Array.isArray(competitions) && competitions.map((competition, index) => (
               <div
                 key={competition.id}
                 ref={index === competitions.length - 1 ? newItemRef : null}
@@ -240,6 +244,9 @@ export default function Competitions() {
                 </AnimatePresence>
               </div>
             ))}
+            {(!Array.isArray(competitions) || competitions.length === 0) && (
+              <p className="text-gray-500 text-center">No competitions added yet.</p>
+            )}
           </div>
         </div>
       </motion.div>

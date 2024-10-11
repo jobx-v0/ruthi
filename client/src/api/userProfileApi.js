@@ -39,10 +39,10 @@ export const saveUserProfileData = async (userId, data) => {
 };
 
 // fetch user profile
-export const fetchUserProfile = async (userId) => {
-  const authToken = localStorage.getItem("authToken");
+export const fetchUserProfile = async (authToken) => {
+  console.log("auth token",authToken);
   try {
-    const response = await axios.get(`${API_URL}/${userId}`, {
+    const response = await axios.get(`${API_URL}`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
     return response.data;

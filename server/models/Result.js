@@ -21,6 +21,7 @@ const resultSchema = new Schema({
       },
       feedback: { type: String, required: true },
       review: { type: String, required: true },
+      trust_score: { type: Number, default: 0.0 },
       _id: false,
     },
   ],
@@ -30,6 +31,7 @@ const resultSchema = new Schema({
     default: {},
   },
   total_score: { type: Number, default: 0 },
+  final_trust_score: { type: Number, default: 0.0 },
   created_at: { type: Date, default: Date.now },
   final_review: { type: String },
 });

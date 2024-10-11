@@ -36,7 +36,7 @@ exports.createProfile = async (req, res) => {
 // Read user profile
 exports.getUserProfile = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const userId = req.user.id || req.user._id;
 
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: "Invalid user ID" });
@@ -58,7 +58,7 @@ exports.getUserProfile = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const userId = req.user.id || req.user._id;
         const updateData = req.body;
 
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
@@ -85,7 +85,7 @@ exports.updateProfile = async (req, res) => {
 // Delete user profile
 exports.deleteProfile = async (req, res) => {
     try {
-        const userId = req.params.userId;
+        const userId = req.user.id || req.user._id;
 
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: "Invalid user ID" });

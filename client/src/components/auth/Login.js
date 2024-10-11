@@ -73,8 +73,12 @@ export default function Login() {
         
         customToast('Login successful!', 'success');
 
+        console.log("user id from google login",response.data);
+        
+
         try {
-          const userProfile = await fetchUserProfile(response.data.user.id);
+          const userId = response.data.user.id || response.data.user._id;
+          const userProfile = await fetchUserProfile(response.data.token);
           if (userProfile && Object.keys(userProfile).length > 0) {
             navigate("/home", { replace: true });
           } else {

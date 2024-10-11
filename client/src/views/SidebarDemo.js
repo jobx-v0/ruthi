@@ -162,7 +162,7 @@ export default function SidebarDemo() {
       if (!authToken) return;
 
       try {
-        const userInfo = await fetchUserInfo();
+        const userInfo = await fetchUserInfo(authToken);
         if (!userInfo || !userInfo._id) {
           toast.error("Unable to fetch user information");
           return;
@@ -189,7 +189,7 @@ export default function SidebarDemo() {
         }
 
         // Fetch user profile data
-        const userProfileData = await fetchUserProfile(userInfo._id);
+        const userProfileData = await fetchUserProfile(authToken);
         console.log("userProfileData:", userProfileData);
 
         // Set all profile sections

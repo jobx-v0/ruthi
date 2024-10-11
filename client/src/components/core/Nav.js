@@ -26,6 +26,8 @@ import {
 import RightArrow from "../icons/RightArrow";
 import { useAuth } from "../../context/AuthContext";
 
+
+
 export const ChevronDown = ({ fill, size, height, width, ...props }) => {
   return (
     <svg
@@ -246,7 +248,7 @@ export default function Nav({ isInterviewPage, isLandingPage = false }) {
                       <Divider orientation="vertical" />
                     </DropdownItem>
 
-                    <DropdownItem key="profile">My Profile</DropdownItem>
+                    <DropdownItem key="profile" onClick={()=>navigate("/profile")}>My Profile</DropdownItem>
                     <DropdownItem key="configurations">Saved Jobs</DropdownItem>
                     <DropdownItem key="settings">Settings</DropdownItem>
                     <DropdownItem

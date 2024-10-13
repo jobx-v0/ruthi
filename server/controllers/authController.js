@@ -289,7 +289,25 @@ const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
     console.error("Google OAuth error:", err);
     return res.status(500).json({ message: "Server error", error: err.message });
   }
+  
 };
+updateUser = async (req, res) => {
+  try{
+    const userId = req.user.id || req.user._id;
+    const updateData = req.body;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {new: true});
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(updatedUser);
+  }catch(error){
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
 
 
 const AuthController = {
@@ -301,6 +319,7 @@ const AuthController = {
   resetPassword,
   resendVerificationEmail,
   googleAuth,
+  updateUser,
 };
 
 module.exports = AuthController;

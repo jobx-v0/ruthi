@@ -3,7 +3,7 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 const cors = require("cors");
 
-require("./cron-jobs/processCompletedInterviews");
+//require("./cron-jobs/processCompletedInterviews");
 
 const app = express();
 app.use(cors());
@@ -13,24 +13,24 @@ app.use(bodyParser.json());
 require("./config/db");
 
 const authRoutes = require("./routes/auth");
-const interviewRoutes = require("./routes/interview");
+//const interviewRoutes = require("./routes/interview");
 const jobRoutes = require("./routes/job");
 const questionRoutes = require("./routes/question");
-const azureRoutes = require("./routes/azure");
-const openAIRoutes = require("./routes/openAI");
+//const azureRoutes = require("./routes/azure");
+//const openAIRoutes = require("./routes/openAI");
 const userProfileRoutes = require("./routes/userProfiles");
 
 // Use your authentication routes
 app.use("/api/auth", authRoutes);
 
 // Use interview routes
-app.use("/api/interview", interviewRoutes);
+//app.use("/api/interview", interviewRoutes);
 
 // Use azure routes
-app.use("/api/azure", azureRoutes);
+//app.use("/api/azure", azureRoutes);
 
 // Use open AI routes
-app.use("/api/openai", openAIRoutes);
+//app.use("/api/openai", openAIRoutes);
 
 // Use job routes
 app.use("/api", jobRoutes);

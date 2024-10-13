@@ -62,6 +62,7 @@ const ResumePage = ({ content }) => (
   </div>
 );
 const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL + "/api/user-profile";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function OverviewPage() {
   const { fetchUserInfo, authToken } = useAuth();
@@ -90,6 +91,7 @@ export default function OverviewPage() {
     const getUserInfo = async () => {
       if (authToken) {
         const info = await fetchUserInfo(authToken);
+        setIsSubmitted(info.isProfileSubmitted);
         setUserInfo(info);
       }
     };
@@ -101,6 +103,9 @@ export default function OverviewPage() {
 
   const handleSubmit = async () => {
     setIsLoading(true);
+    const authToken = localStorage.getItem("authToken");
+    await axios.put(`${BACKEND_URL}/api/auth/update`, {isProfileSubmitted: true}, {headers: {Authorization: `Bearer ${authToken}`}});
+
     try {
       const dataToSubmit = {
         userId: userInfo._id,

@@ -6,7 +6,11 @@ const GuestRoute = ({ children }) => {
   const { authToken, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="loader-container">
+        <div className="loader"></div>
+      </div>
+    );
   }
 
   // If authenticated, redirect to home page

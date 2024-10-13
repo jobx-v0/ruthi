@@ -50,6 +50,8 @@ const userSchema = new mongoose.Schema({
   },
   picture: { type: String }, // Stores the Google profile picture URL (imageUrl)
   isGoogleAuth: { type: Boolean, default: false },
+  isProfileSubmitted : { type: Boolean, default: false},
+  isResumeParsed :{ type: Boolean, default: false }
 });
 
 userSchema
@@ -83,6 +85,7 @@ userSchema.methods = {
   authenticate: function (plainText) {
     return this.encryptPassword(plainText) === this.hashed_password;
   },
+
 };
 
 const User = mongoose.model("User", userSchema);

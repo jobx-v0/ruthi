@@ -10,6 +10,7 @@ import { TextGenerateEffect } from "../../ui/text-generate-effect";
 import { Checkbox } from "@nextui-org/react";
 import { toast, Toaster } from 'react-hot-toast';
 
+
 const fields = loginFields;
 let fieldsState = {};
 fields.forEach((field) => (fieldsState[field.id] = ""));
@@ -18,6 +19,8 @@ export default function Login() {
   const { setToken} = useAuth();
   const [loginState, setLoginState] = useState(fieldsState);
   const navigate = useNavigate();
+ 
+
 
   const handleChange = (e) => {
     setLoginState({ ...loginState, [e.target.id]: e.target.value });
@@ -27,16 +30,20 @@ export default function Login() {
     e.preventDefault();
     try {
       const result = await loginUserAPI(loginState);
+      console.log(result)
       if (result.success) {
-        setToken(result.token);        
-        // Delay navigation to allow toast to be visible
-        setTimeout(() => {
-          if (result.hasProfile) {
-            navigate("/home");
-          } else {
-            navigate("/uploadResume");
-          }
-        }, 1000); // 1 second delay
+        setToken(result.token);  
+        const isProfileSubmitted = result.userData.isProfileSubmitted;
+        const isParsedResume= result.userData.isParsedResume;
+        // navigation flow
+        if(isProfileSubmitted){
+          navigate("/profile")
+        }else if(!isParsedResume){
+          navigate("/uploadResume") 
+        }else{
+          navigate("/profile")
+        }
+
       } else {
         toast.error(result.error || 'Login failed. Please try again.');
       }

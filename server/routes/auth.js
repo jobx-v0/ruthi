@@ -3,6 +3,9 @@ const router = express.Router();
 const AuthController = require("../controllers/authController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 
+//To put request to backend
+router.put('/update', authMiddleware, AuthController.updateUser);
+ 
 //Google OAuth authentication 
 router.post("/google-auth", AuthController.googleAuth);
 

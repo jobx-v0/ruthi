@@ -104,6 +104,9 @@ export default function Component() {
 
   const handleContinueClick = async () => {
     setIsParsedResume(true);
+    const authToken = localStorage.getItem("authToken");
+    await axios.put(`${BACKEND_URL}/api/auth/update`, {isResumeParsed: true}, {headers: {Authorization: `Bearer ${authToken}`}});
+
     const userInfo = await fetchUserInfo();
     const userId = userInfo._id;
     if (file) {

@@ -7,7 +7,11 @@ const ProtectedRoute = ({ children }) => {
 
   // Show a loading spinner or component while checking authentication
   if (isLoading) {
-    return <div>Loading...</div>; // Replace with a spinner or loading component
+    return (
+      <div className="loader-container">
+        <div className="loader"></div>
+      </div>
+    );
   }
 
   return authToken ? children : <Navigate to="/login" />;

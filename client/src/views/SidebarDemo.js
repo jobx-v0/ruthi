@@ -282,8 +282,13 @@ export default function SidebarDemo() {
   }, [isSubmitted, setSelectedSection]);
 
   const handleLogout = () => {
-    localStorage.clear();
-    window.location.href = "/";
+    let isLoading = true;
+    if (isLoading) {
+      setTimeout(() => {
+        localStorage.clear();
+        window.location.href = "/login";
+      }, 500);
+    }   
   };
 
   const initialLinks = [

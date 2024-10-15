@@ -128,6 +128,14 @@ export default function Component() {
           },
         });
 
+        await axios.put(`${BACKEND_URL}/api/auth/update`, {
+          isParsedResume: true,
+        }, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+          },
+        });
+
         const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
         console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
         console.log("Health check response:", res);

@@ -5,6 +5,9 @@ import { motion } from "framer-motion";
 import { FaCheckCircle, FaEdit } from "react-icons/fa";
 import { useSetRecoilState } from 'recoil';
 import { isSubmittedState } from '../../store/atoms/userProfileSate';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function ThankyouCard() {
   const setIsSubmitted = useSetRecoilState(isSubmittedState);
@@ -12,6 +15,13 @@ export default function ThankyouCard() {
   const handleEditProfile = () => {
     setIsSubmitted(false);
     localStorage.setItem('isSubmitted', 'false');
+    axios.put(`${BACKEND_URL}/api/auth/update`, {
+      isProfileSubmitted: false,
+    }, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+      },
+    });
   };
 
   return (

@@ -53,7 +53,7 @@ const InterviewPage = () => {
       });
   };
 
-  useEffect(() => {
+  /*useEffect(() => {
     const storedAuthToken = localStorage.getItem("authToken");
     if (storedAuthToken) {
       setToken(storedAuthToken);
@@ -70,7 +70,7 @@ const InterviewPage = () => {
       navigate("/login");
       return;
     }
-  }, []);
+  }, []);*/
 
   useEffect(() => {
     if (

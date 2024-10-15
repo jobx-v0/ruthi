@@ -42,7 +42,10 @@ const RuthiLandingPage = () => {
                 talent or find your dream job, our platform provides a seamless,
                 efficient, and fair hiring experience.
               </p>
-              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+              onClick={() => {
+                window.location.href = "/login";
+              }}>
                 START NOW
               </button>
             </div>
@@ -76,7 +79,10 @@ const RuthiLandingPage = () => {
                 creating equal opportunities and fostering a fair recruitment
                 environment for all.
               </p>
-              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+              onClick={() => {
+                window.location.href = "/login";
+              }}>
                 Post Job
               </button>
             </div>
@@ -93,10 +99,16 @@ const RuthiLandingPage = () => {
                 navigate the job market and land your dream job with confidence.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-                <button className="px-8 py-4 border-2 border-[#FF4D00] text-[#FF4D00] rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-orange-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+                <button className="px-8 py-4 border-2 border-[#FF4D00] text-[#FF4D00] rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-orange-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+                onClick={() => {
+                  window.location.href = "/login";
+                }}>
                   Refer a Friend
                 </button>
-                <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+                <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+                onClick={() => {
+                  window.location.href = "/login";
+                }}>
                   Register Now
                 </button>
               </div>

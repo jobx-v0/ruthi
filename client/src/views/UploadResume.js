@@ -53,7 +53,7 @@ export default function Component() {
     { icon: Smile, text: "Almost there! Polishing the results..." },
   ];
 
-  useEffect(() => {
+  /*useEffect(() => {
     console.log("File state updated:", file);
     const authToken = localStorage.getItem("authToken");
     if (!authToken) {
@@ -61,7 +61,7 @@ export default function Component() {
       navigate("/login");
       return;
     }
-  }, [file, navigate]);
+  }, [file, navigate]);*/
 
   useEffect(() => {
     let interval;

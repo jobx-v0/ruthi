@@ -64,6 +64,7 @@ const ResumePage = ({ content }) => (
 );
 const REACT_APP_BACKEND_URL =
   process.env.REACT_APP_BACKEND_URL + "/api/user-profile";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const renderDescription = (description) => {
   if (
@@ -214,16 +215,17 @@ export default function OverviewPage() {
       // First, check if a profile exists
       try {
         const checkResponse = await axios.get(
-          `${REACT_APP_BACKEND_URL}/${userInfo._id}`,
+          `${BACKEND_URL}/api/auth/user/info`,
           {
             headers: { Authorization: `Bearer ${authToken}` },
           }
         );
+        console.log("checkResponse is there the users:", checkResponse);
 
         if (checkResponse.data) {
           // Profile exists, update it
           const updateResponse = await axios.put(
-            `${REACT_APP_BACKEND_URL}/${userInfo._id}`,
+            `${BACKEND_URL}/api/user-profile`,
             dataToSubmit,
             {
               headers: { Authorization: `Bearer ${authToken}` },
@@ -235,7 +237,7 @@ export default function OverviewPage() {
         if (checkError.response && checkError.response.status === 404) {
           // Profile doesn't exist, create a new one
           const createResponse = await axios.post(
-            `${REACT_APP_BACKEND_URL}/create`,
+            `${BACKEND_URL}/api/user-profile/create`,
             dataToSubmit,
             {
               headers: { Authorization: `Bearer ${authToken}` },

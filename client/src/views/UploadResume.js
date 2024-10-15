@@ -31,12 +31,11 @@ import {
 } from "../store/atoms/userProfileSate";
 import { toast } from "react-toastify";
 
-
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
-const RESUME_PARSER_URL = process.env.REACT_APP_RESUME_PARSER_URL + "/api/resume";
+const RESUME_PARSER_URL =
+  process.env.REACT_APP_RESUME_PARSER_URL + "/api/resume";
 console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
-
 
 export default function Component() {
   const [file, setFile] = useState(null);
@@ -57,7 +56,7 @@ export default function Component() {
   useEffect(() => {
     console.log("File state updated:", file);
     const authToken = localStorage.getItem("authToken");
-    if(!authToken){
+    if (!authToken) {
       toast.error("Please login to continue");
       navigate("/login");
       return;
@@ -106,38 +105,37 @@ export default function Component() {
   );
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
 
-
   const handleContinueClick = async () => {
     setIsParsedResume(true);
     const userInfo = await fetchUserInfo();
-    console.log("User Info fecthed from fetchUserInfo:",userInfo);
+    console.log("User Info fetched from fetchUserInfo:", userInfo);
     const userId = userInfo._id || userInfo.id;
     if (file) {
       setIsLoading(true);
-      console.log("File uploaded:", file);
-
-      const response = await axios.get(`${AZURE_URL}/sas/${userId}`);
-      const { sasUrl } = response.data;
-      console.log("SAS URL:", sasUrl);
-
-      const blob = new Blob([file], { type: file.type });
-      console.log("Blob:", blob);
-
-      await axios.put(sasUrl, blob, {
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-        },
-      });
-
-      const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
-      console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
-      console.log("Health check response:", res);
-
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      console.log("Form data:", formData);
-      
       try {
+        console.log("File uploaded:", file);
+
+        const response = await axios.get(`${AZURE_URL}/sas/${userId}`);
+        const { sasUrl } = response.data;
+        console.log("SAS URL:", sasUrl);
+
+        const blob = new Blob([file], { type: file.type });
+        console.log("Blob:", blob);
+
+        await axios.put(sasUrl, blob, {
+          headers: {
+            "x-ms-blob-type": "BlockBlob",
+          },
+        });
+
+        const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
+        console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
+        console.log("Health check response:", res);
+
+        const formData = new FormData();
+        formData.append("file", file, file.name);
+        console.log("Form data:", formData);
+
         const extract = await axios.post(
           `${RESUME_PARSER_URL}/parse-resume`,
           formData,
@@ -152,6 +150,20 @@ export default function Component() {
 
         const parsedData = extract.data.parsed_data;
 
+        // Log the parsed data before sending it to the server
+        console.log("Parsed data to be sent:", parsedData);
+
+        const uploadResponse = await axios.post(
+          `${BACKEND_URL}/api/user-profile/create`,
+          parsedData,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
+        );
+        console.log("Profile creation response:", uploadResponse);
+
         // Update Recoil atoms with parsed data
         setPersonalInformation(parsedData.personal_information || []);
         setSocials(parsedData.socials || []);
@@ -162,21 +174,44 @@ export default function Component() {
         setSkills(parsedData.skills || []);
         setPersonalProjects(parsedData.personal_projects || []);
         setAwardsAndAchievements(parsedData.awards_and_achievements || []);
-        setPositionsOfResponsibility(parsedData.position_of_responsibility || []);
+        setPositionsOfResponsibility(
+          parsedData.position_of_responsibility || []
+        );
         setCompetitions(parsedData.competitions || []);
-        setExtracurricularActivities(parsedData.extra_curricular_activities || []);
+        setExtracurricularActivities(
+          parsedData.extra_curricular_activities || []
+        );
         console.log("User profile updated with parsed data");
 
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
-        console.error("Error parsing resume:", error);
+        console.error("Error in handleContinueClick:", error);
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error("Error response data:", error.response.data);
+          console.error("Error response status:", error.response.status);
+          console.error("Error response headers:", error.response.headers);
+          toast.error(
+            `Error: ${
+              error.response.data.message ||
+              "Failed to create profile. Please try again."
+            }`
+          );
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error("Error request:", error.request);
+          toast.error(
+            "No response received from server. Please try again later."
+          );
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error("Error message:", error.message);
+          toast.error("An unexpected error occurred. Please try again.");
+        }
         setIsLoading(false);
-        // Handle error (e.g., show error message to user)
       }
-    } else if (linkedinUrl !== "") {
-      // Connect with LinkedIn
-      console.log("LinkedIn connected:", linkedinUrl);
     }
   };
 
@@ -188,29 +223,29 @@ export default function Component() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {isLoading ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="bg-white rounded-lg p-8 flex flex-col items-center max-w-md w-full"
           >
             <div className="w-48 h-48 relative">
-              <motion.div 
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-0 border-4 border-orange-200 rounded-full"
               />
-              <motion.div 
+              <motion.div
                 animate={{ rotate: -360 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-3 border-4 border-orange-400 rounded-full"
               />
-              <motion.div 
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-6 border-4 border-orange-600 rounded-full"
               />
-              <motion.div 
+              <motion.div
                 key={loadingStep}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -218,10 +253,12 @@ export default function Component() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                {React.createElement(loadingSteps[loadingStep].icon, { className: "w-16 h-16 text-orange-500" })}
+                {React.createElement(loadingSteps[loadingStep].icon, {
+                  className: "w-16 h-16 text-orange-500",
+                })}
               </motion.div>
             </div>
-            <motion.p 
+            <motion.p
               key={loadingStep}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   candidateSignupFields,
-  employerSignupFields,
+  // employerSignupFields, // Commented out
 } from "../../constants/formFields";
 import FormAction from "../FormAction";
 import { useNavigate } from "react-router-dom";
@@ -20,21 +20,22 @@ import { useAuth } from "../../context/AuthContext";
 
 // import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
-  const [isEmployer, setIsEmployer] = useState(false);
+  const [isEmployer, setIsEmployer] = useState(false); // Commented out
   const [signUpState, setSignUpState] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [role, setRole] = useState("candidate");
+  const [role] = useState("candidate"); // Set to "candidate" by default
   const navigate = useNavigate();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   const {setToken} = useAuth();
 
   useEffect(() => {
-    const fields = isEmployer ? employerSignupFields : candidateSignupFields;
+    const fields = candidateSignupFields;
     const initialState = {};
     fields.forEach((field) => (initialState[field.id] = ""));
     setSignUpState(initialState);
-    setRole(isEmployer ? "recruiter" : "candidate");
-  }, [isEmployer]);
+    setIsEmployer(true); // Set to false by default
+    // setRole("candidate"); // This line can be removed as role is now set by default
+  }, []); // Removed dependency on isEmployer
 
   const handleChange = (e) => {
     setSignUpState((prevState) => ({
@@ -70,7 +71,7 @@ export default function Signup() {
   const handleSubmitSignUp = async (e) => {
     e.preventDefault();
     var is_valid = true;
-    const fields = isEmployer ? employerSignupFields : candidateSignupFields;
+    const fields = candidateSignupFields;
 
     // Create a new object to store the updated sign up state
     let updatedSignUpState = { ...signUpState };
@@ -144,7 +145,7 @@ export default function Signup() {
       try {
         const success = await registerUserAPI({
           ...signUpState,
-          role: isEmployer ? "recruiter" : "candidate",
+          role: "candidate",
         });
         if (success) {
           // toast.success("Account created successfully! Redirecting to login...");
@@ -257,7 +258,7 @@ export default function Signup() {
     }
   };
 
-  const fields = isEmployer ? employerSignupFields : candidateSignupFields;
+  const fields = candidateSignupFields;
   const words =
     "A platform for job-seekers to practice interviews and get evaluated. Hone your skills and get ready for your dream job with real-time feedback and tailored advice.";
 
@@ -306,7 +307,7 @@ export default function Signup() {
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
 
-          <div className="flex space-x-3 mb-4">
+          {/* <div className="flex space-x-3 mb-4">
             <button
               className={`flex-1 px-3 py-2 text-sm ${
                 !isEmployer
@@ -327,14 +328,14 @@ export default function Signup() {
             >
               Employer
             </button>
-          </div>
+          </div> */}
 
           <form onSubmit={handleSubmitSignUp} className="space-y-3 mb-2">
             {fields.map((field) => (
               <InputField
                 key={field.id}
                 handleChange={handleChange}
-                value={signUpState[field.id] || ""} // Ensure a default value
+                value={signUpState[field.id] || ""}
                 labelText={field.labelText}
                 labelFor={field.labelFor}
                 id={field.id}

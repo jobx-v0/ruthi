@@ -171,7 +171,7 @@ export default function Competitions() {
                               htmlFor={`competition-name-${competition.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Competition Name
+                              Competition Name <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -191,7 +191,7 @@ export default function Competitions() {
                               htmlFor={`competition-date-${competition.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Date
+                              Date <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="date"

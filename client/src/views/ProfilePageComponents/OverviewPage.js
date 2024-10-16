@@ -249,15 +249,6 @@ export default function OverviewPage() {
           throw checkError;
         }
       }
-
-      await axios.put(`${BACKEND_URL}/api/auth/update`, {
-        isProfileSubmitted: true,
-      }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-        },
-      });
-
       showToast("Profile submitted successfully!", "success");
       setIsSubmitted(true);
     } catch (error) {

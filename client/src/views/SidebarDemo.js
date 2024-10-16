@@ -160,8 +160,6 @@ export default function SidebarDemo() {
 
   useEffect(() => {
     const getUserProfile = async () => {
-      if (!authToken) return;
-
       try {
         const userInfo = await fetchUserInfo(authToken);
         if (!userInfo || !userInfo._id) {
@@ -169,21 +167,40 @@ export default function SidebarDemo() {
           return;
         }
 
-        console.log("userInfo from fetchUserInfo:", userInfo);
         setIsProfileSubmitted(userInfo.isProfileSubmitted);
         setIsParsedResume(userInfo.isParsedResume);
 
         // Check atoms for existing data
         const sectionsWithData = [];
-        if (publications.length > 0) sectionsWithData.push("Publications");
-        if (personalProjects.length > 0)
+        if (
+          publications.length > 0 &&
+          !sectionsWithData.includes("Publications")
+        )
+          sectionsWithData.push("Publications");
+        if (
+          personalProjects.length > 0 &&
+          !sectionsWithData.includes("Personal Projects")
+        )
           sectionsWithData.push("Personal Projects");
-        if (awardsAndAchievements.length > 0)
+        if (
+          awardsAndAchievements.length > 0 &&
+          !sectionsWithData.includes("Awards and Achievements")
+        )
           sectionsWithData.push("Awards and Achievements");
-        if (positionsOfResponsibility.length > 0)
+        if (
+          positionsOfResponsibility.length > 0 &&
+          !sectionsWithData.includes("Positions of Responsibility")
+        )
           sectionsWithData.push("Positions of Responsibility");
-        if (competitions.length > 0) sectionsWithData.push("Competitions");
-        if (extracurricularActivities.length > 0)
+        if (
+          competitions.length > 0 &&
+          !sectionsWithData.includes("Competitions")
+        )
+          sectionsWithData.push("Competitions");
+        if (
+          extracurricularActivities.length > 0 &&
+          !sectionsWithData.includes("Extra-curricular Activities")
+        )
           sectionsWithData.push("Extra-curricular Activities");
 
         // If there's existing data, set the initial states
@@ -235,11 +252,7 @@ export default function SidebarDemo() {
           userProfileData.position_of_responsibility?.length > 0 &&
           !sectionsWithData.includes("Positions of Responsibility")
         )
-          console.log(
-            "sectionsWithData:",
-            userProfileData.position_of_responsibility
-          );
-        sectionsWithData.push("Positions of Responsibility");
+          sectionsWithData.push("Positions of Responsibility");
         if (
           userProfileData.competitions?.length > 0 &&
           !sectionsWithData.includes("Competitions")
@@ -251,8 +264,11 @@ export default function SidebarDemo() {
         )
           sectionsWithData.push("Extra-curricular Activities");
 
-        setInitialDataSections(sectionsWithData);
-        setManuallyAddedSections(sectionsWithData);
+        // Remove duplicates from sectionsWithData
+        const uniqueSectionsWithData = [...new Set(sectionsWithData)];
+
+        setInitialDataSections(uniqueSectionsWithData);
+        setManuallyAddedSections(uniqueSectionsWithData);
 
         // If there's any data, set the selected section to "Overview"
         if (

@@ -1,36 +1,43 @@
 import { atom } from "recoil";
+import { getPersistedData } from "./persistedData";
+
+const persistedData = getPersistedData();
 
 // Atom for personal information
 export const personalInformationState = atom({
   key: "personalInformationState",
-  default: {
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-  },
+  default: persistedData.personalInformation,
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("personalInformation", JSON.stringify(newData));
+      });
+    },
+  ],
 });
 
 // Atom for socials
 export const socialsState = atom({
   key: "socialsState",
-  default: {
-    github: "",
-    linkedin: "",
-    twitter: "",
-    website: "",
-  },
+  default: persistedData.socials, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("socials", JSON.stringify(newData));
+      });
+    },
+  ],
 });
 
 // Atom for courses
 export const coursesState = atom({
   key: "coursesState",
-  default: [
-    {
-      course_name: "",
-      course_link: "",
-      course_provider: "",
-      completion_date: "",
+  default: persistedData.courses, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("courses", JSON.stringify(newData));
+      });
     },
   ],
 });
@@ -38,14 +45,12 @@ export const coursesState = atom({
 // Atom for education
 export const educationState = atom({
   key: "educationState",
-  default: [
-    {
-      institution: "",
-      degree: "",
-      start_date: "",
-      end_date: "",
-      cgpa_or_percentage: "",
-      description: [],
+  default: persistedData.education, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("education", JSON.stringify(newData));
+      });
     },
   ],
 });
@@ -53,17 +58,25 @@ export const educationState = atom({
 // Atom for experience
 export const experienceState = atom({
   key: "experienceState",
-  default: [],
+  default: persistedData.experience, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("experience", JSON.stringify(newData));
+      });
+    },
+  ],
 });
 
 // Atom for publications
 export const publicationsState = atom({
   key: "publicationsState",
-  default: [
-    {
-      name: "",
-      link: "",
-      date: "",
+  default: persistedData.publications, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("publications", JSON.stringify(newData));
+      });
     },
   ],
 });
@@ -71,10 +84,12 @@ export const publicationsState = atom({
 // Atom for skills
 export const skillsState = atom({
   key: "skillsState",
-  default: [
-    {
-      skill_name: "",
-      skill_proficiency: "",
+  default: persistedData.skills, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("skills", JSON.stringify(newData));
+      });
     },
   ],
 });
@@ -82,14 +97,12 @@ export const skillsState = atom({
 // Atom for personal projects
 export const personalProjectsState = atom({
   key: "personalProjectsState",
-  default: [
-    {
-      name: "",
-      description: [],
-      link: "",
-      start_date: "",
-      end_date: "",
-      description: [],
+  default: persistedData.personalProjects, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("personalProjects", JSON.stringify(newData));
+      });
     },
   ],
 });
@@ -97,19 +110,25 @@ export const personalProjectsState = atom({
 // Atom for awards and achievements
 export const awardsAndAchievementsState = atom({
   key: "awardsAndAchievementsState",
-  default: [],
+  default: persistedData.awardsAndAchievements, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("awardsAndAchievements", JSON.stringify(newData));
+      });
+    },
+  ],
 });
 
 // Atom for positions of responsibility
 export const positionsOfResponsibilityState = atom({
   key: "positionsOfResponsibilityState",
-  default: [
-    {
-      title: "",
-      organization: "",
-      start_date: "",
-      end_date: "",
-      description: [],
+  default: persistedData.positionsOfResponsibility, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("positionsOfResponsibility", JSON.stringify(newData));
+      });
     },
   ],
 });
@@ -117,17 +136,50 @@ export const positionsOfResponsibilityState = atom({
 // Atom for competitions
 export const competitionsState = atom({
   key: "competitionsState",
-  default: [],
+  default: persistedData.competitions, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("competitions", JSON.stringify(newData));
+      });
+    },
+  ],
 });
 
 // Atom for extracurricular activities
 export const extracurricularActivitiesState = atom({
   key: "extracurricularActivitiesState",
-  default: [],
+  default: persistedData.extracurricularActivities, // Load from localStorage or default value
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("extracurricularActivities", JSON.stringify(newData));
+      });
+    },
+  ],
 });
 
-// Atom for submitted state
 export const isSubmittedState = atom({
-  key: 'isSubmittedState',
-  default: false,
+  key: "isSubmittedState",
+  default: persistedData.isSubmitted,
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("isSubmitted", JSON.stringify(newData));
+      });
+    },
+  ],
 });
+
+export const isParsedResumeState = atom({
+  key: "isParsedResumeState",
+  default: persistedData.isParsedResume,
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("isParsedResume", JSON.stringify(newData));
+      });
+    },
+  ],
+});
+

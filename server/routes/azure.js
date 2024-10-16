@@ -3,7 +3,10 @@ const router = express.Router();
 
 const AzureController = require("../controllers/azureController");
 
-router.get("/sas/:userId/:jobId/:questionId", AzureController.generateSasToken);
+router.get(
+  "/sas/:userId/:jobId/:questionId/:chunkNo",
+  AzureController.generateSasToken
+);
 
 router.get("/sas/:userId", AzureController.generateSasTokenForUser);
 
@@ -15,5 +18,7 @@ router.post(
 router.post("/transcribe", AzureController.handleTranscriptionForAllQuestions);
 
 router.get("/audio/download", AzureController.downloadAudio);
+
+router.post("/combine-video", AzureController.combineVideo);
 
 module.exports = router;

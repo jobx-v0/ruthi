@@ -1,54 +1,70 @@
-import { useState } from "react";
+import { useState} from "react";
 import { loginFields } from "../../constants/formFields";
 import FormAction from "../FormAction";
 import InputField from "../Input";
-import NotificationBanner from "../NotificationBanner";
-import useNotification from "../../services/useNotification";
 import { loginUserAPI } from "../../api/authApi";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
-
-// import {Input} from "@nextui-org/react";
 import { Checkbox } from "@nextui-org/react";
+import { toast, Toaster } from 'react-hot-toast';
 
 const fields = loginFields;
 let fieldsState = {};
 fields.forEach((field) => (fieldsState[field.id] = ""));
 
 export default function Login() {
-  const { setToken, setUserInfo } = useAuth();
+  const { setToken} = useAuth();
   const [loginState, setLoginState] = useState(fieldsState);
   const navigate = useNavigate();
-
-  const { notification, showNotification, closeNotification } =
-    useNotification();
 
   const handleChange = (e) => {
     setLoginState({ ...loginState, [e.target.id]: e.target.value });
   };
 
-  const handleClick = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    loginUserAPI(loginState, showNotification, setToken, setUserInfo, navigate);
+    try {
+      const result = await loginUserAPI(loginState);
+      if (result.success) {
+        setToken(result.token);        
+        // Delay navigation to allow toast to be visible
+        setTimeout(() => {
+          if (result.hasProfile) {
+            navigate("/home");
+          } else {
+            navigate("/uploadResume");
+          }
+        }, 1000); // 1 second delay
+      } else {
+        toast.error(result.error || 'Login failed. Please try again.');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('An unexpected error occurred. Please try again later.');
+    }
   };
 
   const handleForgotPassword = (e) => {
     e.preventDefault();
     navigate("/forgot-password");
   };
+
   const words = "Welcome back! Please enter your details.";
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
-      {notification && (
-        <NotificationBanner
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
-        />
-      )}
+      <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
 
       {/* Left Side Content*/}
       <div className="w-full lg:w-[55%] text-white p-4 lg:p-6 flex flex-col items-center justify-center bg-gradient-to-r from-blue-600 via-blue-500 to-transparent">
@@ -59,9 +75,9 @@ export default function Login() {
             className="w-24 lg:w-64 h-auto mb-3"
           />
         </div>
-        <p className="text-base lg:text-xl leading-relaxed text-start">
+        <div className="text-base lg:text-xl leading-relaxed text-start">
           <TextGenerateEffect duration={2} filter={false} words={words} />
-        </p>
+        </div>
       </div>
 
       {/* Right Side Form */}
@@ -70,7 +86,7 @@ export default function Login() {
           <h2 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4">
             Sign In
           </h2>
-          <form className="space-y-3 mb-2">
+          <form onSubmit={handleSubmit} className="space-y-3 mb-2">
             {fields.map((field) => (
               <InputField
                 key={field.id}
@@ -102,7 +118,7 @@ export default function Login() {
               </a>
             </div>
             <FormAction
-              handleClick={handleClick}
+              handleSubmit={handleSubmit}
               text="Sign In"
               customStyles="w-full bg-blue-600 hover:bg-blue-700 text-white"
             />

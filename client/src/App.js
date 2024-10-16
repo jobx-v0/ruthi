@@ -14,15 +14,16 @@ import Jobs from "./views/Jobs";
 import VideoRecorder from "./components/VideoRecorder";
 import NewInterview from "./views/NewInterview";
 import LandingPage from "./components/Test";
-import LandingTest from "./components/LandingTest"
+import LandingTest from "./components/LandingTest";
 import VerificationPage from "./views/Verification";
 import VerifyEmailPrompt from "./views/VerifyEmail";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
 import SidebarDemo from "./views/SidebarDemo";
 import UploadResume from "./views/UploadResume";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import InterviewPreview from "./components/interview/InterviewPreview";
 
 function App() {
   return (
@@ -40,9 +41,13 @@ function App() {
             <Route path="/home" element={<Home />} />
             {/* <Route path="/interview" element={<InterviewPage />} /> */}
             <Route path="/thank-you" element={<ThankYouPage />} />
+            <Route path="/interview-preview" element={<InterviewPreview />} />
             <Route path="/new-interview" element={<NewInterview />} />
             <Route path="/verification" element={<VerificationPage />} />
-            <Route path="/verify-email-prompt" element={<VerifyEmailPrompt />} />
+            <Route
+              path="/verify-email-prompt"
+              element={<VerifyEmailPrompt />}
+            />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/profile" element={<SidebarDemo />} />
@@ -50,7 +55,7 @@ function App() {
           </Routes>
         </BrowserRouter>
       </NextUIProvider>
-      <ToastContainer />
+      <ToastContainer position="top-right" autoClose={3000} />
       {/* <div className="min-h-full h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8"> */}
 

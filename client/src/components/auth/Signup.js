@@ -4,39 +4,41 @@ import {
   employerSignupFields,
 } from "../../constants/formFields";
 import FormAction from "../FormAction";
-import NotificationBanner from "../NotificationBanner";
-import useNotification from "../../services/useNotification";
 import { useNavigate } from "react-router-dom";
 import { registerUserAPI } from "../../api/authApi";
 import InputField from "../Input";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
 
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { GoogleLogin } from "@react-oauth/google";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import { toast } from "react-hot-toast";
+
+// import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
   const [isEmployer, setIsEmployer] = useState(false);
   const [signUpState, setSignUpState] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [role, setRole] = useState("candidate");
   const navigate = useNavigate();
-
-  const { notification, showNotification, closeNotification } =
-    useNotification();
+  const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
   useEffect(() => {
     const fields = isEmployer ? employerSignupFields : candidateSignupFields;
     const initialState = {};
     fields.forEach((field) => (initialState[field.id] = ""));
     setSignUpState(initialState);
+    setRole(isEmployer ? "recruiter" : "candidate");
   }, [isEmployer]);
 
   const handleChange = (e) => {
-    setSignUpState({ ...signUpState, [e.target.id]: e.target.value });
+    setSignUpState((prevState) => ({
+      ...prevState,
+      [e.target.id]: e.target.value,
+    }));
   };
-
-  useEffect(() => {
-    if (notification) {
-      setIsSubmitting(false);
-    }
-  }, [notification]);
 
   const validateEmail = (email) => {
     // Basic email validation
@@ -136,11 +138,103 @@ export default function Signup() {
 
     if (is_valid) {
       setIsSubmitting(true);
-      registerUserAPI(
-        { ...signUpState, role: isEmployer ? "recruiter" : "candidate" },
-        showNotification,
-        () => navigate("/login")
+      try {
+        const success = await registerUserAPI({
+          ...signUpState,
+          role: isEmployer ? "recruiter" : "candidate",
+        });
+        if (success) {
+          // toast.success("Account created successfully! Redirecting to login...");
+          setTimeout(() => {
+            navigate("/login");
+          }, 1000); // Delay navigation by 2 seconds
+        } else {
+          toast.error("Failed to create account. Please try again.");
+        }
+      } catch (error) {
+        toast.error("An error occurred. Please try again later.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    } else {
+      toast.error("Please correct the errors in the form.");
+    }
+  };
+
+  const extractCompanyNameFromEmail = (email) => {
+    // Extract the domain from the email
+    const domain = email.split("@")[1]; // e.g., 'ruthi.in'
+
+    // Get the company name by splitting the domain and taking the first part
+    const companyName = domain.split(".")[0]; // e.g., 'ruthi'
+
+    return companyName;
+  };
+
+  //success handler for Google Auth
+  const handleSuccess = async (credentialResponse) => {
+    const selectedRole = role;
+    try {
+      console.log("Credential Response:", credentialResponse);
+      const decoded = jwtDecode(credentialResponse.credential);
+      console.log("Decoded JWT:", decoded);
+
+      const email = decoded.email;
+      const companyName = extractCompanyNameFromEmail(email);
+
+      const response = await axios.post(
+        `${REACT_APP_BACKEND_URL}/api/auth/google-auth`,
+        {
+          token: credentialResponse.credential,
+          role: selectedRole,
+          companyName,
+        }
       );
+
+      console.log("Response from server:", response.data);
+
+      // Check if the response contains a token
+      if (response.data && (response.data.token || response.data.newUsertoken)) {
+        localStorage.setItem("authToken",response.data.token || response.data.newUsertoken);
+        // toast.success("Account created successfully! Redirecting...");
+        await toast.promise(
+          new Promise(resolve => setTimeout(resolve, 2000)), // 2 seconds delay
+          { 
+            loading: 'Creating account...',
+            success: 'Account created successfully! Redirecting...',
+            error: 'An error occurred',
+          }
+        );
+        navigate("/uploadResume", { replace: true });
+      } else {
+        throw new Error("No token received from server");
+      }
+    } catch (error) {
+      console.error("Error during Google login:", error);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          // The request was made and the server responded with a status code
+          // that falls out of the range of 2xx
+          console.error("Server responded with error:", error.response.data);
+          toast.error(
+            `Authentication failed: ${
+              error.response.data.message || "Unknown error"
+            }`
+          );
+        } else if (error.request) {
+          // The request was made but no response was received
+          console.error("No response received:", error.request);
+          toast.error("No response from server. Please try again later.");
+        } else {
+          // Something happened in setting up the request that triggered an Error
+          console.error("Error setting up request:", error.message);
+          toast.error("An error occurred. Please try again.");
+        }
+      } else {
+        // Handle non-Axios errors
+        console.error("Non-Axios error:", error);
+        toast.error(error.message || "An unexpected error occurred");
+      }
     }
   };
 
@@ -150,13 +244,8 @@ export default function Signup() {
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen">
-      {notification && (
-        <NotificationBanner
-          message={notification.message}
-          type={notification.type}
-          onClose={closeNotification}
-        />
-      )}
+      {/* Remove NotificationBanner component */}
+
       {/* Left Side */}
       <div className="w-full lg:w-[40%] text-white p-4 lg:p-6 flex flex-col items-center justify-center">
         <div className="flex items-center justify-center mr-14">
@@ -166,9 +255,9 @@ export default function Signup() {
             className="w-24 lg:w-64 h-auto mb-3"
           />
         </div>
-        <p className="text-base lg:text-xl leading-relaxed text-start">
+        <div className="text-base lg:text-xl leading-relaxed text-start">
           <TextGenerateEffect duration={2} filter={false} words={words} />
-        </p>
+        </div>
       </div>
 
       {/* Right Side */}
@@ -178,6 +267,25 @@ export default function Signup() {
           <h1 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4">
             Create an Account
           </h1>
+          {/* import google auth */}
+          <div className="flex justify-center">
+            <GoogleOAuthProvider
+              clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+            >
+              <GoogleLogin
+                onSuccess={handleSuccess}
+                onError={() => {
+                  console.log("Login Failed");
+                }}
+              />
+            </GoogleOAuthProvider>
+          </div>
+
+          <div className="flex items-center my-4">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="px-3 text-gray-500 text-sm">OR</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
 
           <div className="flex space-x-3 mb-4">
             <button
@@ -207,7 +315,7 @@ export default function Signup() {
               <InputField
                 key={field.id}
                 handleChange={handleChange}
-                value={signUpState[field.id]}
+                value={signUpState[field.id] || ""} // Ensure a default value
                 labelText={field.labelText}
                 labelFor={field.labelFor}
                 id={field.id}

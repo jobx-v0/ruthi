@@ -6,9 +6,7 @@ import { IconAward } from '@tabler/icons-react'
 import { useRecoilState } from 'recoil'
 import { awardsAndAchievementsState } from '../../store/atoms/userProfileSate'
 import { z } from 'zod'
-import { saveUserProfileData } from '../../api/userProfileApi'
-import { useAuth } from '../../context/AuthContext'
-import { toast } from 'react-toastify'
+
 
 const awardSchema = z.string()
   .min(1, "Award name is required")
@@ -19,7 +17,6 @@ export default function AwardsAndAchievements() {
   const [awards, setAwards] = useRecoilState(awardsAndAchievementsState)
   const [newAward, setNewAward] = useState('')
   const [error, setError] = useState(null)
-  const { userInfo } = useAuth()
 
   const validateAward = (award) => {
     try {
@@ -53,25 +50,6 @@ export default function AwardsAndAchievements() {
 
   const removeAward = (index) => {
     setAwards(awards.filter((_, i) => i !== index))
-  }
-
-  const handleSave = async () => {
-    if (!userInfo || !userInfo._id) {
-      toast.error('User information not available.')
-      return
-    }
-
-    const dataToSubmit = {
-      awards_and_achievements: awards
-    }
-
-    try {
-      await saveUserProfileData(userInfo._id, dataToSubmit)
-      toast.success('Awards and achievements saved successfully!')
-    } catch (error) {
-      console.error('Failed to save awards and achievements:', error)
-      toast.error('Failed to save awards and achievements. Please try again.')
-    }
   }
 
   return (
@@ -140,15 +118,6 @@ export default function AwardsAndAchievements() {
               <p className="text-gray-500 text-center">No awards or achievements added yet.</p>
             )}
           </AnimatePresence>
-        </div>
-
-        <div className="mt-6 text-left">
-          <button
-            onClick={handleSave}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-          >
-            Save
-          </button>
         </div>
       </motion.div>
     </div>

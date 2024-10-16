@@ -14,3 +14,34 @@ export const transcribeInterviewAPI = async (authToken, userId, jobId) => {
     },
   });
 };
+
+export const getSasURL = async (
+  authToken,
+  userId,
+  jobId,
+  questionId,
+  chunkNumber
+) => {
+  return axios.get(
+    `${API_URL}/sas/${userId}/${jobId}/${questionId}/${chunkNumber}`,
+    {
+      body: {
+        userId,
+        jobId,
+        questionId,
+        chunkNumber,
+      },
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    }
+  );
+};
+
+export const uploadChunkToAzureAPI = async (sasUrl, blob) => {
+  return await axios.put(sasUrl, blob, {
+    headers: {
+      "x-ms-blob-type": "BlockBlob",
+    },
+  });
+};

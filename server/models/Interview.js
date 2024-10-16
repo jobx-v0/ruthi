@@ -22,12 +22,23 @@ const interviewSchema = new Schema({
         required: true,
       },
       answer: { type: String, required: true },
+      number_of_chunks: {
+        type: Number,
+        expires: "24h",
+      },
       _id: false,
     },
   ],
   created_at: { type: Date, default: Date.now },
+  isCompleted: { type: Boolean, default: false },
+  evaluation: {
+    type: String,
+    enum: ["not done", "in process", "completed"], // Enum to represent different states
+    default: "not done", // Default value
+  },
 });
 
+// Model
 const Interview = mongoose.model("Interview", interviewSchema);
 
 module.exports = Interview;

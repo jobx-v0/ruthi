@@ -95,7 +95,7 @@ export default function PersonalProjects() {
 
   const descriptionToBulletPoints = (description) => {
     if (!description || typeof description !== 'string') {
-      return [];
+      return [description];
     }
     return description.split('\n').filter(point => point.trim() !== '');
   };

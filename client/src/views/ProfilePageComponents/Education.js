@@ -191,7 +191,7 @@ export default function Education() {
 
   const descriptionToBulletPoints = (description) => {
     if (!description || typeof description !== "string") {
-      return [];
+      return [description];
     }
     return description.split("\n").filter((point) => point.trim() !== "");
   };

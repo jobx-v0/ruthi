@@ -21,6 +21,7 @@ import UploadResume from "./views/UploadResume";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from 'react-toastify';
+import ReachOut from "./components/ReachOut";
 import 'react-toastify/dist/ReactToastify.css';
  
 function App() {
@@ -59,6 +60,15 @@ function App() {
               element={
                 <GuestRoute>
                   <ForgotPassword />
+                </GuestRoute>
+              }
+            />
+
+            <Route
+              path="/reach-out"
+              element={
+                <GuestRoute>
+                  <ReachOut />
                 </GuestRoute>
               }
             />

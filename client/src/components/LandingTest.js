@@ -81,7 +81,7 @@ const RuthiLandingPage = () => {
               </p>
               <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
               onClick={() => {
-                window.location.href = "/login";
+                window.location.href = "/reach-out";
               }}>
                 Post Job
               </button>
@@ -101,7 +101,7 @@ const RuthiLandingPage = () => {
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
                 <button className="px-8 py-4 border-2 border-[#FF4D00] text-[#FF4D00] rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-orange-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
                 onClick={() => {
-                  window.location.href = "/login";
+                  window.location.href = "/reach-out";
                 }}>
                   Refer a Friend
                 </button>

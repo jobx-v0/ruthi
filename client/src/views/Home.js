@@ -18,7 +18,7 @@ const Home = () => {
   const [attempts, setAttempts] = useState(0);
   const [showAttempts, setShowAttempts] = useState(false);
 
-  useEffect(() => {
+  /*useEffect(() => {
     // If there is no authToken in the context, retrieve it from localStorage
     const storedAuthToken = localStorage.getItem("authToken");
     if (storedAuthToken) {
@@ -40,7 +40,7 @@ const Home = () => {
       navigate("/login");
       return;
     }
-  }, [authToken]);
+  }, [authToken]);*/
 
   const handleClick = (e) => {
     e.preventDefault();

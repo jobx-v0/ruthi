@@ -4,7 +4,7 @@ const userProfileController = require('../controllers/userProfileController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Create a new user profile
-router.post('/create', userProfileController.createProfile);
+router.post('/create',authMiddleware, userProfileController.createProfile);
 
 // Update a user profile by ID
 router.put('/', authMiddleware, userProfileController.updateProfile);

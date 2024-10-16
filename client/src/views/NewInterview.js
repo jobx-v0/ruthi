@@ -12,7 +12,7 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Flex } from "@tremor/react";
 import { Chip, Button, Tooltip, useDisclosure } from "@nextui-org/react";
-
+import { toast, Toaster } from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faCheck } from "@fortawesome/free-solid-svg-icons";
 import "../components/interview/interview.css";
@@ -23,7 +23,6 @@ const InterviewPage = () => {
   var { authToken, setToken, userInfo, fetchUserInfo } = useAuth();
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  // const [userAnswers, setUserAnswers] = useState([]);
   const hasFetchedQuestions = useRef(false);
   const hasCreatedInterview = useRef(false);
   const navigate = useNavigate();
@@ -36,6 +35,8 @@ const InterviewPage = () => {
   const [isTimerActive, setIsTimerActive] = useState(true);
   const location = useLocation();
   const { jobId } = location.state || {};
+
+  const [isFullScreen, setIsFullScreen] = useState(true);
 
   const handleTimerActiveChange = (newTimerActiveValue) => {
     setIsTimerActive(newTimerActiveValue);
@@ -57,16 +58,13 @@ const InterviewPage = () => {
     const storedAuthToken = localStorage.getItem("authToken");
     if (storedAuthToken) {
       setToken(storedAuthToken);
-      // Fetch user info from the backend
       fetchUserInfo(storedAuthToken);
 
-      // Fetch questions from the backend when the component mounts
       if (!hasFetchedQuestions.current) {
         hasFetchedQuestions.current = true;
         fetchQuestionsData(storedAuthToken);
       }
     } else {
-      // Redirect to login if no authToken found
       navigate("/login");
       return;
     }
@@ -90,6 +88,105 @@ const InterviewPage = () => {
     }
   }, [authToken, userInfo?._id, jobId, questions.length]);
 
+  const enterFullScreen = (attempt = 1) => {
+    const elem = document.documentElement;
+
+    if (document.fullscreenEnabled) {
+      const requestFullScreen =
+        elem.requestFullscreen ||
+        elem.mozRequestFullScreen ||
+        elem.webkitRequestFullscreen ||
+        elem.msRequestFullscreen;
+
+      if (requestFullScreen) {
+        requestFullScreen
+          .call(elem)
+          .then(() => {
+            setIsFullScreen(true);
+          })
+          .catch((err) => {
+            console.warn("Error entering fullscreen:", err);
+            if (attempt < 5) {
+              setTimeout(() => {
+                enterFullScreen(attempt + 1);
+              }, 1000);
+            }
+          });
+      }
+    } else {
+      console.log("Fullscreen is not supported by this browser.");
+    }
+  };
+
+  const warnIfTabNotActive = () => {
+    if (document.hidden) {
+      toast("Warning: Tab switching is not allowed!", {
+        icon: "⚠️",
+      });
+      console.log("Warning: Tab switching is not allowed!");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    e.preventDefault();
+    toast("Warning: Keyboard usage is not allowed!", {
+      icon: "⚠️",
+    });
+    console.log("Warning: Keyboard usage is not allowed!");
+  };
+
+  const ensureFullScreen = () => {
+    if (!document.fullscreenElement && isFullScreen) {
+      enterFullScreen();
+    }
+  };
+
+  const exitFullScreen = () => {
+    if (document.fullscreenElement) {
+      const exitFullScreen =
+        document.exitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.webkitExitFullscreen ||
+        document.msExitFullscreen;
+
+      if (exitFullScreen) {
+        exitFullScreen
+          .call(document)
+          .then(() => {
+            setIsFullScreen(false);
+          })
+          .catch((err) => {
+            console.warn("Error exiting fullscreen:", err);
+          });
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Detect when tab is not active
+    document.addEventListener("visibilitychange", warnIfTabNotActive);
+
+    // Detect keyboard usage
+    document.addEventListener("keydown", handleKeyDown);
+
+    // Ensure fullscreen is maintained unless manually exited
+    document.addEventListener("fullscreenchange", ensureFullScreen);
+
+    // Continuous check to maintain fullscreen
+    const intervalId = setInterval(() => {
+      if (isFullScreen && !document.fullscreenElement) {
+        enterFullScreen();
+      }
+    }, 100);
+
+    return () => {
+      document.removeEventListener("visibilitychange", warnIfTabNotActive);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("fullscreenchange", ensureFullScreen);
+      clearInterval(intervalId);
+    };
+  }, [isFullScreen]);
+
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -104,7 +201,6 @@ const InterviewPage = () => {
       })
       .catch((error) => {
         console.error("Error submitting interview:", error);
-        // Handle error (e.g., show error message to user)
       });
   };
 
@@ -113,7 +209,21 @@ const InterviewPage = () => {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <Nav isInterviewPage={true} isLandingPage={false} />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+        }}
+      />
+      <Nav
+        isInterviewPage={true}
+        isLandingPage={false}
+        exitFullScreen={exitFullScreen}
+      />
       <div className="bg-white m-3 p-2 lg:p-4 rounded-xl shadow-xl border-1 border-slate-50 max-w-6xl w-11/12  lg:w-full flex flex-col ">
         <Flex className="gap-4 p-0 py-1 mb-3 w-full justify-between">
           {" "}

@@ -51,7 +51,7 @@ export default function JobPostMain({
     //   return;
     // }
 
-    navigate("/new-interview", { state: { jobId: id } });
+    navigate("/interview-preview", { state: { jobId: id } });
   };
 
   return (

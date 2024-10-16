@@ -125,7 +125,7 @@ export default function Publications() {
                       htmlFor={`publication-name-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Name
+                      Publication Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -145,7 +145,7 @@ export default function Publications() {
                       htmlFor={`publication-link-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Link
+                      Publication Link <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="url"
@@ -165,7 +165,7 @@ export default function Publications() {
                       htmlFor={`publication-date-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Date
+                      Publication Date <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="date"

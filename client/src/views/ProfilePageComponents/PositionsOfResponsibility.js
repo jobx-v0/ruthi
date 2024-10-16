@@ -115,7 +115,8 @@ export default function PositionsOfResponsibility() {
   };
 
   const descriptionToBulletPoints = (description) => {
-    if (typeof description !== "string") return [];
+    if (typeof description !== "string")
+       return [description];
     return description.split("\n").filter((point) => point.trim() !== "");
   };
 
@@ -190,7 +191,7 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-title-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Title
+                              Title<span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -220,7 +221,7 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-organization-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Organization
+                              Organization<span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -250,7 +251,7 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-start-date-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Start Date
+                              Start Date<span className="text-red-500">*</span>
                             </label>
                             <input
                               type="date"
@@ -281,7 +282,7 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-end-date-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              End Date
+                              End Date<span className="text-red-500">*</span>
                             </label>
                             <input
                               type="date"

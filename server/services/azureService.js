@@ -10,10 +10,22 @@ const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
 const path = require("path");
 const InterviewService = require("./interviewService");
+const yaml = require("js-yaml");
 
 require("dotenv").config();
 
-const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
+//Loading Azure Yaml
+let azureServiceConfig;
+try {
+  const configPath = path.join(__dirname, "config\dev.config.yaml");
+  const config = yaml.load(fs.readFileSync(configPath, "utf8"));
+  let azureService = config.app.azureService;  // Extract azureService config
+} catch (error) {
+  console.error("Error loading YAML config:", error);
+  process.exit(1);
+}
+if(azureServiceConfig){
+  const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
 const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;
@@ -501,3 +513,11 @@ const AzureService = {
 };
 
 module.exports = AzureService;
+}else{
+  console.log('Azure Service is Diabled');
+  
+}
+
+
+
+

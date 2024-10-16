@@ -7,7 +7,7 @@ const processInterview = async (interview) => {
     const results = [];
     for (const item of interview.data) {
       const { question } = item;
-      const transcription = await AzureService.combineAllChunksInToOneVideo(
+      const res = await AzureService.combineAllChunksInToOneVideo(
         interview.user_id.toString(),
         interview.job_id.toString(),
         question.toString()
@@ -16,10 +16,11 @@ const processInterview = async (interview) => {
       const evaluationResult =
         await OpenAIService.evaluateTranscriptionForQuestion(
           question,
-          transcription
+          res.transcription
         );
       results.push({
         questionId: question,
+        trust_score: res.trust_score,
         ...evaluationResult,
       });
     }
@@ -27,6 +28,8 @@ const processInterview = async (interview) => {
     await OpenAIService.createOrUpdateResults(interview._id, results);
 
     await OpenAIService.calculateTotalScore(interview._id);
+
+    await OpenAIService.overAllCandidatePerformance(interview._id);
 
     interview.evaluation = "completed";
     await interview.save();

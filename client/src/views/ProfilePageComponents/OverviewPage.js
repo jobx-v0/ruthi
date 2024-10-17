@@ -167,9 +167,10 @@ export default function OverviewPage({setInvalidSections}) {
               return sectionData.some((item) => {
                 if (section === "experience") {
                   // Special check for experience section
-                  return (
-                    !item[field] || (!item.currently_working && !item.end_date)
-                  );
+                  if (field === "end_date" || field === "currently_working") {
+                    return !item.currently_working && !item.end_date;
+                  }
+                  return !item[field];
                 }
                 return !item[field];
               });
@@ -213,7 +214,7 @@ export default function OverviewPage({setInvalidSections}) {
         const checkResponse = await axios.get(
           `${BACKEND_URL}/api/auth/user/info`,
           {
-            headers: { Authorization: `Bearer ${authToken}` },
+            headers: { Authorization: `Bearer ${authToken}` },  
           }
         );
         console.log("checkResponse is there the users:", checkResponse);

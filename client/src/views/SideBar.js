@@ -519,21 +519,30 @@ export default function SideBar() {
 
   // Update the handleNavigation function
   const handleNavigation = (direction) => {
-
     if (direction === "next") {
       if (!validateCurrentSection()) return;
     }
 
-    if (direction === "next" && currentIndex === sections.length - 1) {
-      setSelectedSection("Overview");
-      return;
+    const allSections = [
+      "Basic Information",
+      "Education",
+      "Experience",
+      "Skills",
+      ...manuallyAddedSections,
+      "Overview"
+    ];
+
+    const currentIndex = allSections.indexOf(selectedSection);
+    let newIndex;
+
+    if (direction === "next") {
+      newIndex = currentIndex + 1;
+    } else {
+      newIndex = currentIndex - 1;
     }
 
-    const newIndex = direction === "next" ? currentIndex + 1 : currentIndex - 1;
-    if (newIndex >= 0 && newIndex < sections.length) {
-      setSelectedSection(sections[newIndex]);
-    } else if (newIndex === sections.length) {
-      setIsModalOpen(true);
+    if (newIndex >= 0 && newIndex < allSections.length) {
+      setSelectedSection(allSections[newIndex]);
     }
 
     if (invalidSections.length > 0) {
@@ -543,11 +552,6 @@ export default function SideBar() {
         setInvalidSections(prev => prev.slice(1)); // Remove the first invalid section
         return;
       }
-    }
-
-    if(invalidSections.length === 0){
-      setSelectedSection("Overview");
-      return;
     }
   };
 

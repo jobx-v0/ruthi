@@ -13,16 +13,35 @@ const experienceSchema = z.object({
   position: z.string()
     .min(1, "Position is required")
     .regex(/^[a-zA-Z0-9\s.,'-]+$/, "Position should only contain letters, numbers, spaces, and common punctuation"),
-  start_date: z.string().min(1, "Start date is required"),
-  end_date: z.string().optional(),
+  start_date: z.string().refine(
+    (date) => {
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
+      const today = new Date();
+      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
+      return selectedDate >= seventyYearsAgo && selectedDate <= today;
+    },
+    {
+      message: "Start date must be within the last 70 years and not in the future",
+    }
+  ),
+  end_date: z.string().refine(
+    (date) => {
+      if (!date) return true; // Allow empty string for currently working
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
+      const today = new Date();
+      return selectedDate <= today;
+    },
+    { message: "End date cannot be in the future" }
+  ).optional(),
   description: z.string().optional(),
   currently_working: z.boolean(),
 });
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
 
 export default function ExperienceForm() {
@@ -87,11 +106,18 @@ export default function ExperienceForm() {
   };
 
   const getCurrentDate = () => {
-    return new Date().toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
+  };
+
+  const getDateLimit = () => {
+    const today = new Date();
+    const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
+    return seventyYearsAgo.toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   const validateEndDate = (startDate, endDate) => {
-    return !startDate || !endDate || new Date(endDate) >= new Date(startDate);
+    if (!startDate || !endDate) return true;
+    return new Date(endDate) >= new Date(startDate);
   };
 
   const descriptionToBulletPoints = (description) => {
@@ -145,7 +171,7 @@ export default function ExperienceForm() {
                       htmlFor={`company-${experience.id}`}
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Company
+                      Company <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -171,7 +197,7 @@ export default function ExperienceForm() {
                       htmlFor={`position-${experience.id}`}
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Position
+                      Position <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -197,10 +223,10 @@ export default function ExperienceForm() {
                       htmlFor={`startDate-${experience.id}`}
                       className="block text-sm font-medium text-gray-700"
                     >
-                      Start Date
+                      Start Date <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="date"
+                      type="month"
                       id={`startDate-${experience.id}`}
                       value={formatDateForInput(experience.start_date)}
                       onChange={(e) => {
@@ -216,6 +242,7 @@ export default function ExperienceForm() {
                           handleInputChange(experience.id, "end_date", "");
                         }
                       }}
+                      min={getDateLimit()}
                       max={getCurrentDate()}
                       className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary ${
                         errors[`${experience.id}-start_date`] ? "border-red-500" : ""
@@ -230,10 +257,10 @@ export default function ExperienceForm() {
                       htmlFor={`endDate-${experience.id}`}
                       className="block text-sm font-medium text-gray-700"
                     >
-                      End Date
+                      End Date <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="date"
+                      type="month"
                       id={`endDate-${experience.id}`}
                       value={formatDateForInput(experience.end_date)}
                       onChange={(e) => {

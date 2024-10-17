@@ -51,19 +51,19 @@ export default function Signup() {
       return "Invalid email format";
     }
 
-    // Company email validation (basic check for non-common domains)
-    if (isEmployer) {
-      const commonDomains = [
-        "gmail.com",
-        "yahoo.com",
-        "hotmail.com",
-        "outlook.com",
-      ];
-      const domain = email.split("@")[1];
-      if (commonDomains.includes(domain)) {
-        return "Please use a company email address";
-      }
-    }
+    // // Company email validation (basic check for non-common domains)
+    // if (isEmployer) {
+    //   const commonDomains = [
+    //     "gmail.com",
+    //     "yahoo.com",
+    //     "hotmail.com",
+    //     "outlook.com",
+    //   ];
+    //   const domain = email.split("@")[1];
+    //   if (commonDomains.includes(domain)) {
+    //     return "Please use a company email address";
+    //   }
+    // }
 
     return null;
   };

@@ -33,12 +33,12 @@ export const hasAnyData = (profile) => {
 
 export const requiredFields = {
   personal_information: ["first_name", "last_name", "email", "phone", "expected_salary"],
-  education: ["institution", "degree", "start_date", "end_date"],
-  experience: ["company", "position", "start_date"],
-  publications: ["name", "date"],
-  courses: ["course_name", "course_provider", "completion_date"],
+  education: ["institution", "degree", "start_date", "end_date","cgpa_or_percentage"],
+  experience: ["company", "position", "start_date", "end_date"],
+  publications: ["name","link", "date"],
+  courses: ["course_name", "course_provider", "completion_date","course_link"],
   skills: ["skill_name", "skill_proficiency"],
-  personal_projects: ["name", "description", "start_date", "end_date"],
+  personal_projects: ["name", "description", "start_date", "end_date","link"],
   position_of_responsibility: ["title", "organization", "start_date", "end_date"],
-  competitions: ["name", "description", "date"],
+  competitions: ["name", "date"],
 };

@@ -81,10 +81,9 @@ export default function Login() {
         console.log("user id from google login", response.data);
 
         try {
-          const userId = response.data.user.id || response.data.user._id;
           const userProfile = await fetchUserProfile(response.data.token);
           if (userProfile && Object.keys(userProfile).length > 0) {
-            navigate("/home", { replace: true });
+            navigate("/profile", { replace: true });
           } else {
             navigate("/uploadResume", { replace: true });
           }

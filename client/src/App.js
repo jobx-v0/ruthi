@@ -16,7 +16,7 @@ import VerificationPage from "./views/Verification";
 import VerifyEmailPrompt from "./views/VerifyEmail";
 import ForgotPassword from "./components/auth/ForgotPassword";
 import ResetPassword from "./components/auth/ResetPassword";
-import SidebarDemo from "./views/SidebarDemo";
+import SideBar from "./views/SideBar";
 import UploadResume from "./views/UploadResume";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
@@ -118,7 +118,7 @@ function App() {
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <SidebarDemo />
+                  <SideBar />
                 </ProtectedRoute>
               }
             />
@@ -143,20 +143,20 @@ function App() {
       <Toaster
         position="top-right"
         toastOptions={{
-          duration: 4000,
+          duration: 5000,
           style: {
             background: "#363636",
             color: "#fff",
           },
           success: {
-            duration: 4000,
+            duration: 5000,
             theme: {
               primary: "green",
               secondary: "black",
             },
           },
           error: {
-            duration: 4000,
+            duration: 5000,
             theme: {
               primary: "red",
               secondary: "black",

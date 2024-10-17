@@ -27,31 +27,26 @@ const educationSchema = z.object({
     ),
   start_date: z.string().refine(
     (date) => {
-      const selectedDate = new Date(date);
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
       const today = new Date();
-      const seventyYearsAgo = new Date(
-        today.getFullYear() - 70,
-        today.getMonth(),
-        today.getDate()
-      );
+      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
       return selectedDate >= seventyYearsAgo && selectedDate <= today;
     },
     {
-      message:
-        "Start date must be within the last 70 years and not in the future",
+      message: "Start date must be within the last 70 years and not in the future",
     }
   ),
-  end_date: z
-    .string()
-    .refine(
-      (date) => {
-        const selectedDate = new Date(date);
-        const today = new Date();
-        return selectedDate <= today;
-      },
-      { message: "End date cannot be in the future" }
-    )
-    .optional(),
+  end_date: z.string().refine(
+    (date) => {
+      if (!date) return true; // Allow empty string for ongoing education
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
+      const today = new Date();
+      return selectedDate <= today;
+    },
+    { message: "End date cannot be in the future" }
+  ).optional(),
   cgpa_or_percentage: z
     .string()
     .regex(/^(\d{1,2}(\.\d{1,2})?|100)$/, "Invalid CGPA or percentage"),
@@ -75,18 +70,14 @@ const courseSchema = z.object({
     ),
   completion_date: z.string().refine(
     (date) => {
-      const selectedDate = new Date(date);
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
       const today = new Date();
-      const seventyYearsAgo = new Date(
-        today.getFullYear() - 70,
-        today.getMonth(),
-        today.getDate()
-      );
+      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
       return selectedDate >= seventyYearsAgo && selectedDate <= today;
     },
     {
-      message:
-        "Completion date must be within the last 70 years and not in the future",
+      message: "Completion date must be within the last 70 years and not in the future",
     }
   ),
   course_link: z.string().url("Invalid URL").or(z.literal("")),
@@ -94,8 +85,7 @@ const courseSchema = z.object({
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toISOString().split("T")[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
 
 export default function Education() {
@@ -198,17 +188,13 @@ export default function Education() {
 
   const getCurrentDate = () => {
     const today = new Date();
-    return today.toISOString().split("T")[0];
+    return today.toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   const getDateLimit = () => {
     const today = new Date();
-    const seventyYearsAgo = new Date(
-      today.getFullYear() - 70,
-      today.getMonth(),
-      today.getDate()
-    );
-    return seventyYearsAgo.toISOString().split("T")[0];
+    const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
+    return seventyYearsAgo.toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   return (
@@ -339,7 +325,7 @@ export default function Education() {
                         Start Date <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="date"
+                        type="month"
                         id={`start-date-${education.id}`}
                         value={formatDate(education.start_date)}
                         min={getDateLimit()}
@@ -372,7 +358,7 @@ export default function Education() {
                         End Date <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="date"
+                        type="month"
                         id={`end-date-${education.id}`}
                         value={formatDate(education.end_date)}
                         min={education.start_date}
@@ -492,7 +478,7 @@ export default function Education() {
                         htmlFor={`course-name-${course.id}`}
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Course Name
+                        Course Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -522,7 +508,7 @@ export default function Education() {
                         htmlFor={`provider-${course.id}`}
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Provider
+                        Provider <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="text"
@@ -552,10 +538,10 @@ export default function Education() {
                         htmlFor={`completion-date-${course.id}`}
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Completion Date
+                        Completion Date <span className="text-red-500">*</span>
                       </label>
                       <input
-                        type="date"
+                        type="month"
                         id={`completion-date-${course.id}`}
                         value={formatDate(course.completion_date)}
                         min={getDateLimit()}
@@ -584,7 +570,7 @@ export default function Education() {
                         htmlFor={`course-link-${course.id}`}
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Course Link
+                        Course Link <span className="text-red-500">*</span>
                       </label>
                       <input
                         type="url"
@@ -621,14 +607,6 @@ export default function Education() {
             </div>
           )}
         </div>
-        {/* <div className="mt-6 text-left">
-        <button
-          className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-6 rounded-full transition duration-300 shadow-md"
-          onClick={handleSave}
-        >
-          Save
-        </button> */}
-        {/* </div> */}
       </motion.div>
     </div>
   );

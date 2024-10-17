@@ -39,7 +39,6 @@ export const saveUserProfileData = async (authToken, data) => {
 
 // fetch user profile
 export const fetchUserProfile = async (authToken) => {
-  console.log("auth token",authToken);
   try {
     const response = await axios.get(`${API_URL}`, {
       headers: { Authorization: `Bearer ${authToken}` },

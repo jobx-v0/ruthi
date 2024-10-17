@@ -64,6 +64,7 @@ const ResumePage = ({ content }) => (
 );
 const REACT_APP_BACKEND_URL =
   process.env.REACT_APP_BACKEND_URL + "/api/user-profile";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 const renderDescription = (description) => {
   if (
@@ -86,7 +87,7 @@ const renderDescription = (description) => {
   }
 };
 
-export default function OverviewPage() {
+export default function OverviewPage({setInvalidSections}) {
   const showToast = useCustomToast();
   const { fetchUserInfo, authToken } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
@@ -125,7 +126,7 @@ export default function OverviewPage() {
       setIsParsed(false);
     }
     getUserInfo();
-  }, [authToken, fetchUserInfo, isParsed]);
+  }, [authToken, isParsed]);
 
   console.log("rendering again");
 
@@ -152,7 +153,7 @@ export default function OverviewPage() {
       };
 
       // Check for missing required fields only if there's data in the corresponding section
-      const missingFields = {};
+      const missingFields = [];
       Object.entries(requiredFields).forEach(([section, fields]) => {
         const sectionData = dataToSubmit[section];
         if (
@@ -166,9 +167,10 @@ export default function OverviewPage() {
               return sectionData.some((item) => {
                 if (section === "experience") {
                   // Special check for experience section
-                  return (
-                    !item[field] || (!item.currently_working && !item.end_date)
-                  );
+                  if (field === "end_date" || field === "currently_working") {
+                    return !item.currently_working && !item.end_date;
+                  }
+                  return !item[field];
                 }
                 return !item[field];
               });
@@ -176,54 +178,41 @@ export default function OverviewPage() {
             return !sectionData[field];
           });
           if (missingInSection.length > 0) {
-            missingFields[section] = missingInSection;
+            missingFields.push(section);
           }
         }
       });
 
-      // Special check for experience end date or currently working
-      if (dataToSubmit.experience && dataToSubmit.experience.length > 0) {
-        const invalidExperiences = dataToSubmit.experience.filter(
-          (exp) => !exp.currently_working && !exp.end_date
-        );
-        if (invalidExperiences.length > 0) {
-          if (!missingFields.experience) {
-            missingFields.experience = [];
-          }
-          missingFields.experience.push("end date or currently working status");
-        }
-      }
-
-      if (Object.keys(missingFields).length > 0) {
-        const missingFieldsMessage = Object.entries(missingFields)
-          .map(([section, fields]) => `${section}: ${fields.join(", ")}`)
-          .join("\n");
+      if (missingFields.length > 0) {
+        const missingFieldsMessage = missingFields.join(", ");
         showToast(
-          `Please fill in the following required fields:\n${missingFieldsMessage}`,
+          `Please fill in the required fields for the following sections:\n${missingFieldsMessage}`,
           "error"
         );
         setIsLoading(false);
+        setInvalidSections(missingFields);
         return;
       }
 
       console.log(
         "Data being submitted:",
         JSON.stringify(dataToSubmit, null, 2)
-      );
+      );  
 
       // First, check if a profile exists
       try {
         const checkResponse = await axios.get(
-          `${REACT_APP_BACKEND_URL}/${userInfo._id}`,
+          `${BACKEND_URL}/api/auth/user/info`,
           {
-            headers: { Authorization: `Bearer ${authToken}` },
+            headers: { Authorization: `Bearer ${authToken}` },  
           }
         );
+        console.log("checkResponse is there the users:", checkResponse);
 
         if (checkResponse.data) {
           // Profile exists, update it
           const updateResponse = await axios.put(
-            `${REACT_APP_BACKEND_URL}/${userInfo._id}`,
+            `${BACKEND_URL}/api/user-profile`,
             dataToSubmit,
             {
               headers: { Authorization: `Bearer ${authToken}` },
@@ -235,7 +224,7 @@ export default function OverviewPage() {
         if (checkError.response && checkError.response.status === 404) {
           // Profile doesn't exist, create a new one
           const createResponse = await axios.post(
-            `${REACT_APP_BACKEND_URL}/create`,
+            `${BACKEND_URL}/api/user-profile/create`,
             dataToSubmit,
             {
               headers: { Authorization: `Bearer ${authToken}` },
@@ -247,7 +236,6 @@ export default function OverviewPage() {
           throw checkError;
         }
       }
-
       showToast("Profile submitted successfully!", "success");
       setIsSubmitted(true);
     } catch (error) {
@@ -648,8 +636,8 @@ export default function OverviewPage() {
   );
 
   return (
-    <div className="min-h-screen">
-      <div className="w-full mx-auto">
+    <div className="min-h-scree">
+      <div className="w-full mx-auto bg-gray-200">
         {isLoading ? <Loader /> : <ResumePage content={content} />}
       </div>
     </div>

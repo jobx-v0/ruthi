@@ -1,4 +1,4 @@
-import { useState} from "react";
+import { useState } from "react";
 import { loginFields } from "../../constants/formFields";
 import FormAction from "../FormAction";
 import InputField from "../Input";
@@ -11,7 +11,7 @@ import { Checkbox } from "@nextui-org/react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { fetchUserProfile } from '../../api/userProfileApi';
+import { fetchUserProfile } from "../../api/userProfileApi";
 import { useCustomToast } from "../utils/useCustomToast"; // Import the custom hook
 
 const fields = loginFields;
@@ -33,23 +33,28 @@ export default function Login() {
     e.preventDefault();
     try {
       const result = await loginUserAPI(loginState);
+      console.log(result);
       if (result.success) {
-        setToken(result.token);        
-        customToast('Login successful!', 'success');
-        // Delay navigation to allow toast to be visible
-        setTimeout(() => {
-          if (result.hasProfile) {
-            navigate("/home");
-          } else {
-            navigate("/uploadResume");
-          }
-        }, 1000); // 1 second delay
+        setToken(result.token);
+        const isProfileSubmitted = result.userData.isProfileSubmitted;
+        const isParsedResume = result.userData.isParsedResume;
+        // navigation flow
+        if (isProfileSubmitted) {
+          navigate("/profile");
+        } else if (!isParsedResume) {
+          navigate("/uploadResume");
+        } else {
+          navigate("/profile");
+        }
       } else {
-        customToast(result.error || 'Login failed. Please try again.', 'error');
+        customToast(result.error || "Login failed. Please try again.", "error");
       }
     } catch (error) {
       console.error(error);
-      customToast('An unexpected error occurred. Please try again later.', 'error');
+      customToast(
+        "An unexpected error occurred. Please try again later.",
+        "error"
+      );
     }
   };
 
@@ -70,17 +75,15 @@ export default function Login() {
 
       if (response.data && response.data.token) {
         setToken(response.data.token);
-        
-        customToast('Login successful!', 'success');
 
-        console.log("user id from google login",response.data);
-        
+        customToast("Login successful!", "success");
+
+        console.log("user id from google login", response.data);
 
         try {
-          const userId = response.data.user.id || response.data.user._id;
           const userProfile = await fetchUserProfile(response.data.token);
           if (userProfile && Object.keys(userProfile).length > 0) {
-            navigate("/home", { replace: true });
+            navigate("/profile", { replace: true });
           } else {
             navigate("/uploadResume", { replace: true });
           }
@@ -93,7 +96,10 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Error during Google login:", error);
-      customToast('Authentication failed. Please Signup as a new user/admin', 'error');
+      customToast(
+        "Authentication failed. Please Signup as a new user/admin",
+        "error"
+      );
     }
   };
 
@@ -132,14 +138,16 @@ export default function Login() {
           <h2 className="text-2xl lg:text-3xl font-bold text-blue-700 mb-4 text-center">
             Sign In
           </h2>
-          
+
           {/* Google Auth Button */}
           <div className="flex justify-center mb-4">
-            <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+            <GoogleOAuthProvider
+              clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+            >
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => {
-                  customToast('Google Login Failed', 'error');
+                  customToast("Google Login Failed", "error");
                 }}
               />
             </GoogleOAuthProvider>

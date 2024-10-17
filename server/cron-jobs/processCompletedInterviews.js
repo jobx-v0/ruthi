@@ -1,6 +1,7 @@
 const Interview = require("../models/Interview");
 const AzureService = require("../services/azureService");
 const OpenAIService = require("../services/openAIService");
+const ReportGenerateService = require("../services/reportGenerator");
 
 const processInterview = async (interview) => {
   try {
@@ -18,6 +19,7 @@ const processInterview = async (interview) => {
           question,
           res.transcription
         );
+
       results.push({
         questionId: question,
         trust_score: res.trust_score,
@@ -30,6 +32,15 @@ const processInterview = async (interview) => {
     await OpenAIService.calculateTotalScore(interview._id);
 
     await OpenAIService.overAllCandidatePerformance(interview._id);
+
+    const { finalOutputPath, blobName, deletePDF } =
+      await ReportGenerateService.generateReport(interview._id);
+
+    const sasURL = await AzureService.generateSasTokenForBlob(blobName);
+
+    await AzureService.uploadPdf(sasURL, finalOutputPath);
+
+    await ReportGenerateService.deletePDF(deletePDF);
 
     interview.evaluation = "completed";
     await interview.save();

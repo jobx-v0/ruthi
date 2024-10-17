@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 
 const InterviewPreview = ({ profilePic }) => {
   const [showModal, setShowModal] = useState(false);
@@ -153,7 +154,9 @@ const InterviewPreview = ({ profilePic }) => {
 
   const testMicrophone = () => {
     if (!selectedMic) {
-      alert("Please select a microphone first.");
+      toast("Warning: Please select a microphone!", {
+        icon: "⚠️",
+      });
       return;
     }
 
@@ -222,7 +225,9 @@ const InterviewPreview = ({ profilePic }) => {
     if (capturedPic) {
       navigate("/new-interview", { state: { jobId: jobId } });
     } else {
-      alert("Please add a photo before continuing.");
+      toast("Warning: Please add a photo before continuing.", {
+        icon: "⚠️",
+      });
     }
   };
 
@@ -247,6 +252,16 @@ const InterviewPreview = ({ profilePic }) => {
 
   return (
     <div className="h-screen flex justify-center items-center">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+        }}
+      />
       <div className="max-w-4xl p-6 flex items-start">
         {/* Profile Section */}
         <div
@@ -268,7 +283,9 @@ const InterviewPreview = ({ profilePic }) => {
                 setShowModal(true);
                 startCamera();
               } else {
-                alert("Please select a camera first.");
+                toast("Warning: Please select a camera!", {
+                  icon: "⚠️",
+                });
               }
             }}
           >

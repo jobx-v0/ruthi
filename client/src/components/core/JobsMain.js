@@ -8,7 +8,7 @@ import {
 } from "../../api/jobApi";
 import JobPostMain from "./JobPostMain";
 import AddJobModal from "./AddJobModal";
-import { useAuth } from "../../context/AuthContext"; // Import the AuthContext
+import { useAuth } from "../../context/AuthContext";
 
 export default function JobsMain() {
   const [jobs, setJobs] = useState([]);

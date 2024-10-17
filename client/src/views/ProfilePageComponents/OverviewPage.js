@@ -183,16 +183,6 @@ export default function OverviewPage({setInvalidSections}) {
         }
       });
 
-      // Special check for experience end date or currently working
-      if (dataToSubmit.experience && dataToSubmit.experience.length > 0) {
-        const invalidExperiences = dataToSubmit.experience.filter(
-          (exp) => !exp.currently_working && !exp.end_date
-        );
-        if (invalidExperiences.length > 0 && !missingFields.includes("experience")) {
-          missingFields.push("experience");
-        }
-      }
-
       if (missingFields.length > 0) {
         const missingFieldsMessage = missingFields.join(", ");
         showToast(

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interview Report</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      h1,
+      h2 {
+        text-align: center;
+        color: #0047ab;
+      }
+      h3 {
+        color: #333;
+      }
+      .container {
+        border: 1px solid #ddd;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+      .detail {
+        margin-bottom: 10px;
+      }
+      .question {
+        font-weight: bold;
+      }
+      .feedback {
+        margin-top: 10px;
+        font-style: italic;
+        color: #555;
+      }
+      .trust-score {
+        color: green;
+      }
+      .final-review {
+        background-color: #f0f8ff;
+        padding: 15px;
+        border-radius: 8px;
+        font-style: italic;
+      }
+      .skills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      .skill {
+        background-color: #f0f0f0;
+        padding: 5px 10px;
+        border-radius: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Interview Report</h1>
+
+    <div class="container">
+      <h2>Candidate Information</h2>
+      <div class="detail">Username: <strong>{{username}}</strong></div>
+      <div class="detail">Email: <strong>{{email}}</strong></div>
+      <div class="detail">Result ID: <strong>{{resultId}}</strong></div>
+      <div class="detail">
+        Interview Took At: <strong>{{interviewTookAt}}</strong>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Skills Tested</h2>
+      <div class="skills">
+        {{#each skills_required}}
+        <span class="skill">{{this}}</span>
+        {{/each}}
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Total scores in each category</h2>
+      <div class="detail">
+        Communication Skills Score:
+        <strong>{{totalCommunicationSkills}}</strong>
+      </div>
+      <div class="detail">
+        Subject Expertise Score: <strong>{{totalSubjectExpertise}}</strong>
+      </div>
+      <div class="detail">
+        Relevancy Score: <strong>{{totalRelevancy}}</strong>
+      </div>
+    </div>
+
+    <div class="container">
+      <h2>Total scores</h2>
+      <div class="detail">Total Score: <strong>{{totalScore}}</strong></div>
+      <div class="detail trust-score">
+        Total Trust Score: <strong>{{finalTrustScore}}</strong>
+      </div>
+    </div>
+
+    <div class="container final-review">
+      <h3>Final Review</h3>
+      <p>{{finalReview}}</p>
+    </div>
+
+    {{#each questionDetails}}
+    <div class="container">
+      <h3>Question:</h3>
+      <p class="question">{{question}}</p>
+      <h4>Answer:</h4>
+      <p>{{answer}}</p>
+      <p><b>Communication Skills Score:</b> {{communicationSkills}}</p>
+      <p><b>Subject Expertise Score:</b> {{subjectExpertise}}</p>
+      <p><b>Relevancy Score:</b> {{relevancy}}</p>
+      <h4>Review:</h4>
+      <p>{{review}}</p>
+      <h4>Feedback:</h4>
+      <p class="feedback">{{feedback}}</p>
+    </div>
+    {{/each}}
+  </body>
+</html>

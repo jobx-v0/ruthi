@@ -15,7 +15,8 @@ const projectSchema = z.object({
   link: z.string().url("Invalid URL").or(z.literal("")),
   start_date: z.string().refine(
     (date) => {
-      const selectedDate = new Date(date);
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
       const today = new Date();
       return selectedDate <= today;
     },
@@ -23,7 +24,9 @@ const projectSchema = z.object({
   ),
   end_date: z.string().refine(
     (date) => {
-      const selectedDate = new Date(date);
+      if (!date) return true; // Allow empty string for ongoing projects
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
       const today = new Date();
       return selectedDate <= today;
     },
@@ -34,8 +37,7 @@ const projectSchema = z.object({
 // Add this utility function at the top of your file
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
 
 export default function PersonalProjects() {
@@ -44,7 +46,7 @@ export default function PersonalProjects() {
   const [errors, setErrors] = useState({});
 
   const getCurrentDate = () => {
-    return new Date().toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   const validateField = (field, value, index) => {
@@ -95,7 +97,7 @@ export default function PersonalProjects() {
 
   const descriptionToBulletPoints = (description) => {
     if (!description || typeof description !== 'string') {
-      return [];
+      return [description];
     }
     return description.split('\n').filter(point => point.trim() !== '');
   };
@@ -143,7 +145,7 @@ export default function PersonalProjects() {
                       htmlFor={`project-name-${project.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Project Name
+                      Project Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -163,7 +165,7 @@ export default function PersonalProjects() {
                       htmlFor={`project-link-${project.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Project Link
+                      Project Link 
                     </label>
                     <input
                       type="url"
@@ -183,10 +185,10 @@ export default function PersonalProjects() {
                       htmlFor={`start-date-${project.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Start Date
+                      Start Date <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="date"
+                      type="month"
                       id={`start-date-${project.id}`}
                       value={formatDateForInput(project.start_date)}
                       max={getCurrentDate()}
@@ -204,10 +206,10 @@ export default function PersonalProjects() {
                       htmlFor={`end-date-${project.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      End Date
+                      End Date <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="date"
+                      type="month"
                       id={`end-date-${project.id}`}
                       value={formatDateForInput(project.end_date)}
                       min={project.start_date}

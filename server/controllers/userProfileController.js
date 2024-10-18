@@ -5,7 +5,8 @@ const mongoose = require('mongoose');
 // Create a new user profile
 exports.createProfile = async (req, res) => {
     try {
-        const { userId, ...profileData } = req.body;
+        const userId = req.user.id || req.user._id;
+        const {...profileData } = req.body;
 
         if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
             return res.status(400).json({ message: "Invalid user ID" });

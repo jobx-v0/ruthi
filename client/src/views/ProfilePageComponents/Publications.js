@@ -10,8 +10,7 @@ import { toast } from 'react-toastify';
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
 
 const publicationSchema = z.object({
@@ -21,7 +20,8 @@ const publicationSchema = z.object({
   link: z.string().url("Invalid URL").or(z.literal("")),
   date: z.string().refine(
     (date) => {
-      const selectedDate = new Date(date);
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
       const today = new Date();
       return selectedDate <= today;
     },
@@ -36,8 +36,7 @@ export default function Publications() {
   // const { userInfo } = useAuth();
 
   const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   useEffect(() => {
@@ -125,7 +124,7 @@ export default function Publications() {
                       htmlFor={`publication-name-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Name
+                      Publication Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -165,10 +164,10 @@ export default function Publications() {
                       htmlFor={`publication-date-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Date
+                      Publication Date <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="date"
+                      type="month"
                       id={`publication-date-${publication.id}`}
                       value={formatDateForInput(publication.date)}
                       max={getCurrentDate()}

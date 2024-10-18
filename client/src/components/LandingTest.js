@@ -3,8 +3,10 @@ import HeroSvg from "../assets/hero.svg";
 import CandidateSvg from "../assets/candidate.svg";
 import RecruiterSvg from "../assets/recruiter.svg";
 import Ruthi_full_Logo from "../assets/Ruthi_full_Logo.png";
+import {useNavigate} from "react-router-dom";
 
 const RuthiLandingPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="bg-white min-h-screen font-sans text-gray-800">
       <div className="bg-[#e0ebfd]">
@@ -12,18 +14,18 @@ const RuthiLandingPage = () => {
           <header className="flex flex-row justify-between items-center py-4 sm:py-6">
             <h1 className="text-4xl font-bold text-blue-600">
               <img src={Ruthi_full_Logo} alt="Ruthi Logo" className="w-24 sm:w-36 h-auto hover:cursor-pointer" onClick={() => {
-                window.location.href = "/";
+                navigate("/");
               }}/>
             </h1>
             <div className="flex flex-row space-x-2 sm:space-x-4">
               <button className="px-2 sm:px-6 py-1 sm:py-3 text-xs sm:text-base text-[#FF4D00] border border-[#FF4D00] rounded-md font-semibold transition duration-300 ease-in-out hover:bg-orange-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
               onClick={() => {
-                window.location.href = "/login";
+                navigate("/login");
               }}>
                 Log in
               </button>
               <button className="px-2 sm:px-6 py-1 sm:py-3 text-xs sm:text-base bg-[#FF4D00] text-white rounded-md font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50" onClick={() => {
-                window.location.href = "/signup";
+                navigate("/signup");
               }}>
                 Sign Up
               </button>
@@ -42,7 +44,10 @@ const RuthiLandingPage = () => {
                 talent or find your dream job, our platform provides a seamless,
                 efficient, and fair hiring experience.
               </p>
-              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+              onClick={() => {
+                navigate("/login");
+              }}>
                 START NOW
               </button>
             </div>
@@ -76,7 +81,10 @@ const RuthiLandingPage = () => {
                 creating equal opportunities and fostering a fair recruitment
                 environment for all.
               </p>
-              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+              <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+              onClick={() => {
+                navigate("/reach-out");
+              }}>
                 Post Job
               </button>
             </div>
@@ -93,10 +101,16 @@ const RuthiLandingPage = () => {
                 navigate the job market and land your dream job with confidence.
               </p>
               <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-6">
-                <button className="px-8 py-4 border-2 border-[#FF4D00] text-[#FF4D00] rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-orange-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+                <button className="px-8 py-4 border-2 border-[#FF4D00] text-[#FF4D00] rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-orange-50 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+                onClick={() => {
+                  navigate("/reach-out");
+                }}>
                   Refer a Friend
                 </button>
-                <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50">
+                <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
+                onClick={() => {
+                  navigate("/login");
+                }}>
                   Register Now
                 </button>
               </div>

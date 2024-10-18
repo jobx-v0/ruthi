@@ -14,7 +14,8 @@ const competitionSchema = z.object({
   description: z.string().optional(),
   date: z.string().refine(
     (date) => {
-      const selectedDate = new Date(date);
+      const [year, month] = date.split('-');
+      const selectedDate = new Date(year, month - 1);
       const today = new Date();
       return selectedDate <= today;
     },
@@ -24,8 +25,7 @@ const competitionSchema = z.object({
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
 
 export default function Competitions() {
@@ -49,8 +49,7 @@ export default function Competitions() {
   }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   const validateField = (field, value, index) => {
@@ -171,7 +170,7 @@ export default function Competitions() {
                               htmlFor={`competition-name-${competition.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Competition Name
+                              Competition Name <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -191,10 +190,10 @@ export default function Competitions() {
                               htmlFor={`competition-date-${competition.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Date
+                              Date <span className="text-red-500">*</span>
                             </label>
                             <input
-                              type="date"
+                              type="month"
                               id={`competition-date-${competition.id}`}
                               value={formatDateForInput(competition.date)}
                               max={getCurrentDate()}

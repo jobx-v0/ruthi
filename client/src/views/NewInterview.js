@@ -54,22 +54,6 @@ const InterviewPage = () => {
       });
   };
 
-  /*useEffect(() => {
-    const storedAuthToken = localStorage.getItem("authToken");
-    if (storedAuthToken) {
-      setToken(storedAuthToken);
-      fetchUserInfo(storedAuthToken);
-
-      if (!hasFetchedQuestions.current) {
-        hasFetchedQuestions.current = true;
-        fetchQuestionsData(storedAuthToken);
-      }
-    } else {
-      navigate("/login");
-      return;
-    }
-  }, []);*/
-
   useEffect(() => {
     if (
       authToken &&

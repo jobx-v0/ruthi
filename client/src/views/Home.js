@@ -17,31 +17,6 @@ const Home = () => {
   const [remainingAttempts, setRemainingAttempts] = useState(MAX_ATTEMPTS);
   const [attempts, setAttempts] = useState(0);
   const [showAttempts, setShowAttempts] = useState(false);
-
-  /*useEffect(() => {
-    // If there is no authToken in the context, retrieve it from localStorage
-    const storedAuthToken = localStorage.getItem("authToken");
-    if (storedAuthToken) {
-      // Fetch the current count of interviews for the user
-      setToken(storedAuthToken);
-      fetchInterviewCountsAPI(storedAuthToken)
-        .then((response) => {
-          // Assuming the response contains the count of interviews
-          const interviewCount = response.data.count;
-          setRemainingAttempts(MAX_ATTEMPTS - interviewCount);
-          setAttempts(interviewCount);
-          setShowAttempts(true);
-        })
-        .catch((error) => {
-          console.error("Error fetching interview count:", error);
-          navigate("/login");
-        });
-    } else {
-      navigate("/login");
-      return;
-    }
-  }, [authToken]);*/
-
   const handleClick = (e) => {
     e.preventDefault();
 

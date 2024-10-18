@@ -54,16 +54,6 @@ export default function Component() {
     { icon: Smile, text: "Almost there! Polishing the results..." },
   ];
 
-  /*useEffect(() => {
-    console.log("File state updated:", file);
-    const authToken = localStorage.getItem("authToken");
-    if (!authToken) {
-      toast.error("Please login to continue");
-      navigate("/login");
-      return;
-    }
-  }, [file, navigate]);*/
-
   useEffect(() => {
     let interval;
     if (isLoading) {

@@ -77,6 +77,8 @@ export const getPersistedData = () => {
 
   const isParsedResume = safeJSONParse("isParsedResume", false);
 
+  const isParsedResumeFirstTime = safeJSONParse("isParsedResumeFirstTime", false);
+
   return {
     personalInformation,
     socials,
@@ -92,5 +94,6 @@ export const getPersistedData = () => {
     extracurricularActivities,
     isSubmitted,
     isParsedResume,
+    isParsedResumeFirstTime,
   };
 };

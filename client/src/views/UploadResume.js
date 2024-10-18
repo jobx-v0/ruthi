@@ -104,6 +104,7 @@ export default function Component() {
     extracurricularActivitiesState
   );
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
+  const setIsParsedResumeFirstTime = useSetRecoilState(isParsedResumeFirstTimeState);
 
   const handleContinueClick = async () => {
     setIsParsedResume(true);
@@ -130,6 +131,7 @@ export default function Component() {
 
         await axios.put(`${BACKEND_URL}/api/auth/update`, {
           isParsedResume: true,
+          isParsedResumeFirstTime: true,
         }, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("authToken")}`,
@@ -189,6 +191,7 @@ export default function Component() {
         setExtracurricularActivities(
           parsedData.extra_curricular_activities || []
         );
+        setIsParsedResumeFirstTime(true);
         console.log("User profile updated with parsed data");
 
         setIsLoading(false);

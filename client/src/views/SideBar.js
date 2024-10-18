@@ -51,6 +51,7 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
   isParsedResumeState,
+  isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
 import { useCustomToast } from "../components/utils/useCustomToast";
 
@@ -154,6 +155,8 @@ export default function SideBar() {
   );
   const setIsProfileSubmitted = useSetRecoilState(isSubmittedState);
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
+  const setIsParsedFirstTime = useSetRecoilState(isParsedResumeFirstTimeState);
+
 
   const [initialDataSections, setInitialDataSections] = useState([]);
   const customToast = useCustomToast();
@@ -198,6 +201,7 @@ export default function SideBar() {
 
         setIsProfileSubmitted(userInfo.isProfileSubmitted);
         setIsParsedResume(userInfo.isParsedResume);
+        setIsParsedFirstTime(userInfo.isParsedResumeFirstTime);
 
         // Check atoms for existing data
         const sectionsWithData = [];

@@ -183,3 +183,15 @@ export const isParsedResumeState = atom({
   ],
 });
 
+export const isParsedResumeFirstTimeState = atom({
+  key: "isParsedResumeFirstTimeState",
+  default: persistedData.isParsedResumeFirstTime,
+  effects: [
+    ({ onSet }) => {
+      onSet((newData) => {
+        localStorage.setItem("isParsedResumeFirstTime", JSON.stringify(newData));
+        console.log("isParsedResumeFirstTimeState", newData);
+      });
+    },
+  ],
+});

@@ -33,6 +33,7 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
   isParsedResumeState,
+  isParsedResumeFirstTimeState,
 } from "../../store/atoms/userProfileSate";
 import { isValidData, hasAnyData } from "../../validators/validData";
 import axios from "axios";
@@ -110,6 +111,8 @@ export default function OverviewPage({setInvalidSections}) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
   const [isParsed, setIsParsed] = useRecoilState(isParsedResumeState);
+  const [isParsedFirstTime, setIsParsedFirstTime] = useRecoilState(isParsedResumeFirstTimeState);
+
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -118,15 +121,15 @@ export default function OverviewPage({setInvalidSections}) {
         setUserInfo(info);
       }
     };
-    if (isParsed) {
+    if (isParsedFirstTime) {
       showToast(
         "We've worked our magic with our resume parser! We've done our best to extract your information.",
         "success"
       );
-      setIsParsed(false);
+      setIsParsedFirstTime(false);
     }
     getUserInfo();
-  }, [authToken, isParsed]);
+  }, [authToken]);
 
   console.log("rendering again");
 
@@ -237,6 +240,9 @@ export default function OverviewPage({setInvalidSections}) {
         }
       }
       showToast("Profile submitted successfully!", "success");
+      await axios.put(`${BACKEND_URL}/api/auth/update`, {isProfileSubmitted: true}, {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting profile:", error);

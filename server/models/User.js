@@ -48,6 +48,7 @@ const userSchema = new mongoose.Schema({
   isGoogleAuth: { type: Boolean, default: false },
   isProfileSubmitted: { type: Boolean, default: false },
   isParsedResume: { type: Boolean, default: false },
+  isParsedResumeFirstTime: { type: Boolean, default: false },
 });
 
 userSchema

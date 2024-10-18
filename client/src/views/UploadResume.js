@@ -28,6 +28,7 @@ import {
   competitionsState,
   extracurricularActivitiesState,
   isParsedResumeState,
+  isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
 import { toast } from "react-toastify";
 

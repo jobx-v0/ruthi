@@ -149,11 +149,9 @@ const InterviewPage = () => {
       }
     };
 
-    window.addEventListener("focus", handleFocusChange);
     window.addEventListener("blur", handleFocusChange);
 
     return () => {
-      window.removeEventListener("focus", handleFocusChange);
       window.removeEventListener("blur", handleFocusChange);
     };
   }, [tabSwitchCount]);
@@ -268,15 +266,6 @@ const InterviewPage = () => {
             </Chip>
           </div>
           <div>
-            {/* <QuestionCategoryModal
-              type={
-                questions.length !== 0
-                  ? questions[currentQuestionIndex]
-                    ? questions[currentQuestionIndex].type
-                    : ""
-                  : ""
-              }
-            /> */}
             <QuestionCategoryModal
               type={
                 questions && questions.length !== 0

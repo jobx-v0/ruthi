@@ -35,10 +35,10 @@ export const requiredFields = {
   personal_information: ["first_name", "last_name", "email", "phone", "expected_salary"],
   education: ["institution", "degree", "start_date", "end_date","cgpa_or_percentage"],
   experience: ["company", "position", "start_date", "end_date","currently_working"],
-  publications: ["name","link", "date"],
-  courses: ["course_name", "course_provider", "completion_date","course_link"],
+  publications: ["name","date"],
+  courses: ["course_name", "course_provider", "completion_date"],
   skills: ["skill_name", "skill_proficiency"],
-  personal_projects: ["name", "description", "start_date", "end_date","link"],
+  personal_projects: ["name", "description", "start_date", "end_date"],
   position_of_responsibility: ["title", "organization", "start_date", "end_date"],
   competitions: ["name", "date"],
 };

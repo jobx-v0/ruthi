@@ -657,7 +657,7 @@ export default function OverviewPage({ setInvalidSections }) {
   );
 
   return (
-    <div className="min-h-scree">
+    <div className="min-h-screen">
       <div className="w-full mx-auto bg-gray-200">
         {isLoading ? <Loader /> : <ResumePage content={content} />}
       </div>

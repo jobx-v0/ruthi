@@ -35,7 +35,7 @@ const ReachOut = () => {
                 href="mailto:anuroopanandperli.iitkgp@gmail.com"
                 className="text-gray-700 hover:text-orange-600 transition-colors break-all"
               >
-                anuroopanandperli.iitkgp@gmail.com
+                anuroop@ruthi.in
               </a>
             </div>
           </div>

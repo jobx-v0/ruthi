@@ -1,6 +1,7 @@
 const Interview = require("../models/Interview"); // Import the Interview model
 const MAX_ATTEMPTS = process.env.MAX_ATTEMPTS || 5; // Default to 5 if not specified in .env
 const Question = require("../models/Question");
+const Job = require("../models/Job");
 const InterviewService = require("../services/interviewService");
 const AzureService = require("../services/azureService");
 const OpenAIService = require("../services/openAIService");
@@ -34,7 +35,11 @@ const getQuestionsBySkills = async (req, res) => {
     const numberOfQuestions =
       parseInt(process.env.NUMBER_OF_QUESTIONS_IN_INTERVIEW) || 5;
 
-    const skills = req.body.skills;
+    const jobId = req.body.jobId;
+
+    const job = await Job.findById(jobId);
+
+    const skills = job.skills_required;
 
     const questions = await Question.aggregate([
       { $match: { skills: { $in: skills } } },
@@ -208,11 +213,11 @@ const getCurrentCountOfInterviews = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Find existing interview data for the user
-    let userInterview = await Interview.findOne({ user_id: userId });
+    // Find the number of interview documents for the user
+    let interviewCount = await Interview.countDocuments({ user_id: userId });
 
-    if (userInterview) {
-      return res.status(200).json({ count: userInterview.interviews.length });
+    if (interviewCount) {
+      return res.status(200).json({ count: interviewCount });
     }
     return res.status(200).json({ count: 0 });
   } catch (error) {

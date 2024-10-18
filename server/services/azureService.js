@@ -12,6 +12,8 @@ const path = require("path");
 const fsExtra = require("fs-extra");
 const InterviewService = require("./interviewService");
 const Face_Recognition = require("./facial_recognition");
+const Interview = require("../models/Interview");
+const Result = require("../models/Result");
 
 require("dotenv").config();
 
@@ -169,6 +171,24 @@ const uploadBlob = async (sasUrl, content) => {
       `Failed to upload blob: ${error.message}`,
       "UPLOAD_ERROR"
     );
+  }
+};
+
+const uploadPdf = async (sasUrl, pdfFilePath) => {
+  try {
+    const pdfData = fs.readFileSync(pdfFilePath);
+
+    // Upload the file using a PUT request
+    const response = await axios.put(sasUrl, pdfData, {
+      headers: {
+        "x-ms-blob-type": "BlockBlob", // Required for uploading blobs
+        "Content-Type": "application/pdf", // Set the correct content type
+      },
+    });
+
+    console.log("PDF uploaded successfully:", response.status);
+  } catch (error) {
+    console.error("Error uploading PDF:", error.message);
   }
 };
 
@@ -395,7 +415,7 @@ const getChunks = async (userId, jobId, questionId) => {
 
 const deleteTimeStampPhotos = async (timeStampImagesPath) => {
   try {
-    fsExtra.removeSync(timeStampImagesPath);
+    await fsExtra.remove(timeStampImagesPath);
     console.log(`Successfully deleted ${timeStampImagesPath}`);
   } catch (err) {
     console.error(`Error deleting directory ${timeStampImagesPath}:`, err);
@@ -534,6 +554,31 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
   return { trust_score, transcription: transcription.toString().trim() };
 };
 
+const downloadBlobPDFToFrontend = async (req, res) => {
+  try {
+    const interviewDoc = await Interview.findById(req.params.interviewId);
+    const resultDoc = await Result.findOne({ interview_id: interviewDoc._id });
+
+    const blobName = path.join(
+      `${interviewDoc.user_id}`,
+      `${interviewDoc.job_id}`,
+      `${interviewDoc._id}`,
+      `Report${interviewDoc.user_id}${interviewDoc.job_id}${interviewDoc._id}${resultDoc._id}.pdf`
+    );
+
+    const sasUrl = await generateSasTokenForBlob(blobName);
+
+    const response = await axios.get(sasUrl, { responseType: "stream" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="file.pdf"');
+
+    response.data.pipe(res);
+  } catch (error) {
+    res.status(500).send("Error downloading PDF: " + error.message);
+  }
+};
+
 const AzureService = {
   generateSasTokenForBlob,
   processVideo,
@@ -543,6 +588,9 @@ const AzureService = {
   combineAllChunksInToOneVideo,
   extractAudio,
   transcribeAudio,
+  ensureDirectoryExists,
+  uploadPdf,
+  downloadBlobPDFToFrontend,
 };
 
 module.exports = AzureService;

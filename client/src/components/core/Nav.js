@@ -26,8 +26,6 @@ import {
 import RightArrow from "../icons/RightArrow";
 import { useAuth } from "../../context/AuthContext";
 
-
-
 export const ChevronDown = ({ fill, size, height, width, ...props }) => {
   return (
     <svg
@@ -243,6 +241,7 @@ export default function Nav({
                         base: "bg-slate-300",
                         icon: "text-white/70",
                       }}
+                      style={{ cursor: "pointer" }}
                     />
                   </DropdownTrigger>
                   <DropdownMenu aria-label="User Actions" variant="flat">
@@ -252,7 +251,12 @@ export default function Nav({
                       <Divider orientation="vertical" />
                     </DropdownItem>
 
-                    <DropdownItem key="profile" onClick={()=>navigate("/profile")}>My Profile</DropdownItem>
+                    <DropdownItem
+                      key="profile"
+                      onClick={() => navigate("/profile")}
+                    >
+                      My Profile
+                    </DropdownItem>
                     <DropdownItem key="configurations">Saved Jobs</DropdownItem>
                     <DropdownItem key="settings">Settings</DropdownItem>
                     <DropdownItem
@@ -301,7 +305,7 @@ export default function Nav({
                   Are you sure to finish the interview?
                 </div>
                 <div className="flex justify-end mt-2">
-                  <Link href="/home" underline="none">
+                  <Link href="/thank-you" underline="none">
                     <button
                       className="text-xs text-rose-500 font-semibold bg-none "
                       onClick={() => exitFullScreen()}

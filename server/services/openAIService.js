@@ -159,18 +159,20 @@ const createOrUpdateResults = async (interviewId, results) => {
     result.question_scores.map((qs) => [qs.question_id.toString(), qs])
   );
 
-  for (const { questionId, scores, feedback, review } of results) {
+  for (const { questionId, scores, feedback, review, trust_score } of results) {
     if (existingQuestionsMap.has(questionId.toString())) {
       const existingScore = existingQuestionsMap.get(questionId.toString());
       existingScore.scores = scores;
       existingScore.feedback = feedback;
       existingScore.review = review;
+      existingScore.trust_score = trust_score;
     } else {
       const newQuestionData = {
         question_id: questionId,
         scores: scores,
         feedback: feedback,
         review: review,
+        trust_score: trust_score,
       };
       result.question_scores.push(newQuestionData);
     }
@@ -301,12 +303,13 @@ const overAllCandidatePerformance = async (interviewId) => {
     );
 
     let totalTrustScore = 0;
+    let lengthOfQuestionsArray = result.question_scores.length;
 
     result.question_scores.forEach((score) => {
       totalTrustScore += score.trust_score || 0;
     });
 
-    const finalTrustScore = totalTrustScore / 10;
+    const finalTrustScore = totalTrustScore / lengthOfQuestionsArray;
 
     result.final_trust_score = finalTrustScore;
     result.final_review = response.final_review;

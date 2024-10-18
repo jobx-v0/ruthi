@@ -18,6 +18,7 @@ import { faArrowRight, faCheck } from "@fortawesome/free-solid-svg-icons";
 import "../components/interview/interview.css";
 import VideoRecorder from "../components/VideoRecorder";
 import { useLocation } from "react-router-dom";
+import CheatingInterviewModal from "../components/interview/CheatingInterviewModal";
 
 const InterviewPage = () => {
   var { authToken, setToken, userInfo, fetchUserInfo } = useAuth();
@@ -38,14 +39,17 @@ const InterviewPage = () => {
 
   const [isFullScreen, setIsFullScreen] = useState(true);
 
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isCheatingModalOpen, setIsCheatingModalOpen] = useState(false);
+
   const handleTimerActiveChange = (newTimerActiveValue) => {
     setIsTimerActive(newTimerActiveValue);
   };
 
   const fetchQuestionsData = (token) => {
-    fetchQuestionsAPI(token)
+    fetchQuestionsAPI(token, jobId)
       .then((response) => {
-        const questionsResponse = response.data.Questions;
+        const questionsResponse = response?.data;
         setQuestions(questionsResponse);
       })
       .catch((error) => {
@@ -55,22 +59,29 @@ const InterviewPage = () => {
   };
 
   useEffect(() => {
+    if (!hasFetchedQuestions.current) {
+      hasFetchedQuestions.current = true;
+      fetchQuestionsData(authToken);
+    }
+  }, [jobId]);
+
+  useEffect(() => {
     if (
       authToken &&
       userInfo?._id &&
       jobId &&
-      questions.length > 0 &&
-      !hasCreatedInterview.current
+      questions?.length > 0 &&
+      !hasCreatedInterview?.current
     ) {
       hasCreatedInterview.current = true;
-      let questionIds = questions.map((question) => question._id);
-      createInterviewAPI(authToken, userInfo._id, jobId, questionIds).catch(
+      let questionIds = questions?.map((question) => question?._id);
+      createInterviewAPI(authToken, userInfo?._id, jobId, questionIds).catch(
         (error) => {
           console.error("Error creating interview:", error);
         }
       );
     }
-  }, [authToken, userInfo?._id, jobId, questions.length]);
+  }, [authToken, userInfo?._id, jobId, questions?.length]);
 
   const enterFullScreen = (attempt = 1) => {
     const elem = document.documentElement;
@@ -102,14 +113,39 @@ const InterviewPage = () => {
     }
   };
 
-  const warnIfTabNotActive = () => {
-    if (document.hidden) {
-      toast("Warning: Tab switching is not allowed!", {
-        icon: "⚠️",
-      });
-      console.log("Warning: Tab switching is not allowed!");
-    }
+  const onCloseCheatingModal = () => {
+    setIsCheatingModalOpen(false);
+    exitFullScreen();
+    navigate("/thank-you");
   };
+
+  useEffect(() => {
+    const handleFocusChange = () => {
+      if (!document.hasFocus()) {
+        setTabSwitchCount((prev) => prev + 1);
+
+        if (tabSwitchCount > 2) {
+          setIsCheatingModalOpen(true);
+          setTimeout(() => {
+            onCloseCheatingModal();
+          }, 8000);
+        }
+
+        toast(
+          `Warning: Tab switching or window change detected! ${tabSwitchCount}`,
+          {
+            icon: "⚠️",
+          }
+        );
+      }
+    };
+
+    window.addEventListener("blur", handleFocusChange);
+
+    return () => {
+      window.removeEventListener("blur", handleFocusChange);
+    };
+  }, [tabSwitchCount]);
 
   const handleKeyDown = (e) => {
     e.preventDefault();
@@ -147,16 +183,10 @@ const InterviewPage = () => {
   };
 
   useEffect(() => {
-    // Detect when tab is not active
-    document.addEventListener("visibilitychange", warnIfTabNotActive);
-
-    // Detect keyboard usage
     document.addEventListener("keydown", handleKeyDown);
 
-    // Ensure fullscreen is maintained unless manually exited
     document.addEventListener("fullscreenchange", ensureFullScreen);
 
-    // Continuous check to maintain fullscreen
     const intervalId = setInterval(() => {
       if (isFullScreen && !document.fullscreenElement) {
         enterFullScreen();
@@ -164,7 +194,6 @@ const InterviewPage = () => {
     }, 100);
 
     return () => {
-      document.removeEventListener("visibilitychange", warnIfTabNotActive);
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("fullscreenchange", ensureFullScreen);
       clearInterval(intervalId);
@@ -181,6 +210,7 @@ const InterviewPage = () => {
   const handleSubmit = () => {
     submitInterviewAPI(authToken, userInfo._id, jobId)
       .then((response) => {
+        exitFullScreen();
         navigate("/thank-you");
       })
       .catch((error) => {
@@ -188,8 +218,8 @@ const InterviewPage = () => {
       });
   };
 
-  const questionsCount = questions.length;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const questionsCount = questions?.length || 0;
+  const isLastQuestion = currentQuestionIndex === questionsCount - 1;
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -229,8 +259,8 @@ const InterviewPage = () => {
           <div>
             <QuestionCategoryModal
               type={
-                questions[currentQuestionIndex]
-                  ? questions[currentQuestionIndex].type
+                questions && questions.length !== 0
+                  ? questions[currentQuestionIndex]?.type || ""
                   : ""
               }
             />
@@ -271,7 +301,7 @@ const InterviewPage = () => {
                   size="sm"
                   className=" py-6 lg:p-8 text-md w-0 lg:w-auto lg:text-lg font-medium border-blue-600 bg-white text-blue-600 hover:bg-blue-600 hover:text-white border-1"
                   onPress={
-                    isLastQuestion ? onOpenSubmitModal : handleNextQuestion
+                    isLastQuestion ? onOpenSubmitModal() : handleNextQuestion()
                   }
                 >
                   {isLastQuestion ? (
@@ -288,6 +318,10 @@ const InterviewPage = () => {
         ) : (
           <></>
         )}
+        <CheatingInterviewModal
+          isCheatingModalOpen={isCheatingModalOpen}
+          onCloseCheatingModal={onCloseCheatingModal}
+        />
         <SubmitIntervieModal
           isSubmitModalOpen={isSubmitModalOpen}
           onOpenSubmitModal={onOpenSubmitModal}

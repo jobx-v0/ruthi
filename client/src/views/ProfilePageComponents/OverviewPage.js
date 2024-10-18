@@ -88,7 +88,7 @@ const renderDescription = (description) => {
   }
 };
 
-export default function OverviewPage({setInvalidSections}) {
+export default function OverviewPage({ setInvalidSections }) {
   const showToast = useCustomToast();
   const { fetchUserInfo, authToken } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
@@ -111,8 +111,9 @@ export default function OverviewPage({setInvalidSections}) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
   const [isParsed, setIsParsed] = useRecoilState(isParsedResumeState);
-  const [isParsedFirstTime, setIsParsedFirstTime] = useRecoilState(isParsedResumeFirstTimeState);
-
+  const [isParsedFirstTime, setIsParsedFirstTime] = useRecoilState(
+    isParsedResumeFirstTimeState
+  );
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -121,12 +122,22 @@ export default function OverviewPage({setInvalidSections}) {
         setUserInfo(info);
       }
     };
+    const updateIsParsedFirstTime = async () => {
+      await axios.put(
+        `${BACKEND_URL}/api/auth/update`,
+        { isParsedResumeFirstTime: false },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
+    };
     if (isParsedFirstTime) {
       showToast(
         "We've worked our magic with our resume parser! We've done our best to extract your information.",
         "success"
       );
       setIsParsedFirstTime(false);
+      updateIsParsedFirstTime();
     }
     getUserInfo();
   }, [authToken]);
@@ -200,14 +211,14 @@ export default function OverviewPage({setInvalidSections}) {
       console.log(
         "Data being submitted:",
         JSON.stringify(dataToSubmit, null, 2)
-      );  
+      );
 
       // First, check if a profile exists
       try {
         const checkResponse = await axios.get(
           `${BACKEND_URL}/api/auth/user/info`,
           {
-            headers: { Authorization: `Bearer ${authToken}` },  
+            headers: { Authorization: `Bearer ${authToken}` },
           }
         );
         console.log("checkResponse is there the users:", checkResponse);
@@ -240,9 +251,13 @@ export default function OverviewPage({setInvalidSections}) {
         }
       }
       showToast("Profile submitted successfully!", "success");
-      await axios.put(`${BACKEND_URL}/api/auth/update`, {isProfileSubmitted: true}, {
-        headers: { Authorization: `Bearer ${authToken}` },
-      });
+      await axios.put(
+        `${BACKEND_URL}/api/auth/update`,
+        { isProfileSubmitted: true },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting profile:", error);

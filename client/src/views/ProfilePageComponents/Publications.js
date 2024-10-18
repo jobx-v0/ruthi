@@ -144,7 +144,7 @@ export default function Publications() {
                       htmlFor={`publication-link-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Link <span className="text-red-500">*</span>
+                      Publication Link
                     </label>
                     <input
                       type="url"

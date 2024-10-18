@@ -165,7 +165,7 @@ export default function PersonalProjects() {
                       htmlFor={`project-link-${project.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Project Link <span className="text-red-500">*</span> 
+                      Project Link 
                     </label>
                     <input
                       type="url"

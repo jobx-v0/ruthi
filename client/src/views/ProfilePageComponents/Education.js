@@ -570,7 +570,7 @@ export default function Education() {
                         htmlFor={`course-link-${course.id}`}
                         className="block text-sm font-medium text-gray-700 mb-1"
                       >
-                        Course Link <span className="text-red-500">*</span>
+                        Course Link
                       </label>
                       <input
                         type="url"

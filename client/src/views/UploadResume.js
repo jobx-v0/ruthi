@@ -95,7 +95,9 @@ export default function Component() {
     extracurricularActivitiesState
   );
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
-  const setIsParsedResumeFirstTime = useSetRecoilState(isParsedResumeFirstTimeState);
+  const setIsParsedResumeFirstTime = useSetRecoilState(
+    isParsedResumeFirstTimeState
+  );
 
   const handleContinueClick = async () => {
     setIsParsedResume(true);
@@ -120,14 +122,18 @@ export default function Component() {
           },
         });
 
-        await axios.put(`${BACKEND_URL}/api/auth/update`, {
-          isParsedResume: true,
-          isParsedResumeFirstTime: true,
-        }, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+        await axios.put(
+          `${BACKEND_URL}/api/auth/update`,
+          {
+            isParsedResume: true,
+            isParsedResumeFirstTime: true,
           },
-        });
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            },
+          }
+        );
 
         const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
         console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
@@ -137,6 +143,7 @@ export default function Component() {
         formData.append("file", file, file.name);
         console.log("Form data:", formData);
 
+        //
         const extract = await axios.post(
           `${RESUME_PARSER_URL}/parse-resume`,
           formData,
@@ -150,6 +157,21 @@ export default function Component() {
         console.log("Extract response:", extract);
 
         const parsedData = extract.data.parsed_data;
+
+        // Extract links from the resume
+        const Extract_Links = await axios.post(
+          `${RESUME_PARSER_URL}/extract-links`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            withCredentials: true,
+          }
+        );
+
+        const extractedLinks = Extract_Links.data.extracted_links;
+        parsedData.socials = extractedLinks;
 
         // Log the parsed data before sending it to the server
         console.log("Parsed data to be sent:", parsedData);
@@ -216,11 +238,7 @@ export default function Component() {
       }
     }
   };
-
-  const handleLinkedinChange = (event) => {
-    setLinkedinUrl(event.target.value);
-  };
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {isLoading ? (

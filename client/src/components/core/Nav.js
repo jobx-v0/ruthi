@@ -308,7 +308,13 @@ export default function Nav({
                   <Link href="/thank-you" underline="none">
                     <button
                       className="text-xs text-rose-500 font-semibold bg-none "
-                      onClick={() => exitFullScreen()}
+                      onClick={() => {
+                        window.removeEventListener("beforeunload", (e) => {
+                          e.preventDefault();
+                          // e.returnValue = "";
+                        });
+                        exitFullScreen();
+                      }}
                     >
                       Finish Anyway
                     </button>

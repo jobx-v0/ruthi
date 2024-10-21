@@ -148,7 +148,6 @@ export default function OverviewPage({ setInvalidSections }) {
     setIsLoading(true);
     try {
       const dataToSubmit = {
-        userId: userInfo._id,
         personal_information: {
           ...personal_information,
           email: userInfo.email,

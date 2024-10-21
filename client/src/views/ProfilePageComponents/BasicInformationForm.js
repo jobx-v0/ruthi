@@ -24,8 +24,10 @@ const personalInfoSchema = z.object({
     .min(1, "Last name is required")
     .regex(/^[a-zA-Z\s]+$/, "Only letters are allowed"),
   email: z.string().email("Invalid email address"),
-  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
-  expected_salary: z
+  phone: z.string().regex(/^(?!0{10})\d{10}$/, {
+    message: "Phone number must be exactly 10 digits and cannot be all zeros",
+  }),
+    expected_salary: z
     .number()
     .min(1, "Expected salary must be at least 1")
     .max(99, "Expected salary must not exceed 99")

@@ -13,6 +13,10 @@ module.exports = {
       scale: {
         80: "0.80",
       },
+      boxShadow: {
+        'neumorphism': '4px 4px 8px #bebebe, -4px -4px 8px #ffffff',
+        'neumorphism-active': 'inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff',
+      },
       colors: {
         'blue-custom': '#004E98',
       },

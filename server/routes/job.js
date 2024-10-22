@@ -29,16 +29,16 @@ router.post("/jobs/:id/questions", JobController.addCustomQuestions);
 // Route to delete a specific question by _id
 router.delete(
   "/job/:jobId/question/:questionId",
-  JobController.deleteQuestionById
+  JobController.deleteCustomQuestionById
 );
 
 // Route to update a specific question by _id
 router.put(
   "/job/:jobId/question/:questionId",
-  JobController.updateQuestionById
+  JobController.updateCustomQuestionById
 );
 
 // Route to delete all questions (remove the 'questions' field)
-router.delete("/job/:jobId/questions", JobController.deleteAllQuestions);
+router.delete("/job/:jobId/questions", JobController.deleteAllCustomQuestions);
 
 module.exports = router;

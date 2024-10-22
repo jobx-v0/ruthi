@@ -165,7 +165,7 @@ const addCustomQuestions = async (req, res) => {
 };
 
 // delete a specific question by _id
-const deleteQuestionById = async (req, res) => {
+const deleteCustomQuestionById = async (req, res) => {
   try {
     const { jobId, questionId } = req.params;
 
@@ -191,7 +191,7 @@ const deleteQuestionById = async (req, res) => {
 };
 
 // update a specific question by _id
-const updateQuestionById = async (req, res) => {
+const updateCustomQuestionById = async (req, res) => {
   try {
     const { jobId, questionId } = req.params;
     const { type, question, answer } = req.body; // Data to update the question
@@ -223,7 +223,7 @@ const updateQuestionById = async (req, res) => {
 };
 
 // delete all questions (remove the 'questions' field)
-const deleteAllQuestions = async (req, res) => {
+const deleteAllCustomQuestions = async (req, res) => {
   try {
     const { jobId } = req.params;
 
@@ -252,7 +252,7 @@ module.exports = {
   updateJobById,
   deleteJobById,
   addCustomQuestions,
-  deleteQuestionById,
-  updateQuestionById,
-  deleteAllQuestions,
+  deleteCustomQuestionById,
+  updateCustomQuestionById,
+  deleteAllCustomQuestions,
 };

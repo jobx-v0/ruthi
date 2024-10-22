@@ -3,8 +3,26 @@ import { useNavigate } from "react-router-dom";
 
 const ThankYouPage = () => {
   const navigate = useNavigate();
+
+  const exitFullScreen = () => {
+    if (document.fullscreenElement) {
+      const exitFullScreen =
+        document.exitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.webkitExitFullscreen ||
+        document.msExitFullscreen;
+
+      if (exitFullScreen) {
+        exitFullScreen.call(document).catch((err) => {
+          console.warn("Error exiting fullscreen:", err);
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     setTimeout(() => {
+      exitFullScreen();
       navigate("/jobs");
     }, 10000);
   }, []);

@@ -11,11 +11,13 @@ const processInterview = async (interview) => {
       const res = await AzureService.combineAllChunksInToOneVideo(
         interview.user_id.toString(),
         interview.job_id.toString(),
+        interview._id,
         question.toString()
       );
 
       const evaluationResult =
         await OpenAIService.evaluateTranscriptionForQuestion(
+          interview.job_id,
           question,
           res.transcription
         );

@@ -27,9 +27,9 @@ const saveInterview = async (user_id, job_id, data) => {
   return await interview.save();
 };
 
-const updateAnswer = async (userId, jobId, questionId, transcription) => {
+const updateAnswer = async (interviewId, questionId, transcription) => {
   // Find the specific interview document
-  const interview = await Interview.findOne({ user_id: userId, job_id: jobId });
+  const interview = await Interview.findById(interviewId);
 
   if (!interview) {
     throw new Error("Interview not found");

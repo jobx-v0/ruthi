@@ -448,13 +448,13 @@ const deleteAudioFromLocalDir = async (audioPath) => {
   }
 };
 
-const deleteUserIdDir = async (userId) => {
-  const userIdDir = path.join(__dirname, "tempChunks", userId);
+const deleteJobIdDir = async (userId, jobId) => {
+  const jobIdDir = path.join(__dirname, "tempChunks", userId, jobId);
 
   try {
-    fs.rmSync(userIdDir, { recursive: true, force: true });
+    fs.rmSync(jobIdDir, { recursive: true, force: true });
   } catch (err) {
-    console.error(`Error deleting userId directory ${userIdDir}:`, err);
+    console.error(`Error deleting userId directory ${jobIdDir}:`, err);
   }
 };
 
@@ -480,10 +480,22 @@ const getAudioDuration = (audioPath) => {
 };
 
 // Download all chunks and save them locally in the proper directory
-const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
+const combineAllChunksInToOneVideo = async (
+  userId,
+  jobId,
+  interviewId,
+  questionId
+) => {
   const chunks = await getChunks(userId, jobId, questionId);
 
-  const tempDir = path.join(__dirname, "tempChunks", userId, jobId, questionId);
+  const tempDir = path.join(
+    __dirname,
+    "tempChunks",
+    userId,
+    jobId,
+    interviewId,
+    questionId
+  );
 
   ensureDirectoryExists(tempDir);
 
@@ -494,9 +506,12 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
     chunkPaths.push(localPath);
   }
 
-  const combinedVideoName = `${userId}${jobId}${questionId}.webm`;
+  const combinedVideoName = `${userId}${jobId}${interviewId}${questionId}.webm`;
   const combinedVideoPath = path.join(tempDir, combinedVideoName);
-  const audioPath = path.join(tempDir, `${userId}${jobId}${questionId}.wav`);
+  const audioPath = path.join(
+    tempDir,
+    `${userId}${jobId}${interviewId}${questionId}.wav`
+  );
 
   await combineChunks(chunkPaths, combinedVideoPath);
 
@@ -531,7 +546,7 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
 
   await uploadFinalVideoToAzure(
     combinedVideoPath,
-    `${userId}/${jobId}/${questionId}/${combinedVideoName}`
+    `${userId}/${jobId}/${interviewId}${questionId}/${combinedVideoName}`
   );
 
   await deleteChunksFromAzure(chunks);
@@ -541,15 +556,14 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
   const transcription = await transcribeAudio(audioPath);
 
   await InterviewService.updateAnswer(
-    userId,
-    jobId,
+    interviewId,
     questionId,
     transcription.toString().trim()
   );
 
   await deleteAudioFromLocalDir(audioPath);
 
-  await deleteUserIdDir(userId);
+  await deleteJobIdDir(userId, jobId);
 
   return { trust_score, transcription: transcription.toString().trim() };
 };

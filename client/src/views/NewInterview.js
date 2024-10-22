@@ -37,6 +37,8 @@ const InterviewPage = () => {
   const location = useLocation();
   const { jobId } = location.state || {};
 
+  const [interviewId, setInterviewId] = useState("");
+
   const [isFullScreen, setIsFullScreen] = useState(true);
 
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
@@ -75,11 +77,13 @@ const InterviewPage = () => {
     ) {
       hasCreatedInterview.current = true;
       let questionIds = questions?.map((question) => question?._id);
-      createInterviewAPI(authToken, userInfo?._id, jobId, questionIds).catch(
-        (error) => {
+      createInterviewAPI(authToken, userInfo?._id, jobId, questionIds)
+        .then((response) => {
+          setInterviewId(response.data.interview._id);
+        })
+        .catch((error) => {
           console.error("Error creating interview:", error);
-        }
-      );
+        });
     }
   }, [authToken, userInfo?._id, jobId, questions?.length]);
 
@@ -115,6 +119,10 @@ const InterviewPage = () => {
 
   const onCloseCheatingModal = () => {
     setIsCheatingModalOpen(false);
+    window.removeEventListener("beforeunload", (e) => {
+      e.preventDefault();
+      // e.returnValue = "";
+    });
     exitFullScreen();
     navigate("/thank-you");
   };
@@ -200,6 +208,19 @@ const InterviewPage = () => {
     };
   }, [isFullScreen]);
 
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault(); // Necessary for most browsers to trigger the dialog
+      e.returnValue = ""; // Chrome requires setting returnValue to an empty string
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
+
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -210,7 +231,10 @@ const InterviewPage = () => {
   const handleSubmit = () => {
     submitInterviewAPI(authToken, userInfo._id, jobId)
       .then((response) => {
-        exitFullScreen();
+        window.removeEventListener("beforeunload", (e) => {
+          e.preventDefault();
+          // e.returnValue = "";
+        });
         navigate("/thank-you");
       })
       .catch((error) => {
@@ -287,6 +311,7 @@ const InterviewPage = () => {
           jobId={jobId}
           onTimerActiveChange={handleTimerActiveChange}
           userId={userInfo?._id}
+          interviewId={interviewId}
         />
 
         {!isTimerActive ? (
@@ -299,9 +324,9 @@ const InterviewPage = () => {
               >
                 <Button
                   size="sm"
-                  className=" py-6 lg:p-8 text-md w-0 lg:w-auto lg:text-lg font-medium border-blue-600 bg-white text-blue-600 hover:bg-blue-600 hover:text-white border-1"
+                  className="py-6 lg:p-8 text-md w-0 lg:w-auto lg:text-lg font-medium border-blue-600 bg-white text-blue-600 hover:bg-blue-600 hover:text-white border-1"
                   onPress={
-                    isLastQuestion ? onOpenSubmitModal() : handleNextQuestion()
+                    isLastQuestion ? onOpenSubmitModal : handleNextQuestion
                   }
                 >
                   {isLastQuestion ? (

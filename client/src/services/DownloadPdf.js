@@ -26,7 +26,7 @@ const DownloadPdf = ({ interviewId }) => {
 
   return (
     <div>
-      <button onClick={handleDownload}>Download/View PDF</button>
+      <button onClick={handleDownload}>Download/View Result</button>
     </div>
   );
 };

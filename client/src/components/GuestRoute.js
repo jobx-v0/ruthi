@@ -3,6 +3,8 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
+import { fetchUserProfile } from "../../api/userProfileApi";
+
 const GuestRoute = ({ children }) => {
   const { authToken, isLoading, fetchUserInfo } = useAuth();
   const navigate = useNavigate();
@@ -11,11 +13,11 @@ const GuestRoute = ({ children }) => {
     const fetchUserAndNavigate = async () => {
       if (authToken) {
         try {
-          const userInfo = await fetchUserInfo();
-          if (!userInfo.isParsedResume) {
-            navigate("/uploadResume");
-          } else {
+          const response = await fetchUserProfile(authToken);
+          if (response) {
             navigate("/profile");
+          } else {
+            navigate("/uploadResume");
           }
         } catch (error) {
           console.error("Error fetching user info", error);

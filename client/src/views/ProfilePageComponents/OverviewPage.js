@@ -170,19 +170,8 @@ export default function OverviewPage({ setInvalidSections }) {
         },
         socials,
         courses,
-        education: education.map((edu) => ({
-          ...edu,
-          description: Array.isArray(edu.description)
-            ? edu.description.join(", ")
-            : edu.description,
-        })),
-        experience: experience.map((exp) => ({
-          ...exp,
-          // Ensure description is a string
-          description: Array.isArray(exp.description)
-            ? exp.description.join(", ")
-            : exp.description || "",
-        })),
+        education,
+        experience,
         publications,
         skills,
         personal_projects: personalProjects,
@@ -286,6 +275,10 @@ export default function OverviewPage({ setInvalidSections }) {
         });
       }
 
+      console.log(
+        "experience that is getting validated: ",
+        dataToSubmit.experience
+      );
       // Validate experience
       if (isValidData(dataToSubmit.experience)) {
         dataToSubmit.experience.forEach((exp, index) => {
@@ -305,27 +298,13 @@ export default function OverviewPage({ setInvalidSections }) {
               // Dynamically check for required fields based on `currently_working`
               const currentlyWorking = exp.currently_working;
 
-              // If `currently_working` is true, skip `end_date` validation
-              if (currentlyWorking) {
-                if (!exp.end_date || exp.end_date === null) {
-                  // No issues as we are not expecting an end_date
-                } else {
-                  console.error(
-                    `End date should be null if currently working in experience item ${index}`
-                  );
-                  if (!invalidSections.includes("experience")) {
-                    invalidSections.push("experience");
-                  }
-                }
-              } else {
-                // If `currently_working` is false, check for a valid `end_date`
-                if (!exp.end_date || exp.end_date === null) {
-                  console.error(
-                    `End date is required in experience item ${index} if not currently working.`
-                  );
-                  if (!invalidSections.includes("experience")) {
-                    invalidSections.push("experience");
-                  }
+              // If `currently_working` is true, allow `end_date` to be null
+              if (!currentlyWorking && (!exp.end_date || exp.end_date === null)) {
+                console.error(
+                  `End date is required in experience item ${index} if not currently working.`
+                );
+                if (!invalidSections.includes("experience")) {
+                  invalidSections.push("experience");
                 }
               }
 

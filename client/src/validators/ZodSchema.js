@@ -82,7 +82,7 @@ export const educationSchema = z.object({
       z.string().regex(/^\d{1,2}(\.\d{1,2})?$/, "Invalid CGPA or percentage"),
     ])
     .optional(),
-  description: z.string().optional().or(z.literal("")),
+  description: z.union([z.string(), z.array(z.string())]).optional(), // Changed to allow string or array of strings
 });
 
 // Course Schema
@@ -155,6 +155,7 @@ export const experienceSchema = z.object({
   ),
   end_date: z
     .string()
+    .nullable()
     .refine(
       (date) => {
         if (!date) return true; // Allow empty string for currently working
@@ -166,7 +167,7 @@ export const experienceSchema = z.object({
       { message: "End date cannot be in the future" }
     )
     .optional(),
-  description: z.string().optional().or(z.literal("")),
+  description: z.union([z.string(), z.array(z.string())]).optional(), // Changed to allow string or array of strings
   currently_working: z.boolean().optional(),
 });
 
@@ -176,7 +177,7 @@ export const projectSchema = z.object({
     .string()
     .min(1, "Project name is required")
     .regex(/^(?=.*[a-zA-Z])/, "Project name must contain at least one letter"),
-  description: z.string().optional(),
+  description: z.union([z.string(), z.array(z.string())]).optional(),
   link: z.string().url("Invalid URL").or(z.literal("")),
   start_date: z.string().refine(
     (date) => {
@@ -225,7 +226,7 @@ export const competitionSchema = z.object({
       /^(?=.*[a-zA-Z])/,
       "Competition name must contain at least one letter"
     ),
-  description: z.string().optional(),
+  description: z.union([z.string(), z.array(z.string())]).optional(),
   date: z.string().refine(
     (date) => {
       const [year, month] = date.split("-");
@@ -281,7 +282,7 @@ export const positionSchema = z.object({
     .string()
     .refine(
       (date) => {
-        if (!date) return true; // Allow empty string for ongoing positions
+        if (!date) return true;
         const [year, month] = date.split("-");
         const selectedDate = new Date(year, month - 1);
         const today = new Date();
@@ -290,5 +291,5 @@ export const positionSchema = z.object({
       { message: "End date cannot be in the future" }
     )
     .optional(),
-  description: z.string().optional(),
+  description: z.union([z.string(), z.array(z.string())]).optional(),
 });

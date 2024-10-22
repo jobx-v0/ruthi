@@ -24,7 +24,7 @@ router.delete(
 );
 
 // add questions to a job
-router.post("/jobs/:id/questions", JobController.addQuestions);
+router.post("/jobs/:id/questions", JobController.addCustomQuestions);
 
 // Route to delete a specific question by _id
 router.delete(

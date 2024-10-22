@@ -126,7 +126,7 @@ const deleteJobById = async (req, res) => {
   }
 };
 
-const addQuestions = async (req, res) => {
+const addCustomQuestions = async (req, res) => {
   try {
     const jobId = req.params.id;
     const { questions } = req.body;
@@ -251,7 +251,7 @@ module.exports = {
   getJobById,
   updateJobById,
   deleteJobById,
-  addQuestions,
+  addCustomQuestions,
   deleteQuestionById,
   updateQuestionById,
   deleteAllQuestions,

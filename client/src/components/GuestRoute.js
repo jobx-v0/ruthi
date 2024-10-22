@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { loginUserAPI } from "../api/authApi";
 import { useNavigate } from "react-router-dom";
 
 const GuestRoute = ({ children }) => {
@@ -13,7 +12,6 @@ const GuestRoute = ({ children }) => {
       if (authToken) {
         try {
           const userInfo = await fetchUserInfo();
-          console.log(userInfo);
           if (!userInfo.isParsedResume) {
             navigate("/uploadResume");
           } else {
@@ -25,8 +23,10 @@ const GuestRoute = ({ children }) => {
       }
     };
 
-    fetchUserAndNavigate();
-  }, []);
+    if (!isLoading) {
+      fetchUserAndNavigate();
+    }
+  }, [authToken, isLoading, fetchUserInfo, navigate]);
 
   if (isLoading) {
     return (
@@ -35,12 +35,8 @@ const GuestRoute = ({ children }) => {
       </div>
     );
   }
-  // // If authenticated, redirect to home page
-  // if (authToken) {
-  //   return <Navigate to="/home" />;
-  // }
 
-  return children; // Render login/signup/landing if not authenticated
+  return children;
 };
 
 export default GuestRoute;

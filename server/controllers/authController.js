@@ -220,10 +220,6 @@ googleAuth = async (req, res) => {
       audience: process.env.REACT_APP_GOOGLE_CLIENT_ID, // Ensure the Google Client ID is correct
     });
 
-    if (!role) {
-      role = "candidate";
-    }
-
     const payload = ticket.getPayload();
     console.log("Google Payload:", payload);
 
@@ -262,7 +258,7 @@ googleAuth = async (req, res) => {
       username: usernameFromEmail,
       email: email,
       isVerified: true, // Since Google already verified their email
-      role: role, // Adjust role as needed
+      role: "candidate", // Adjust role as needed
       hashed_password: "", // No password for Google-authenticated users
       salt: "", // No salt needed
       isGoogleAuth: true,

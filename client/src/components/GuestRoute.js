@@ -1,9 +1,8 @@
 import React, { useEffect } from "react";
-import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-import { fetchUserProfile } from "../../api/userProfileApi";
+import { fetchUserProfile } from "../api/userProfileApi";
 
 const GuestRoute = ({ children }) => {
   const { authToken, isLoading, fetchUserInfo } = useAuth();

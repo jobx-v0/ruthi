@@ -9,7 +9,6 @@ import { registerUserAPI } from "../../api/authApi";
 import InputField from "../Input";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
-
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
@@ -27,6 +26,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   const {setToken} = useAuth();
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false); // Checkbox state
 
   useEffect(() => {
     const fields = candidateSignupFields;
@@ -71,6 +71,14 @@ export default function Signup() {
   const handleSubmitSignUp = async (e) => {
     e.preventDefault();
     var is_valid = true;
+    if (!isTermsAccepted) {
+      toast.error("You must accept the Terms and Conditions.");
+      return; // Exit early if terms are not accepted
+    }
+    if (!isTermsAccepted) {
+      toast.error("You must accept the Terms and Conditions.");
+      return; 
+    }
     const fields = candidateSignupFields;
 
     // Create a new object to store the updated sign up state
@@ -347,6 +355,30 @@ export default function Signup() {
                 errorMessage={field.errorMessage}
               />
             ))}
+            {/*create a checkbox for Terms and conditions */}
+             
+            <div className="flex items-start space-x-2">
+              <input
+                type="checkbox"
+                id="terms"
+                name="terms"
+                required
+                className="mt-1"
+                checked={isTermsAccepted}
+                onChange={(e)=> setIsTermsAccepted(e.target.checked)}//assign.
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600">
+                I agree to the 
+                <a  href="./TermsAndConditons.html" className="text-blue-700 font-semibold">
+                  Terms and Conditions
+                </a> 
+                and 
+                <a href="./PrivacyPolicy.html" className="text-blue-700 font-semibold">
+                  Privacy Policy
+                </a>.
+              </label>
+            </div>
+
             <div className="mt-2">
               <FormAction
                 handleClick={handleSubmitSignUp}

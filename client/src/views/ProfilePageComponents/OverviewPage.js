@@ -35,10 +35,26 @@ import {
   isParsedResumeState,
   isParsedResumeFirstTimeState,
 } from "../../store/atoms/userProfileSate";
-import { isValidData, hasAnyData } from "../../validators/validData";
+import {
+  isValidData,
+  hasAnyData,
+  requiredFields,
+} from "../../validators/validData";
 import axios from "axios";
-import Loader from "./Loader";
-import { requiredFields } from "../../validators/validData";
+import Loader from "../../components/utils/Loader";
+import {
+  personalInfoSchema,
+  socialsSchema,
+  educationSchema,
+  courseSchema,
+  experienceSchema,
+  projectSchema,
+  awardSchema,
+  activitySchema,
+  competitionSchema,
+  publicationSchema,
+  positionSchema,
+} from "../../validators/ZodSchema";
 import { useCustomToast } from "../../components/utils/useCustomToast";
 
 const SectionTitle = ({ title, icon }) => (
@@ -165,45 +181,262 @@ export default function OverviewPage({ setInvalidSections }) {
         extra_curricular_activities: extracurricularActivities,
       };
 
-      // Check for missing required fields only if there's data in the corresponding section
-      const missingFields = [];
-      Object.entries(requiredFields).forEach(([section, fields]) => {
-        const sectionData = dataToSubmit[section];
-        if (
-          sectionData &&
-          (Array.isArray(sectionData)
-            ? sectionData.length > 0
-            : Object.keys(sectionData).length > 0)
-        ) {
-          const missingInSection = fields.filter((field) => {
-            if (Array.isArray(sectionData)) {
-              return sectionData.some((item) => {
-                if (section === "experience") {
-                  // Special check for experience section
-                  if (field === "end_date" || field === "currently_working") {
-                    return !item.currently_working && !item.end_date;
-                  }
-                  return !item[field];
-                }
-                return !item[field];
-              });
-            }
-            return !sectionData[field];
-          });
-          if (missingInSection.length > 0) {
-            missingFields.push(section);
-          }
-        }
-      });
+      console.log("dataToSubmit", dataToSubmit);
 
-      if (missingFields.length > 0) {
-        const missingFieldsMessage = missingFields.join(", ");
+      const invalidSections = [];
+
+      // Helper function to check required fields
+      const checkRequiredFields = (section, data) => {
+        const required = requiredFields[section];
+        if (!required) return true;
+
+        return required.every((field) => {
+          if (section === "experience" && field === "end_date") {
+            return data.end_date || data.currently_working;
+          }
+          return (
+            data[field] !== undefined &&
+            data[field] !== null &&
+            data[field] !== ""
+          );
+        });
+      };
+
+      // Validate personal information
+      try {
+        personalInfoSchema.parse(dataToSubmit.personal_information);
+        if (
+          !checkRequiredFields(
+            "personal_information",
+            dataToSubmit.personal_information
+          )
+        ) {
+          invalidSections.push("personal_information");
+        }
+      } catch (error) {
+        invalidSections.push("personal_information");
+      }
+
+      // Validate socials (no required fields, just use Zod schema)
+      try {
+        socialsSchema.parse(dataToSubmit.socials);
+      } catch (error) {
+        invalidSections.push("socials");
+      }
+
+      // Validate education
+      if (isValidData(dataToSubmit.education)) {
+        dataToSubmit.education.forEach((edu, index) => {
+          try {
+            const result = educationSchema.safeParse(edu);
+            if (!result.success) {
+              console.error(
+                `Education validation error for item ${index}:`,
+                result.error
+              );
+              if (!invalidSections.includes("education")) {
+                invalidSections.push("education");
+              }
+            } else if (!checkRequiredFields("education", edu)) {
+              console.error(
+                `Required fields missing in education item ${index}`
+              );
+              if (!invalidSections.includes("education")) {
+                invalidSections.push("education");
+              }
+            }
+          } catch (error) {
+            console.error(
+              `Unexpected error in education validation for item ${index}:`,
+              error
+            );
+            if (!invalidSections.includes("education")) {
+              invalidSections.push("education");
+            }
+          }
+        });
+      }
+
+      // Validate courses
+      if (isValidData(dataToSubmit.courses)) {
+        dataToSubmit.courses.forEach((course, index) => {
+          try {
+            courseSchema.parse(course);
+            if (!checkRequiredFields("courses", course)) {
+              if (!invalidSections.includes("courses")) {
+                invalidSections.push("courses");
+              }
+            }
+          } catch (error) {
+            if (!invalidSections.includes("courses")) {
+              invalidSections.push("courses");
+            }
+          }
+        });
+      }
+
+      console.log(
+        "experience that is getting validated: ",
+        dataToSubmit.experience
+      );
+      // Validate experience
+      if (isValidData(dataToSubmit.experience)) {
+        dataToSubmit.experience.forEach((exp, index) => {
+          try {
+            const result = experienceSchema.safeParse(exp);
+
+            if (!result.success) {
+              // If validation fails, log the error and mark the experience section as invalid
+              console.error(
+                `Experience validation error for item ${index}:`,
+                result.error
+              );
+              if (!invalidSections.includes("experience")) {
+                invalidSections.push("experience");
+              }
+            } else {
+              // Dynamically check for required fields based on `currently_working`
+              const currentlyWorking = exp.currently_working;
+
+              // If `currently_working` is true, allow `end_date` to be null
+              if (!currentlyWorking && (!exp.end_date || exp.end_date === null)) {
+                console.error(
+                  `End date is required in experience item ${index} if not currently working.`
+                );
+                if (!invalidSections.includes("experience")) {
+                  invalidSections.push("experience");
+                }
+              }
+
+              // Check other required fields
+              if (!checkRequiredFields("experience", exp)) {
+                console.error(
+                  `Required fields missing in experience item ${index}`
+                );
+                if (!invalidSections.includes("experience")) {
+                  invalidSections.push("experience");
+                }
+              }
+            }
+          } catch (error) {
+            console.error(
+              `Unexpected error in experience validation for item ${index}:`,
+              error
+            );
+            if (!invalidSections.includes("experience")) {
+              invalidSections.push("experience");
+            }
+          }
+        });
+      }
+
+      // Validate personal projects
+      if (isValidData(dataToSubmit.personal_projects)) {
+        dataToSubmit.personal_projects.forEach((project, index) => {
+          try {
+            projectSchema.parse(project);
+            if (!checkRequiredFields("personal_projects", project)) {
+              if (!invalidSections.includes("personal_projects")) {
+                invalidSections.push("personal_projects");
+              }
+            }
+          } catch (error) {
+            if (!invalidSections.includes("personal_projects")) {
+              invalidSections.push("personal_projects");
+            }
+          }
+        });
+      }
+
+      // Validate awards and achievements (no required fields, just use Zod schema)
+      if (isValidData(dataToSubmit.awards_and_achievements)) {
+        dataToSubmit.awards_and_achievements.forEach((award, index) => {
+          try {
+            awardSchema.parse(award);
+          } catch (error) {
+            if (!invalidSections.includes("awards_and_achievements")) {
+              invalidSections.push("awards_and_achievements");
+            }
+          }
+        });
+      }
+
+      // Validate extra curricular activities (no required fields, just use Zod schema)
+      if (isValidData(dataToSubmit.extra_curricular_activities)) {
+        dataToSubmit.extra_curricular_activities.forEach((activity, index) => {
+          try {
+            activitySchema.parse(activity);
+          } catch (error) {
+            if (!invalidSections.includes("extra_curricular_activities")) {
+              invalidSections.push("extra_curricular_activities");
+            }
+          }
+        });
+      }
+
+      // Validate competitions
+      if (isValidData(dataToSubmit.competitions)) {
+        dataToSubmit.competitions.forEach((competition, index) => {
+          try {
+            competitionSchema.parse(competition);
+            if (!checkRequiredFields("competitions", competition)) {
+              if (!invalidSections.includes("competitions")) {
+                invalidSections.push("competitions");
+              }
+            }
+          } catch (error) {
+            if (!invalidSections.includes("competitions")) {
+              invalidSections.push("competitions");
+            }
+          }
+        });
+      }
+
+      // Validate publications
+      if (isValidData(dataToSubmit.publications)) {
+        dataToSubmit.publications.forEach((publication, index) => {
+          try {
+            publicationSchema.parse(publication);
+            if (!checkRequiredFields("publications", publication)) {
+              if (!invalidSections.includes("publications")) {
+                invalidSections.push("publications");
+              }
+            }
+          } catch (error) {
+            if (!invalidSections.includes("publications")) {
+              invalidSections.push("publications");
+            }
+          }
+        });
+      }
+
+      // Validate positions of responsibility
+      if (isValidData(dataToSubmit.position_of_responsibility)) {
+        dataToSubmit.position_of_responsibility.forEach((position, index) => {
+          try {
+            positionSchema.parse(position);
+            if (!checkRequiredFields("position_of_responsibility", position)) {
+              if (!invalidSections.includes("position_of_responsibility")) {
+                invalidSections.push("position_of_responsibility");
+              }
+            }
+          } catch (error) {
+            if (!invalidSections.includes("position_of_responsibility")) {
+              invalidSections.push("position_of_responsibility");
+            }
+          }
+        });
+      }
+
+      if (invalidSections.length > 0) {
         showToast(
-          `Please fill in the required fields for the following sections:\n${missingFieldsMessage}`,
+          `Please fix the errors in the following sections: ${invalidSections.join(
+            ", "
+          )}`,
           "error"
         );
         setIsLoading(false);
-        setInvalidSections(missingFields);
+        setInvalidSections(invalidSections);
         return;
       }
 

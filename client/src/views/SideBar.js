@@ -157,10 +157,8 @@ export default function SideBar() {
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
   const setIsParsedFirstTime = useSetRecoilState(isParsedResumeFirstTimeState);
 
-
   const [initialDataSections, setInitialDataSections] = useState([]);
   const customToast = useCustomToast();
-
 
   function getInvalidSection() {
     if (invalidSections.length > 0) {
@@ -168,7 +166,9 @@ export default function SideBar() {
       // Map the section name to the exact string used in the switch statement
       const sectionMapping = {
         personal_information: "Basic Information",
+        socials: "Basic Information",
         education: "Education",
+        courses: "Education",
         experience: "Experience",
         skills: "Skills",
         publications: "Publications",
@@ -533,7 +533,7 @@ export default function SideBar() {
       "Experience",
       "Skills",
       ...manuallyAddedSections,
-      "Overview"
+      "Overview",
     ];
 
     const currentIndex = allSections.indexOf(selectedSection);
@@ -553,21 +553,11 @@ export default function SideBar() {
       const nextSection = getInvalidSection();
       if (nextSection) {
         setSelectedSection(nextSection);
-        setInvalidSections(prev => prev.slice(1)); // Remove the first invalid section
+        setInvalidSections((prev) => prev.slice(1)); // Remove the first invalid section
         return;
       }
     }
   };
-
-  // const handleOverview = () => {
-  //   setSelectedSection("Overview");
-  //   setIsModalOpen(false);
-  // };
-
-  // const handleStartAddingDetails = () => {
-  //   setSelectedSection("Basic Information");
-  //   setIsModalOpen(false);
-  // };
 
   const getVisibleLinks = () => {
     if (isSubmitted) {
@@ -687,8 +677,6 @@ export default function SideBar() {
 }
 
 const Dashboard = ({ selectedSection, errors, setInvalidSections }) => {
-  console.log("Current selected section:", selectedSection); // Add this line for debugging
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">

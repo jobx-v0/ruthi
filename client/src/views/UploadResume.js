@@ -41,7 +41,6 @@ console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
 
 export default function Component() {
   const [file, setFile] = useState(null);
-  const [linkedinUrl, setLinkedinUrl] = useState("");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const { authToken, fetchUserInfo } = useAuth();

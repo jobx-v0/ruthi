@@ -32,7 +32,10 @@ import {
   isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
 import { useCustomToast } from "../components/utils/useCustomToast";
-import { saveUserProfileData, fetchUserProfile } from "../api/userProfileApi";
+import {
+  saveUserProfileData,
+  fetchUserProfile,
+} from "../api/userProfileApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
@@ -196,7 +199,6 @@ export default function Component() {
           console.error("Error response:", error.response.data);
         }
         showToast("An unexpected error occurred. Please try again.", "error");
-        console.error("Error parsing resume:", error);
         setIsLoading(false);
       }
     }

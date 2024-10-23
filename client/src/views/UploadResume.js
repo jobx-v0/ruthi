@@ -104,8 +104,6 @@ export default function Component() {
   const setIsParsedResumeFirstTime = useSetRecoilState(
     isParsedResumeFirstTimeState
   );
-  const showToast = useCustomToast();
-
   const handleContinueClick = async () => {
     const userInfo = await fetchUserInfo();
     const userId = userInfo._id || userInfo.id;

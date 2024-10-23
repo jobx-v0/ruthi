@@ -30,8 +30,11 @@ import {
   isParsedResumeState,
   isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
-import { toast } from "react-toastify";
-import { saveUserProfileData, fetchUserProfile } from "../api/userProfileApi";
+import { useCustomToast } from "../components/utils/useCustomToast";
+import {
+  saveUserProfileData,
+  fetchUserProfile,
+} from "../api/userProfileApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
@@ -99,6 +102,7 @@ export default function Component() {
   const setIsParsedResumeFirstTime = useSetRecoilState(
     isParsedResumeFirstTimeState
   );
+  const showToast = useCustomToast();
 
   const handleContinueClick = async () => {
     
@@ -183,8 +187,7 @@ export default function Component() {
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
-        toast.error("An unexpected error occurred. Please try again.");
-        console.error("Error parsing resume:", error);
+        showToast("An unexpected error occurred. Please try again.", "error");
         setIsLoading(false);
       }
     }

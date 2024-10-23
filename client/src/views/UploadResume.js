@@ -104,7 +104,6 @@ export default function Component() {
   const setIsParsedResumeFirstTime = useSetRecoilState(
     isParsedResumeFirstTimeState
   );
-
   const handleContinueClick = async () => {
     const userInfo = await fetchUserInfo();
     const userId = userInfo._id || userInfo.id;
@@ -191,14 +190,20 @@ export default function Component() {
         await saveUserProfileData(authToken, { parsedData });
         console.log("Updated parsed data pushed to MongoDB");
 
+
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
+        console.error("Error saving profile data:", error);
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+        }
         showToast("An unexpected error occurred. Please try again.", "error");
         setIsLoading(false);
       }
     }
   };
+
 
   // Helper function to update frontend state with parsed data
   const updateRecoilAtoms = (parsedData) => {
@@ -215,6 +220,7 @@ export default function Component() {
     setCompetitions(parsedData.competitions || []);
     setExtracurricularActivities(parsedData.extra_curricular_activities || []);
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

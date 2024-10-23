@@ -32,10 +32,8 @@ import {
   isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
 import { useCustomToast } from "../components/utils/useCustomToast";
-import {
-  saveUserProfileData,
-  fetchUserProfile,
-} from "../api/userProfileApi";
+import { saveUserProfileData, fetchUserProfile,  } from "../api/userProfileApi";
+import { updateUserAPI } from "../api/authApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
@@ -119,6 +117,8 @@ export default function Component() {
           const response = await fetchUserProfile(authToken);
 
           // If we reach here, it means the profile exists with parsed data
+          console.log("response", response);
+
           if (response) {
             parsedData = response;
             console.log("Using cached parsed data:", parsedData);
@@ -156,14 +156,19 @@ export default function Component() {
             );
             parsedData = extract.data.parsed_data;
           } else {
+            console.log("dummyProfileData", dummyProfileData);
             parsedData = dummyProfileData;
           }
 
           // Step 4: Store parsed data in MongoDB
-          await saveUserProfileData(authToken, { parsedData });
+          await saveUserProfileData(authToken, parsedData);
           console.log("Parsed data stored in MongoDB");
           setIsParsedResume(true);
           setIsParsedResumeFirstTime(true);
+          await updateUserAPI({
+            data: { isParsedResume: true, isParsedResumeFirstTime: true },
+            authToken: authToken
+          });
         }
 
         // Step 5: Extract links from resume
@@ -190,7 +195,6 @@ export default function Component() {
         await saveUserProfileData(authToken, { parsedData });
         console.log("Updated parsed data pushed to MongoDB");
 
-
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
@@ -203,7 +207,6 @@ export default function Component() {
       }
     }
   };
-
 
   // Helper function to update frontend state with parsed data
   const updateRecoilAtoms = (parsedData) => {
@@ -220,7 +223,6 @@ export default function Component() {
     setCompetitions(parsedData.competitions || []);
     setExtracurricularActivities(parsedData.extra_curricular_activities || []);
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">

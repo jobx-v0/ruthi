@@ -31,7 +31,7 @@
       "degree": "Bachelor of Science in Computer Science",
       "start_date": "2018-08-01",
       "end_date": "2022-05-20",
-      "cgpa_or_percentage": "3.9/4.0",
+      "cgpa_or_percentage": "3.9",
       "description": [
         "Graduated with Honors",
         "Completed major coursework in algorithms, data structures, and AI"
@@ -40,30 +40,34 @@
   ],
   "experience": [
     {
-      "company_name": "TechCorp",
+      "company": "TechCorp",
       "position": "Software Engineer",
       "start_date": "2022-06-01",
-      "end_date": "Present",
-      "responsibilities": [
+      "end_date": "2024-06-01",
+      "description": [
         "Developed and maintained full-stack web applications",
         "Led a team of 4 engineers to improve code efficiency"
-      ]
+      ],
+      "id":"1233",
+      "currently_working":false
     },
     {
-      "company_name": "Startup Inc.",
+      "company": "Startup Inc.",
       "position": "Frontend Developer Intern",
       "start_date": "2021-06-01",
       "end_date": "2021-08-31",
-      "responsibilities": [
+      "description": [
         "Built responsive UI components using React.js",
         "Collaborated with backend team to integrate APIs"
-      ]
+      ],
+      "id":"2312",
+      "currently_working":false
+
     }
   ],
   "publications": [
     {
-      "title": "A Study on Machine Learning in Healthcare",
-      "journal": "Journal of Healthcare Technology",
+      "name": "A Study on Machine Learning in Healthcare",
       "link": "https://example.com/publication/healthcare-ml",
       "date": "2021-10-01"
     }
@@ -84,9 +88,11 @@
   ],
   "personal_projects": [
     {
-      "project_name": "Portfolio Website",
+      "name": "Portfolio Website",
       "description": "Built a personal portfolio website using React and Tailwind CSS.",
-      "link": "https://johndoe.dev"
+      "link": "https://johndoe.dev",
+      "start_date":"2018-08-01",
+      "end_date":"2022-05-20"
     }
   ],
   "awards_and_achievements": [
@@ -95,11 +101,11 @@
   ],
   "position_of_responsibility": [
     {
-      "role": "Team Lead",
+      "title": "Team Lead",
       "organization": "XYZ University Coding Club",
       "start_date": "2021-09-01",
       "end_date": "2022-05-20",
-      "responsibilities": [
+      "description": [
         "Organized coding hackathons and events for students",
         "Mentored junior developers on project development"
       ]
@@ -107,9 +113,8 @@
   ],
   "competitions": [
     {
-      "competition_name": "Google Code Jam",
-      "year": "2021",
-      "result": "Top 10%"
+      "name": "Google Code Jam",
+      "date":"2022-05-20"
     }
   ],
   "extra_curricular_activities": [

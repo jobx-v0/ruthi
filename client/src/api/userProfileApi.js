@@ -14,10 +14,10 @@ export const saveUserProfileData = async (authToken, data) => {
   }
 
   try {
+    console.log("data to saveuserProfile", data);
     const response = await axios.put(`${API_URL}`, data, {
       headers: {
         Authorization: `Bearer ${authToken}`,
-        "Content-Type": "application/json",
       },
     });
 

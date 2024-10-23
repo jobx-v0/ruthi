@@ -369,13 +369,19 @@ export default function Signup() {
               />
               <label htmlFor="terms" className="text-sm text-gray-600">
                 I agree to the 
-                <a  href="./TermsAndConditons.html" className="text-blue-700 font-semibold">
+                <span
+                  onClick={() => window.location.href = '/TermsAndConditons.html'} 
+                  className="text-blue-600 cursor-pointer "
+                >
                   Terms and Conditions
-                </a> 
-                and 
-                <a href="./PrivacyPolicy.html" className="text-blue-700 font-semibold">
+                </span>
+                & 
+                <span
+                  onClick={() => window.location.href = '/PrivacyPolicy.html'} 
+                  className="text-blue-600 cursor-pointer "
+                >
                   Privacy Policy
-                </a>.
+                </span>
               </label>
             </div>
 

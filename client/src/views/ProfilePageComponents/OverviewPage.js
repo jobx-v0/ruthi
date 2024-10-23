@@ -166,7 +166,7 @@ export default function OverviewPage({ setInvalidSections }) {
       const dataToSubmit = {
         personal_information: {
           ...personal_information,
-          email: userInfo.email,
+          // email: userInfo.email,
         },
         socials,
         courses,

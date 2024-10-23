@@ -5,12 +5,7 @@ import { Trash2 } from "react-feather";
 import { IconBallFootball } from "@tabler/icons-react";
 import { useRecoilState } from "recoil";
 import { extracurricularActivitiesState } from "../../store/atoms/userProfileSate";
-import { z } from "zod";
-
-const activitySchema = z.string()
-  .min(1, "Activity name is required")
-  .regex(/^(?=.*[a-zA-Z])/, "Activity name must contain at least one letter")
-  .max(100, "Activity name must be 100 characters or less");
+import { activitySchema } from "../../validators/ZodSchema";
 
 export default function ExtraCurricularActivities() {
   const [activities, setActivities] = useRecoilState(extracurricularActivitiesState);

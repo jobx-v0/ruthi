@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import dummyProfileData from "../examples/dummy-profile-data.json"; // Import the JSON file
 import { useAuth } from "../context/AuthContext";
 import {
   Upload,
@@ -46,6 +47,7 @@ export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const navigate = useNavigate();
+  const showToast = useCustomToast();
   const [isLoading, setIsLoading] = useState(false);
   const { authToken, fetchUserInfo } = useAuth();
 
@@ -105,85 +107,91 @@ export default function Component() {
   const showToast = useCustomToast();
 
   const handleContinueClick = async () => {
-    
     const userInfo = await fetchUserInfo();
     const userId = userInfo._id || userInfo.id;
-  
+
     if (file) {
       setIsLoading(true);
       try {
         console.log("File uploaded:", file);
-  
+
         // Step 1: Check if parsed data already exists using the user profile API
         let parsedData;
         try {
           const response = await fetchUserProfile(authToken);
-  
+
           // If we reach here, it means the profile exists with parsed data
           if (response) {
             parsedData = response;
             console.log("Using cached parsed data:", parsedData);
-  
+
             // Update Recoil atoms with cached parsed data
             updateRecoilAtoms(parsedData);
           }
         } catch (profileError) {
-            console.error("Error checking user profile:", profileError);
-            setIsLoading(false);
-            return;
+          console.error("Error checking user profile:", profileError);
+          setIsLoading(false);
+          return;
         }
-  
+
         // Step 2: Upload resume to Azure using SAS URL
         const sasResponse = await axios.get(`${AZURE_URL}/sas/${userId}`);
         const { sasUrl } = sasResponse.data;
         const blob = new Blob([file], { type: file.type });
-        await axios.put(sasUrl, blob, { headers: { "x-ms-blob-type": "BlockBlob" } });
-  
+        await axios.put(sasUrl, blob, {
+          headers: { "x-ms-blob-type": "BlockBlob" },
+        });
+
         // Step 3: Call the sensitive resume parsing API if no cached parsed data
         if (!parsedData) {
-          const formData = new FormData();
-          formData.append("file", file, file.name);
-  
-          const extract = await axios.post(
-            `${RESUME_PARSER_URL}/parse-resume`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
-            }
-          );
-          parsedData = extract.data.parsed_data;
-          
-  
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION === "true") {
+            const formData = new FormData();
+            formData.append("file", file, file.name);
+
+            const extract = await axios.post(
+              `${RESUME_PARSER_URL}/parse-resume`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+              }
+            );
+            parsedData = extract.data.parsed_data;
+          } else {
+            parsedData = dummyProfileData;
+          }
+
           // Step 4: Store parsed data in MongoDB
           await saveUserProfileData(authToken, { parsedData });
           console.log("Parsed data stored in MongoDB");
           setIsParsedResume(true);
           setIsParsedResumeFirstTime(true);
         }
-  
+
         // Step 5: Extract links from resume
         const formData = new FormData();
         formData.append("file", file, file.name);
-  
-        const linksResponse = await axios.post(
-          `${RESUME_PARSER_URL}/extract-links`,
-          formData,
-          {
-            headers: { "Content-Type": "multipart/form-data" },
-            withCredentials: true,
-          }
-        );
-        const extractedLinks = linksResponse.data.extracted_links;
-        parsedData.socials = extractedLinks;
-  
+
+        if (process.env.REACT_APP_ENABLE_AI_EVALUATION === "true") {
+          const linksResponse = await axios.post(
+            `${RESUME_PARSER_URL}/extract-links`,
+            formData,
+            {
+              headers: { "Content-Type": "multipart/form-data" },
+              withCredentials: true,
+            }
+          );
+          const extractedLinks = linksResponse.data.extracted_links;
+          parsedData.socials = extractedLinks;
+        }
+
         // Step 6: Update Recoil atoms with final parsed data
         updateRecoilAtoms(parsedData);
-  
+
         // Step 7: Push the updated parsed data to the database using PUT
         await saveUserProfileData(authToken, { parsedData });
         console.log("Updated parsed data pushed to MongoDB");
-  
+
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
@@ -192,7 +200,7 @@ export default function Component() {
       }
     }
   };
-  
+
   // Helper function to update frontend state with parsed data
   const updateRecoilAtoms = (parsedData) => {
     setPersonalInformation(parsedData.personal_information || []);
@@ -208,8 +216,7 @@ export default function Component() {
     setCompetitions(parsedData.competitions || []);
     setExtracurricularActivities(parsedData.extra_curricular_activities || []);
   };
-  
-  
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {isLoading ? (

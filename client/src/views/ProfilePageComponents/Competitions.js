@@ -5,23 +5,7 @@ import { useRecoilState } from "recoil";
 import { competitionsState } from "../../store/atoms/userProfileSate";
 import { Flag, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { z } from "zod";
-
-const competitionSchema = z.object({
-  name: z.string()
-    .min(1, "Competition name is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Competition name must contain at least one letter"),
-  description: z.string().optional(),
-  date: z.string().refine(
-    (date) => {
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "Competition date cannot be in the future" }
-  ),
-});
+import { competitionSchema } from "../../validators/ZodSchema";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';

@@ -14,9 +14,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { toast } from "react-hot-toast";
 import { fetchUserProfile } from '../../api/userProfileApi';
 import { useAuth } from "../../context/AuthContext";
+import { useCustomToast } from "../utils/useCustomToast";
 
 // import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
@@ -27,6 +27,7 @@ export default function Signup() {
   const navigate = useNavigate();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   const {setToken} = useAuth();
+  const showToast = useCustomToast();
 
   useEffect(() => {
     const fields = candidateSignupFields;
@@ -148,20 +149,20 @@ export default function Signup() {
           role: "candidate",
         });
         if (success) {
-          // toast.success("Account created successfully! Redirecting to login...");
+          showToast("Successful! Redirecting...", "success");
           setTimeout(() => {
             navigate("/login");
-          }, 1000); // Delay navigation by 2 seconds
+          }, 1000);
         } else {
-          toast.error("Failed to create account. Please try again.");
+          showToast("Failed to create account. Please try again.", "error");
         }
       } catch (error) {
-        toast.error("An error occurred. Please try again later.");
+        showToast("An error occurred. Please try again later.", "error");
       } finally {
         setIsSubmitting(false);
       }
     } else {
-      toast.error("Please correct the errors in the form.");
+      showToast("Please correct the errors in the form.", "error");
     }
   };
 
@@ -190,14 +191,7 @@ export default function Signup() {
         const authToken = response.data.token || response.data.newUsertoken;
         setToken(authToken);
         
-        await toast.promise(
-          new Promise(resolve => setTimeout(resolve, 2000)),
-          { 
-            loading: 'Creating account...',
-            success: 'Account created successfully! Redirecting...',
-            error: 'An error occurred',
-          }
-        );
+        showToast("Account created successfully! Redirecting...", "success");
 
         console.log("response.data.userId", response.data);
 
@@ -221,27 +215,14 @@ export default function Signup() {
       console.error("Error during Google login:", error);
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          console.error("Server responded with error:", error.response.data);
-          toast.error(
-            `Authentication failed: ${
-              error.response.data.message || "Unknown error"
-            }`
-          );
+          showToast(`Authentication failed: ${error.response.data.message || "Unknown error"}`, "error");
         } else if (error.request) {
-          // The request was made but no response was received
-          console.error("No response received:", error.request);
-          toast.error("No response from server. Please try again later.");
+          showToast("No response from server. Please try again later.", "error");
         } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error setting up request:", error.message);
-          toast.error("An error occurred. Please try again.");
+          showToast("An error occurred. Please try again.", "error");
         }
       } else {
-        // Handle non-Axios errors
-        console.error("Non-Axios error:", error);
-        toast.error(error.message || "An unexpected error occurred");
+        showToast(error.message || "An unexpected error occurred", "error");
       }
     }
   };

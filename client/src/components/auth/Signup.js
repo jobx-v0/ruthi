@@ -75,10 +75,7 @@ export default function Signup() {
       toast.error("You must accept the Terms and Conditions.");
       return; // Exit early if terms are not accepted
     }
-    if (!isTermsAccepted) {
-      toast.error("You must accept the Terms and Conditions.");
-      return; 
-    }
+    
     const fields = candidateSignupFields;
 
     // Create a new object to store the updated sign up state

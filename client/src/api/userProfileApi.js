@@ -14,7 +14,7 @@ export const saveUserProfileData = async (authToken, data) => {
   }
 
   try {
-    const response = await axios.put(`${API_URL}}`, data, {
+    const response = await axios.put(`${API_URL}`, data, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
     

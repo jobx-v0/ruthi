@@ -115,13 +115,17 @@ export default function Education() {
 
   const getCurrentDate = () => {
     const today = new Date();
-    return today.toISOString().substring(0, 7); // Return only YYYY-MM
+    return today.toISOString().substring(0, 7);
   };
 
   const getDateLimit = () => {
     const today = new Date();
     const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
-    return seventyYearsAgo.toISOString().substring(0, 7); // Return only YYYY-MM
+    const tenYearsFromNow = new Date(today.getFullYear() + 10, today.getMonth());
+    return {
+        startDateLimit: seventyYearsAgo.toISOString().substring(0, 7),
+        endDateLimit: tenYearsFromNow.toISOString().substring(0, 7),
+    };
   };
 
   return (
@@ -255,7 +259,7 @@ export default function Education() {
                         type="month"
                         id={`start-date-${education.id}`}
                         value={formatDate(education.start_date)}
-                        min={getDateLimit()}
+                        min={getDateLimit().startDateLimit}
                         max={getCurrentDate()}
                         onChange={(e) =>
                           handleEducationChange(
@@ -289,7 +293,7 @@ export default function Education() {
                         id={`end-date-${education.id}`}
                         value={formatDate(education.end_date)}
                         min={education.start_date}
-                        max={getCurrentDate()}
+                        max={getDateLimit().endDateLimit}
                         onChange={(e) =>
                           handleEducationChange(
                             index,

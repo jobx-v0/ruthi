@@ -71,9 +71,10 @@ export const educationSchema = z.object({
         const [year, month] = date.split("-");
         const selectedDate = new Date(year, month - 1);
         const today = new Date();
-        return selectedDate <= today;
+        const tenYearsFromNow = new Date(today.getFullYear() + 10, today.getMonth());
+        return selectedDate <= tenYearsFromNow;
       },
-      { message: "End date cannot be in the future" }
+      { message: "End date cannot be more than 10 years in the future" }
     )
     .optional(),
   cgpa_or_percentage: z

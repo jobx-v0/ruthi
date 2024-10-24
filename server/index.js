@@ -4,13 +4,12 @@ require("dotenv").config();
 const cors = require("cors");
 const yaml = require("js-yaml");
 
-
+const configPath = path.join(__dirname, "config/dev.config.yaml");
+const config = yaml.load(fs.readFileSync(configPath, "utf8"));
 // services
 
 let emailServiceEnabled;
 try {
-  const configPath = path.join(__dirname, "config/dev.config.yaml");
-  const config = yaml.load(fs.readFileSync(configPath, "utf8"));
   emailServiceEnabled = config.emailService;  // Extract emailService flag
 } catch (error) {
   console.error("Error loading YAML config:", error);
@@ -18,8 +17,6 @@ try {
 }
 let openAIServiceEnabled;
 try {
-  const configPath = path.join(__dirname, "config/dev.config.yaml");
-  const config = yaml.load(fs.readFileSync(configPath, "utf8"));
   openAIServiceEnabled = config.evaluationByGPT;  
 } catch (error) {
   console.error("Error loading YAML config:", error);
@@ -27,8 +24,7 @@ try {
 }
 let azureServiceEnabled;
 try {
-  const configPath = path.join(__dirname, "config/dev.config.yaml");
-  const config = yaml.load(fs.readFileSync(configPath, "utf8"));
+
   azureServiceEnabled = config.azureService; 
 } catch (error) {
   console.error("Error loading YAML config:", error);
@@ -48,8 +44,6 @@ const authRoutes = require("./routes/auth"); // Import your authentication route
 const interviewRoutes = require("./routes/interview");
 const jobRoutes = require("./routes/job");
 const questionRoutes = require("./routes/question");
-const azureRoutes = require("./routes/azure");
-const openAIRoutes = require("./routes/openAI");
 const userProfileRoutes = require("./routes/userProfiles");
 
 // Use your authentication routes
@@ -65,6 +59,8 @@ if(emailServiceEnabled){
 app.use("/api/interview", interviewRoutes);
 
 if(azureServiceEnabled){
+  const azureRoutes = require("./routes/azure");
+
 // Use azure routes
 app.use("/api/azure", azureRoutes);
 
@@ -73,6 +69,8 @@ app.use("/api/azure", azureRoutes);
 }
 
 if(openAIServiceEnabled){
+  const openAIRoutes = require("./routes/openAI");
+
 // Use open AI routes
 
 app.use("/api/openai", openAIRoutes);

@@ -33,12 +33,18 @@ const VerificationPage = () => {
     }
   }, [isLoading]);
   useEffect(() => {
-    // If email service is disabled, skip this component
+    // Skip verification if email service is disabled
     if (!emailServiceEnabled) {
-      navigate("/home"); // Redirect to home if email service is off
+      // Check if the user has uploaded their resume
+      if (userInfo?.hasUploadedResume) {
+        navigate("/profile");
+      } else {
+        navigate("/uploadResume");
+      }
       return;
     }
-  });
+  }, [emailServiceEnabled, navigate, userInfo]);
+
   useEffect(() => {
     // If the user is already verified, navigate to the home page
     if (userInfo?.isVerified) {

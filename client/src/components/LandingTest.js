@@ -109,7 +109,7 @@ const RuthiLandingPage = () => {
                 </button>
                 <button className="px-8 py-4 bg-[#FF4D00] text-white rounded-md text-xl font-semibold transition duration-300 ease-in-out hover:bg-[#ef9d7f] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#FF4D00] focus:ring-opacity-50"
                 onClick={() => {
-                  navigate("/login");
+                  navigate("/signup");
                 }}>
                   Register Now
                 </button>

@@ -148,7 +148,6 @@ export default function OverviewPage({ setInvalidSections }) {
     setIsLoading(true);
     try {
       const dataToSubmit = {
-        userId: userInfo._id,
         personal_information: {
           ...personal_information,
           email: userInfo.email,
@@ -215,41 +214,19 @@ export default function OverviewPage({ setInvalidSections }) {
 
       // First, check if a profile exists
       try {
-        const checkResponse = await axios.get(
-          `${BACKEND_URL}/api/auth/user/info`,
+        // Profile exists, update it
+        const updateResponse = await axios.put(
+          `${BACKEND_URL}/api/user-profile`,
+          dataToSubmit,
           {
             headers: { Authorization: `Bearer ${authToken}` },
           }
         );
-        console.log("checkResponse is there the users:", checkResponse);
-
-        if (checkResponse.data) {
-          // Profile exists, update it
-          const updateResponse = await axios.put(
-            `${BACKEND_URL}/api/user-profile`,
-            dataToSubmit,
-            {
-              headers: { Authorization: `Bearer ${authToken}` },
-            }
-          );
-          console.log("Profile updated successfully:", updateResponse.data);
-        }
-      } catch (checkError) {
-        if (checkError.response && checkError.response.status === 404) {
-          // Profile doesn't exist, create a new one
-          const createResponse = await axios.post(
-            `${BACKEND_URL}/api/user-profile/create`,
-            dataToSubmit,
-            {
-              headers: { Authorization: `Bearer ${authToken}` },
-            }
-          );
-          console.log("New profile created successfully:", createResponse.data);
-        } else {
-          // If it's not a 404 error, rethrow the error
-          throw checkError;
-        }
+        console.log("Profile updated successfully:", updateResponse.data);
+      } catch (error) {
+        console.error("Error updating profile:", error);
       }
+      
       showToast("Profile submitted successfully!", "success");
       await axios.put(
         `${BACKEND_URL}/api/auth/update`,

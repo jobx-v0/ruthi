@@ -14,7 +14,15 @@ const VerificationPage = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { userInfo } = useAuth(); // Get userInfo from AuthContext
-
+  let emailServiceEnabled;
+  try {
+    const configPath = path.join(__dirname, "config/dev.config.yaml");
+    const config = yaml.load(fs.readFileSync(configPath, "utf8"));
+    emailServiceEnabled = config.emailService;  // Extract emailService flag
+  } catch (error) {
+    console.error("Error loading YAML config:", error);
+    process.exit(1);
+  }
   useEffect(() => {
     if (!isLoading) {
       setIsTransitioning(true);
@@ -24,6 +32,18 @@ const VerificationPage = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
+  useEffect(() => {
+    // Skip verification if email service is disabled
+    if (!emailServiceEnabled) {
+      // Check if the user has uploaded their resume
+      if (userInfo?.hasUploadedResume) {
+        navigate("/profile");
+      } else {
+        navigate("/uploadResume");
+      }
+      return;
+    }
+  }, [emailServiceEnabled, navigate, userInfo]);
 
   useEffect(() => {
     // If the user is already verified, navigate to the home page

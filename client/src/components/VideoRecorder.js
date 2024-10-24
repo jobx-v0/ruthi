@@ -24,7 +24,15 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
   const [showTimer, setShowTimer] = useState(true);
 
   const { authToken } = useAuth();
-
+  let azureServiceEnabled;
+  try {
+    const configPath = path.join(__dirname, "config/dev.config.yaml");
+    const config = yaml.load(fs.readFileSync(configPath, "utf8"));
+    azureServiceEnabled = config.azureService; 
+  } catch (error) {
+    console.error("Error loading YAML config:", error);
+    process.exit(1);
+  }
   useEffect(() => {
     onTimerActiveChange(timerActive);
   }, [timerActive, onTimerActiveChange]);
@@ -62,6 +70,11 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
 
   const uploadChunkToAzure = async (blob, chunkNumber) => {
     try {
+      if(!azureServiceEnabled){
+        console.log('Azure service is Diabled');
+        return;
+        
+      }
       const response = await getSasURL(
         authToken,
         userId,

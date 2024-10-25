@@ -141,8 +141,8 @@ export default function OverviewPage({ setInvalidSections }) {
     };
     const updateIsParsedFirstTime = async () => {
       await updateUserAPI({
-        data: { isParsedFirstTime: false },
-        authToken: authToken
+        data: { isParsedResumeFirstTime: false },
+        authToken: authToken,
       });
     };
     if (isParsedFirstTime) {
@@ -164,7 +164,7 @@ export default function OverviewPage({ setInvalidSections }) {
       const dataToSubmit = {
         personal_information: {
           ...personal_information,
-          // email: userInfo.email,
+          email: userInfo.email,
         },
         socials,
         courses,
@@ -462,7 +462,10 @@ export default function OverviewPage({ setInvalidSections }) {
       }
 
       showToast("Profile submitted successfully!", "success");
-      await updateUserAPI({ isProfileSubmitted: true }, authToken);
+      await updateUserAPI({
+        data: { isProfileSubmitted: true },
+        authToken: authToken
+      });
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting profile:", error);

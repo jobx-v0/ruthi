@@ -10,6 +10,7 @@ import {
   Smile,
   Brain,
   Rocket,
+  Twitter,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -32,7 +33,7 @@ import {
   isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
 import { useCustomToast } from "../components/utils/useCustomToast";
-import { saveUserProfileData, fetchUserProfile,  } from "../api/userProfileApi";
+import { saveUserProfileData, fetchUserProfile } from "../api/userProfileApi";
 import { updateUserAPI } from "../api/authApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -67,6 +68,21 @@ export default function Component() {
     }
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      try {
+        const response = await fetchUserProfile(authToken);
+        if (response) {
+          navigate("/profile");
+        }
+      } catch (profileError) {
+        console.error("Error checking user profile:", profileError);
+      }
+    };
+
+    checkUserProfile();
+  }, [authToken, navigate]);
 
   const handleSkipClick = () => {
     navigate("/profile");
@@ -160,36 +176,42 @@ export default function Component() {
             parsedData = dummyProfileData;
           }
 
-          // Step 4: Store parsed data in MongoDB
+          // Step 4: Extract links from resume
+          const formData = new FormData();
+          formData.append("file", file, file.name);
+
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
+            const linksResponse = await axios.post(
+              `${RESUME_PARSER_URL}/extract-links`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+              }
+            );
+            console.log("links:", linksResponse);
+            const extractedLinks = linksResponse.data.extracted_links;
+            parsedData.socials = {
+              github: extractedLinks.github || "",
+              linkedin: extractedLinks.linkedin || "",
+            };
+            console.log("parsedSocial", parsedData.socials);
+          }
+
+          // Step 5: Update Recoil atoms with final parsed data
+          console.log("atoms are getting populated here:");
+          updateRecoilAtoms(parsedData);
+
+          // Step 6: Store parsed data in MongoDB
           await saveUserProfileData(authToken, parsedData);
           console.log("Parsed data stored in MongoDB");
           setIsParsedResume(true);
           setIsParsedResumeFirstTime(true);
           await updateUserAPI({
             data: { isParsedResume: true, isParsedResumeFirstTime: true },
-            authToken: authToken
+            authToken: authToken,
           });
         }
-
-        // Step 5: Extract links from resume
-        const formData = new FormData();
-        formData.append("file", file, file.name);
-
-        if (process.env.REACT_APP_ENABLE_AI_EVALUATION === "true") {
-          const linksResponse = await axios.post(
-            `${RESUME_PARSER_URL}/extract-links`,
-            formData,
-            {
-              headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true,
-            }
-          );
-          const extractedLinks = linksResponse.data.extracted_links;
-          parsedData.socials = extractedLinks;
-        }
-
-        // Step 6: Update Recoil atoms with final parsed data
-        updateRecoilAtoms(parsedData);
 
         // Step 7: Push the updated parsed data to the database using PUT
         await saveUserProfileData(authToken, { parsedData });

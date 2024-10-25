@@ -99,8 +99,8 @@ export const courseSchema = z.object({
     .string()
     .min(1, "Course provider is required")
     .regex(
-      /^[a-zA-Z\s.,'-]+$/,
-      "Course provider should only contain letters, spaces, and common punctuation"
+      /^[a-zA-Z0-9\s.,'-]+$/,
+      "Course provider should only contain letters, numbers, spaces, and common punctuation"
     ),
   completion_date: z.string().refine(
     (date) => {
@@ -168,7 +168,7 @@ export const experienceSchema = z.object({
       { message: "End date cannot be in the future" }
     )
     .optional(),
-  description: z.union([z.string(), z.array(z.string())]).optional(), // Changed to allow string or array of strings
+  description: z.union([z.string(), z.array(z.string())]).optional(), 
   currently_working: z.boolean().optional(),
 });
 
@@ -209,14 +209,12 @@ export const awardSchema = z
   .string()
   .min(1, "Award name is required")
   .regex(/^(?=.*[a-zA-Z])/, "Award name must contain at least one letter")
-  .max(100, "Award name must be 100 characters or less");
 
 // Extra Curricular Activities Schema
 export const activitySchema = z
   .string()
   .min(1, "Activity name is required")
   .regex(/^(?=.*[a-zA-Z])/, "Activity name must contain at least one letter")
-  .max(100, "Activity name must be 100 characters or less");
 
 // Competition Schema
 export const competitionSchema = z.object({

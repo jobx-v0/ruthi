@@ -56,6 +56,7 @@ import {
   positionSchema,
 } from "../../validators/ZodSchema";
 import { useCustomToast } from "../../components/utils/useCustomToast";
+import { updateUserAPI } from "../../api/authApi";
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -139,13 +140,10 @@ export default function OverviewPage({ setInvalidSections }) {
       }
     };
     const updateIsParsedFirstTime = async () => {
-      await axios.put(
-        `${BACKEND_URL}/api/auth/update`,
-        { isParsedResumeFirstTime: false },
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
+      await updateUserAPI({
+        data: { isParsedResumeFirstTime: false },
+        authToken: authToken,
+      });
     };
     if (isParsedFirstTime) {
       showToast(
@@ -166,7 +164,7 @@ export default function OverviewPage({ setInvalidSections }) {
       const dataToSubmit = {
         personal_information: {
           ...personal_information,
-          // email: userInfo.email,
+          email: userInfo.email,
         },
         socials,
         courses,
@@ -299,7 +297,10 @@ export default function OverviewPage({ setInvalidSections }) {
               const currentlyWorking = exp.currently_working;
 
               // If `currently_working` is true, allow `end_date` to be null
-              if (!currentlyWorking && (!exp.end_date || exp.end_date === null)) {
+              if (
+                !currentlyWorking &&
+                (!exp.end_date || exp.end_date === null)
+              ) {
                 console.error(
                   `End date is required in experience item ${index} if not currently working.`
                 );
@@ -459,15 +460,12 @@ export default function OverviewPage({ setInvalidSections }) {
       } catch (error) {
         console.error("Error updating profile:", error);
       }
-      
+
       showToast("Profile submitted successfully!", "success");
-      await axios.put(
-        `${BACKEND_URL}/api/auth/update`,
-        { isProfileSubmitted: true },
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
+      await updateUserAPI({
+        data: { isProfileSubmitted: true },
+        authToken: authToken
+      });
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting profile:", error);

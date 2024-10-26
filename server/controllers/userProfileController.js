@@ -63,7 +63,7 @@ exports.getUserProfile = async (req, res) => {
 // Update user profile
 exports.updateProfile = async (req, res) => {
   try {
-    const userId = req.user.id || req.user._id;
+    const userId = new ObjectId(req.user.id || req.user._id);
     const updateData = req.body;
     console.log("userId from update profile", userId);
     console.log("received data from body", updateData);

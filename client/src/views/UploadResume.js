@@ -31,6 +31,7 @@ import {
   isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
 import { toast } from "react-toastify";
+import { saveUserProfileData, fetchUserProfile } from "../api/userProfileApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
@@ -43,7 +44,7 @@ export default function Component() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const { fetchUserInfo } = useAuth();
+  const { authToken, fetchUserInfo } = useAuth();
 
   const [loadingStep, setLoadingStep] = useState(0);
   const loadingSteps = [
@@ -100,7 +101,7 @@ export default function Component() {
   );
 
   const handleContinueClick = async () => {
-    setIsParsedResume(true);
+    
     const userInfo = await fetchUserInfo();
     const userId = userInfo._id || userInfo.id;
   
@@ -112,26 +113,20 @@ export default function Component() {
         // Step 1: Check if parsed data already exists using the user profile API
         let parsedData;
         try {
-          const profileResponse = await axios.get(`${BACKEND_URL}/api/user-profile/${userId}`);
-          console.log("Profile response:", profileResponse);
+          const response = await fetchUserProfile(authToken);
   
           // If we reach here, it means the profile exists with parsed data
-          if (profileResponse.data && profileResponse.data.parsedResume) {
-            parsedData = profileResponse.data.parsedResume;
+          if (response) {
+            parsedData = response;
             console.log("Using cached parsed data:", parsedData);
   
             // Update Recoil atoms with cached parsed data
             updateRecoilAtoms(parsedData);
           }
         } catch (profileError) {
-          if (profileError.response && profileError.response.status === 404) {
-            // Profile doesn't exist, proceed to parse resume
-            console.log("Profile not found, proceeding to parse resume.");
-          } else {
             console.error("Error checking user profile:", profileError);
             setIsLoading(false);
             return;
-          }
         }
   
         // Step 2: Upload resume to Azure using SAS URL
@@ -154,16 +149,13 @@ export default function Component() {
             }
           );
           parsedData = extract.data.parsed_data;
+          
   
           // Step 4: Store parsed data in MongoDB
-          await axios.post(
-            `${BACKEND_URL}/api/user-profile/create`,
-            parsedData,
-            {
-              headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-            }
-          );
+          await saveUserProfileData(authToken, { parsedData });
           console.log("Parsed data stored in MongoDB");
+          setIsParsedResume(true);
+          setIsParsedResumeFirstTime(true);
         }
   
         // Step 5: Extract links from resume
@@ -185,13 +177,7 @@ export default function Component() {
         updateRecoilAtoms(parsedData);
   
         // Step 7: Push the updated parsed data to the database using PUT
-        await axios.put(
-          `${BACKEND_URL}/api/user-profile`,
-          { parsedResume: parsedData },
-          {
-            headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
-          }
-        );
+        await saveUserProfileData(authToken, { parsedData });
         console.log("Updated parsed data pushed to MongoDB");
   
         setIsLoading(false);

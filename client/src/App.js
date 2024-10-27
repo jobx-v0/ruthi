@@ -25,6 +25,7 @@ import ReachOut from "./components/ReachOut";
 import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
 
+// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 function App() {
   return (
     <AuthProvider>
@@ -131,6 +132,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
             <Route
               path="/recruiter-dashboard"
               element={
@@ -139,6 +141,15 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            {/* <Route
+            path="/recruiter-dashboard"
+            element={
+              <ProtectedRoute>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            }
+            /> */}
 
             {/* Routes not requiring protection */}
             <Route path="/test" element={<VideoRecorder />} />

@@ -165,16 +165,6 @@ export default function Signup() {
     }
   };
 
-  const extractCompanyNameFromEmail = (email) => {
-    // Extract the domain from the email
-    const domain = email.split("@")[1]; // e.g., 'ruthi.in'
-
-    // Get the company name by splitting the domain and taking the first part
-    const companyName = domain.split(".")[0]; // e.g., 'ruthi'
-
-    return companyName;
-  };
-
   //success handler for Google Auth
   const handleSuccess = async (credentialResponse) => {
     const selectedRole = role;
@@ -184,14 +174,12 @@ export default function Signup() {
       console.log("Decoded JWT:", decoded);
 
       const email = decoded.email;
-      const companyName = extractCompanyNameFromEmail(email);
 
       const response = await axios.post(
         `${REACT_APP_BACKEND_URL}/api/auth/google-auth`,
         {
           token: credentialResponse.credential,
           role: selectedRole,
-          companyName,
         }
       );
 

@@ -158,7 +158,7 @@ export default function Component() {
 
         // Step 3: Call the sensitive resume parsing API if no cached parsed data
         if (!parsedData) {
-          if (process.env.REACT_APP_ENABLE_AI_EVALUATION === "true") {
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
             const formData = new FormData();
             formData.append("file", file, file.name);
 
@@ -171,6 +171,9 @@ export default function Component() {
               }
             );
             parsedData = extract.data.parsed_data;
+            await saveUserProfileData(authToken, parsedData);
+            setIsParsedResume(true);
+            setIsParsedResumeFirstTime(true);
           } else {
             console.log("dummyProfileData", dummyProfileData);
             parsedData = dummyProfileData;

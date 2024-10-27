@@ -64,12 +64,14 @@ export default function Login() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    const role = "candidate";
     try {
       const decoded = jwtDecode(credentialResponse.credential);
       const response = await axios.post(
         `${REACT_APP_BACKEND_URL}/api/auth/google-auth`,
         {
           token: credentialResponse.credential,
+          role: role,
         }
       );
 

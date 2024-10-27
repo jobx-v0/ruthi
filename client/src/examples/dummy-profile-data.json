@@ -1,0 +1,127 @@
+{
+  "personal_information": {
+    "first_name": "John",
+    "last_name": "Doe",
+    "email": "johndoe@example.com",
+    "phone": "+1234567890"
+  },
+  "socials": {
+    "github": "https://github.com/johndoe",
+    "linkedin": "https://linkedin.com/in/johndoe",
+    "twitter": "https://twitter.com/johndoe",
+    "website": "https://johndoe.dev"
+  },
+  "courses": [
+    {
+      "course_name": "Full Stack Web Development",
+      "course_link": "https://example.com/courses/fullstack",
+      "course_provider": "Coursera",
+      "completion_date": "2023-09-01"
+    },
+    {
+      "course_name": "Machine Learning",
+      "course_link": "https://example.com/courses/machinelearning",
+      "course_provider": "edX",
+      "completion_date": "2022-05-15"
+    }
+  ],
+  "education": [
+    {
+      "institution": "XYZ University",
+      "degree": "Bachelor of Science in Computer Science",
+      "start_date": "2018-08-01",
+      "end_date": "2022-05-20",
+      "cgpa_or_percentage": "3.9",
+      "description": [
+        "Graduated with Honors",
+        "Completed major coursework in algorithms, data structures, and AI"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "company": "TechCorp",
+      "position": "Software Engineer",
+      "start_date": "2022-06-01",
+      "end_date": "2024-06-01",
+      "description": [
+        "Developed and maintained full-stack web applications",
+        "Led a team of 4 engineers to improve code efficiency"
+      ],
+      "id":"1233",
+      "currently_working":false
+    },
+    {
+      "company": "Startup Inc.",
+      "position": "Frontend Developer Intern",
+      "start_date": "2021-06-01",
+      "end_date": "2021-08-31",
+      "description": [
+        "Built responsive UI components using React.js",
+        "Collaborated with backend team to integrate APIs"
+      ],
+      "id":"2312",
+      "currently_working":false
+
+    }
+  ],
+  "publications": [
+    {
+      "name": "A Study on Machine Learning in Healthcare",
+      "link": "https://example.com/publication/healthcare-ml",
+      "date": "2021-10-01"
+    }
+  ],
+  "skills": [
+    {
+      "skill_name": "JavaScript",
+      "skill_proficiency": "Advanced"
+    },
+    {
+      "skill_name": "Python",
+      "skill_proficiency": "Intermediate"
+    },
+    {
+      "skill_name": "React",
+      "skill_proficiency": "Advanced"
+    }
+  ],
+  "personal_projects": [
+    {
+      "name": "Portfolio Website",
+      "description": "Built a personal portfolio website using React and Tailwind CSS.",
+      "link": "https://johndoe.dev",
+      "start_date":"2018-08-01",
+      "end_date":"2022-05-20"
+    }
+  ],
+  "awards_and_achievements": [
+    "Awarded for academic excellence in Spring 2020.",
+    "Awarded for academic excellence in Fall 2020."
+  ],
+  "position_of_responsibility": [
+    {
+      "title": "Team Lead",
+      "organization": "XYZ University Coding Club",
+      "start_date": "2021-09-01",
+      "end_date": "2022-05-20",
+      "description": [
+        "Organized coding hackathons and events for students",
+        "Mentored junior developers on project development"
+      ]
+    }
+  ],
+  "competitions": [
+    {
+      "name": "Google Code Jam",
+      "date":"2022-05-20"
+    }
+  ],
+  "extra_curricular_activities": [
+      "Volunteered at local community center teaching coding to kids",
+      "Participated in Hackathon"
+  ],
+  "isSubmitted": false,
+  "isParsedResume": true,
+  "isParsedResumeFirstTime": false
+}

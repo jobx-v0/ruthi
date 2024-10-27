@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import dummyProfileData from "../examples/dummy-profile-data.json"; // Import the JSON file
 import { useAuth } from "../context/AuthContext";
 import {
   Upload,
@@ -9,6 +10,7 @@ import {
   Smile,
   Brain,
   Rocket,
+  Twitter,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -30,7 +32,9 @@ import {
   isParsedResumeState,
   isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
-import { toast } from "react-toastify";
+import { useCustomToast } from "../components/utils/useCustomToast";
+import { saveUserProfileData, fetchUserProfile } from "../api/userProfileApi";
+import { updateUserAPI } from "../api/authApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
@@ -42,8 +46,9 @@ export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const navigate = useNavigate();
+  const showToast = useCustomToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { fetchUserInfo } = useAuth();
+  const { authToken, fetchUserInfo } = useAuth();
 
   const [loadingStep, setLoadingStep] = useState(0);
   const loadingSteps = [
@@ -63,6 +68,21 @@ export default function Component() {
     }
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      try {
+        const response = await fetchUserProfile(authToken);
+        if (response) {
+          navigate("/profile");
+        }
+      } catch (profileError) {
+        console.error("Error checking user profile:", profileError);
+      }
+    };
+
+    checkUserProfile();
+  }, [authToken, navigate]);
 
   const handleSkipClick = () => {
     navigate("/profile");
@@ -98,147 +118,137 @@ export default function Component() {
   const setIsParsedResumeFirstTime = useSetRecoilState(
     isParsedResumeFirstTimeState
   );
-
   const handleContinueClick = async () => {
-    setIsParsedResume(true);
     const userInfo = await fetchUserInfo();
-    console.log("User Info fetched from fetchUserInfo:", userInfo);
     const userId = userInfo._id || userInfo.id;
+
     if (file) {
       setIsLoading(true);
       try {
         console.log("File uploaded:", file);
 
-        const response = await axios.get(`${AZURE_URL}/sas/${userId}`);
-        const { sasUrl } = response.data;
-        console.log("SAS URL:", sasUrl);
+        // Step 1: Check if parsed data already exists using the user profile API
+        let parsedData;
+        try {
+          const response = await fetchUserProfile(authToken);
 
+          // If we reach here, it means the profile exists with parsed data
+          console.log("response", response);
+
+          if (response) {
+            parsedData = response;
+            console.log("Using cached parsed data:", parsedData);
+
+            // Update Recoil atoms with cached parsed data
+            updateRecoilAtoms(parsedData);
+          }
+        } catch (profileError) {
+          console.error("Error checking user profile:", profileError);
+          setIsLoading(false);
+          return;
+        }
+
+        // Step 2: Upload resume to Azure using SAS URL
+        const sasResponse = await axios.get(`${AZURE_URL}/sas/${userId}`);
+        const { sasUrl } = sasResponse.data;
         const blob = new Blob([file], { type: file.type });
-        console.log("Blob:", blob);
-
         await axios.put(sasUrl, blob, {
-          headers: {
-            "x-ms-blob-type": "BlockBlob",
-          },
+          headers: { "x-ms-blob-type": "BlockBlob" },
         });
 
-        await axios.put(
-          `${BACKEND_URL}/api/auth/update`,
-          {
-            isParsedResume: true,
-            isParsedResumeFirstTime: true,
-          },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            },
+        // Step 3: Call the sensitive resume parsing API if no cached parsed data
+        if (!parsedData) {
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
+            const formData = new FormData();
+            formData.append("file", file, file.name);
+
+            const extract = await axios.post(
+              `${RESUME_PARSER_URL}/parse-resume`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+              }
+            );
+            parsedData = extract.data.parsed_data;
+            await saveUserProfileData(authToken, parsedData);
+            setIsParsedResume(true);
+            setIsParsedResumeFirstTime(true);
+          } else {
+            console.log("dummyProfileData", dummyProfileData);
+            parsedData = dummyProfileData;
           }
-        );
 
-        const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
-        console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
-        console.log("Health check response:", res);
+          // Step 4: Extract links from resume
+          const formData = new FormData();
+          formData.append("file", file, file.name);
 
-        const formData = new FormData();
-        formData.append("file", file, file.name);
-        console.log("Form data:", formData);
-
-        //
-        const extract = await axios.post(
-          `${RESUME_PARSER_URL}/parse-resume`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-            withCredentials: true,
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
+            const linksResponse = await axios.post(
+              `${RESUME_PARSER_URL}/extract-links`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+              }
+            );
+            console.log("links:", linksResponse);
+            const extractedLinks = linksResponse.data.extracted_links;
+            parsedData.socials = {
+              github: extractedLinks.github || "",
+              linkedin: extractedLinks.linkedin || "",
+            };
+            console.log("parsedSocial", parsedData.socials);
           }
-        );
-        console.log("Extract response:", extract);
 
-        const parsedData = extract.data.parsed_data;
+          // Step 5: Update Recoil atoms with final parsed data
+          console.log("atoms are getting populated here:");
+          updateRecoilAtoms(parsedData);
 
-        // Extract links from the resume
-        const Extract_Links = await axios.post(
-          `${RESUME_PARSER_URL}/extract-links`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-            withCredentials: true,
-          }
-        );
+          // Step 6: Store parsed data in MongoDB
+          await saveUserProfileData(authToken, parsedData);
+          console.log("Parsed data stored in MongoDB");
+          setIsParsedResume(true);
+          setIsParsedResumeFirstTime(true);
+          await updateUserAPI({
+            data: { isParsedResume: true, isParsedResumeFirstTime: true },
+            authToken: authToken,
+          });
+        }
 
-        const extractedLinks = Extract_Links.data.extracted_links;
-        parsedData.socials = extractedLinks;
-
-        // Log the parsed data before sending it to the server
-        console.log("Parsed data to be sent:", parsedData);
-
-        const uploadResponse = await axios.post(
-          `${BACKEND_URL}/api/user-profile/create`,
-          parsedData,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("authToken")}`,
-            },
-          }
-        );
-        console.log("Profile creation response:", uploadResponse);
-
-        // Update Recoil atoms with parsed data
-        setPersonalInformation(parsedData.personal_information || []);
-        setSocials(parsedData.socials || []);
-        setCourses(parsedData.courses || []);
-        setEducation(parsedData.education || []);
-        setExperience(parsedData.experience || []);
-        setPublications(parsedData.publications || []);
-        setSkills(parsedData.skills || []);
-        setPersonalProjects(parsedData.personal_projects || []);
-        setAwardsAndAchievements(parsedData.awards_and_achievements || []);
-        setPositionsOfResponsibility(
-          parsedData.position_of_responsibility || []
-        );
-        setCompetitions(parsedData.competitions || []);
-        setExtracurricularActivities(
-          parsedData.extra_curricular_activities || []
-        );
-        setIsParsedResumeFirstTime(true);
-        console.log("User profile updated with parsed data");
+        // Step 7: Push the updated parsed data to the database using PUT
+        await saveUserProfileData(authToken, { parsedData });
+        console.log("Updated parsed data pushed to MongoDB");
 
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
-        console.error("Error in handleContinueClick:", error);
+        console.error("Error saving profile data:", error);
         if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          console.error("Error response data:", error.response.data);
-          console.error("Error response status:", error.response.status);
-          console.error("Error response headers:", error.response.headers);
-          toast.error(
-            `Error: ${
-              error.response.data.message ||
-              "Failed to create profile. Please try again."
-            }`
-          );
-        } else if (error.request) {
-          // The request was made but no response was received
-          console.error("Error request:", error.request);
-          toast.error(
-            "No response received from server. Please try again later."
-          );
-        } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error message:", error.message);
-          toast.error("An unexpected error occurred. Please try again.");
+          console.error("Error response:", error.response.data);
         }
+        showToast("An unexpected error occurred. Please try again.", "error");
         setIsLoading(false);
       }
     }
   };
-  
+
+  // Helper function to update frontend state with parsed data
+  const updateRecoilAtoms = (parsedData) => {
+    setPersonalInformation(parsedData.personal_information || []);
+    setSocials(parsedData.socials || []);
+    setCourses(parsedData.courses || []);
+    setEducation(parsedData.education || []);
+    setExperience(parsedData.experience || []);
+    setPublications(parsedData.publications || []);
+    setSkills(parsedData.skills || []);
+    setPersonalProjects(parsedData.personal_projects || []);
+    setAwardsAndAchievements(parsedData.awards_and_achievements || []);
+    setPositionsOfResponsibility(parsedData.position_of_responsibility || []);
+    setCompetitions(parsedData.competitions || []);
+    setExtracurricularActivities(parsedData.extra_curricular_activities || []);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {isLoading ? (

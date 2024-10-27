@@ -10,29 +10,53 @@ module.exports = {
   ],
   theme: {
     extend: {
+      animation: {
+        "spin-slow": "spin 4s linear infinite",
+      },
       scale: {
         80: "0.80",
       },
+      boxShadow: {
+        neumorphism: "4px 4px 8px #bebebe, -4px -4px 8px #ffffff",
+        "neumorphism-active":
+          "inset 4px 4px 8px #bebebe, inset -4px -4px 8px #ffffff",
+      },
       colors: {
-        'blue-custom': '#004E98',
+        "blue-custom": "#004E98",
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'Noto Sans', 'sans-serif', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'],
-        inter: ['Inter', 'sans-serif'],
+        sans: [
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "Helvetica Neue",
+          "Arial",
+          "Noto Sans",
+          "sans-serif",
+          "Apple Color Emoji",
+          "Segoe UI Emoji",
+          "Segoe UI Symbol",
+          "Noto Color Emoji",
+        ],
+        inter: ["Inter", "sans-serif"],
       },
       animation: {
-        'spin-slow': 'spin 1s linear infinite',
-        'fade-out': 'fadeOut 0.5s ease-out forwards',
-        'fade-in': 'fadeIn 0.5s ease-in forwards',
+        "spin-slow": "spin 1s linear infinite",
+        "fade-out": "fadeOut 0.5s ease-out forwards",
+        "fade-in": "fadeIn 0.5s ease-in forwards",
       },
       keyframes: {
         fadeOut: {
-          '0%': { opacity: '1' },
-          '100%': { opacity: '0' },
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
         },
         fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
         },
       },
     },

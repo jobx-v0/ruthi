@@ -20,11 +20,11 @@ import SideBar from "./views/SideBar";
 import UploadResume from "./views/UploadResume";
 import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
-import { ToastContainer } from 'react-toastify';
+import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
-//import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
-import 'react-toastify/dist/ReactToastify.css';
- 
+// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
+import "react-toastify/dist/ReactToastify.css";
+
 function App() {
   return (
     <AuthProvider>
@@ -73,7 +73,7 @@ function App() {
                 </GuestRoute>
               }
             />
-           
+
             {/* Protected Routes (authenticated pages) */}
             <Route
               path="/home"
@@ -131,12 +131,22 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            
-           
+            {/* <Route
+            path="/recruiter-dashboard"
+            element={
+              <ProtectedRoute>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            }
+            /> */}
+
             {/* Routes not requiring protection */}
             <Route path="/test" element={<VideoRecorder />} />
             <Route path="/verification" element={<VerificationPage />} />
-            <Route path="/verify-email-prompt" element={<VerifyEmailPrompt />} />
+            <Route
+              path="/verify-email-prompt"
+              element={<VerifyEmailPrompt />}
+            />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
           </Routes>
@@ -170,5 +180,5 @@ function App() {
     </AuthProvider>
   );
 }
- 
+
 export default App;

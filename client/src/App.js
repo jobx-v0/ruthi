@@ -139,7 +139,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             {/* Routes not requiring protection */}
             <Route path="/test" element={<VideoRecorder />} />
             <Route path="/verification" element={<VerificationPage />} />

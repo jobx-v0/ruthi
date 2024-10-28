@@ -14,6 +14,9 @@ import {
 } from "react-icons/fa";
 import { PiBagSimpleFill } from "react-icons/pi";
 import { TbCheckbox } from "react-icons/tb";
+import { toast, Toaster } from "react-hot-toast";
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL + "/api";
 
 // Nav Component
 const Nav = () => {
@@ -146,71 +149,93 @@ const Header = () => {
 };
 
 // HeaderImage Component
-const HeaderImage = () => (
-  <div className="relative flex justify-center items-center animate-scaleUp delay-500 mt-8 md:mt-0">
-    <span
-      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] md:h-[500px] md:w-[500px] bg-blue-400 rounded-full"
-      style={{ animation: "textScaleUp 0.7s ease-out 0.3s forwards" }}
-    ></span>
+const HeaderImage = () => {
+  const [isScreen450, setIsScreen450] = useState(false);
+  useEffect(() => {
+    const handleResize = () => {
+      console.log(window.innerWidth);
 
-    <img
-      src={header_bg}
-      alt="header"
-      className="w-full max-w-[300px] sm:max-w-[450px] md:max-w-[555px]"
-      style={{ animation: "scaleUp 0.7s ease-out 0.3s forwards" }}
-    />
+      if (window.innerWidth < 450) {
+        setIsScreen450(true);
+      } else {
+        setIsScreen450(false);
+      }
+    };
 
-    {/* Image Content 1 */}
-    <div
-      className="absolute top-1/2 left-1/2 flex items-center gap-2 p-2 bg-white rounded-md shadow-lg transform -translate-x-[calc(50%+6rem)] -translate-y-[calc(50%+6rem)]
+    window.addEventListener("resize", handleResize);
+    handleResize(); // Call on mount
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  return (
+    <>
+      <div
+        className="relative flex justify-center items-center animate-scaleUp delay-500 mt-8 md:mt-0"
+        style={{ display: isScreen450 ? "none" : "" }}
+      >
+        <span
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] md:h-[500px] md:w-[500px] bg-blue-400 rounded-full"
+          style={{ animation: "textScaleUp 0.7s ease-out 0.3s forwards" }}
+        ></span>
+
+        <img
+          src={header_bg}
+          alt="header"
+          className="w-full max-w-[300px] sm:max-w-[450px] md:max-w-[555px]"
+          style={{ animation: "scaleUp 0.7s ease-out 0.3s forwards" }}
+        />
+
+        {/* Image Content 1 */}
+        <div
+          className="absolute top-1/2 left-1/2 flex items-center gap-2 p-2 bg-white rounded-md shadow-lg transform -translate-x-[calc(50%+6rem)] -translate-y-[calc(50%+6rem)]
             sm:gap-4 sm:p-4 sm:-translate-x-[calc(50%+8rem)] sm:-translate-y-[calc(50%+8rem)]
             max-w-[280px] sm:max-w-none" /* Limit width on smaller screens */
-      style={{
-        animation: "slideInFromLeft 1s ease-out forwards",
-        opacity: 0,
-      }}
-    >
-      <span
-        className="p-1 text-lg bg-blue-100 text-blue-400 rounded-full
+          style={{
+            animation: "slideInFromLeft 1s ease-out forwards",
+            opacity: 0,
+          }}
+        >
+          <span
+            className="p-1 text-lg bg-blue-100 text-blue-400 rounded-full
                   sm:p-3 sm:text-2xl"
-      >
-        <PiBagSimpleFill />
-      </span>
-      <div className="text-left">
-        <h4 className="text-base font-semibold text-gray-800 sm:text-xl">
-          10000+
-        </h4>
-        <p className="text-xs text-gray-500 sm:text-base">Active Jobs</p>
-      </div>
-    </div>
+          >
+            <PiBagSimpleFill />
+          </span>
+          <div className="text-left">
+            <h4 className="text-base font-semibold text-gray-800 sm:text-xl">
+              10000+
+            </h4>
+            <p className="text-xs text-gray-500 sm:text-base">Active Jobs</p>
+          </div>
+        </div>
 
-    {/* Image Content 2 */}
-    <div
-      className="absolute top-1/2 left-1/2 flex flex-col gap-2 bg-white p-2 rounded-md shadow-lg transform translate-x-[calc(50%-1rem)] translate-y-[calc(80%-0rem)]
+        {/* Image Content 2 */}
+        <div
+          className="absolute top-1/2 left-1/2 flex flex-col gap-2 bg-white p-2 rounded-md shadow-lg transform translate-x-[calc(50%-1rem)] translate-y-[calc(80%-0rem)]
               sm:gap-4 sm:p-4 sm:translate-x-[calc(50%-2rem)] sm:translate-y-[calc(100%-0rem)] max-w-[280px]"
-      style={{
-        animation: "slideInFromRight 1s ease-out forwards",
-        opacity: 0,
-      }}
-    >
-      <ul className="space-y-1 text-gray-500 text-xs sm:space-y-2 sm:text-base">
-        <li className="flex items-center gap-1 sm:gap-2">
-          <span className="text-lg sm:text-2xl text-orange-500">
-            <TbCheckbox />
-          </span>
-          Get 20% off on every 1st month
-        </li>
-        <li className="flex items-center gap-1 sm:gap-2">
-          <span className="text-lg sm:text-2xl text-orange-500">
-            <TbCheckbox />
-          </span>
-          Expert AI Interviewer
-        </li>
-      </ul>
-    </div>
+          style={{
+            animation: "slideInFromRight 1s ease-out forwards",
+            opacity: 0,
+          }}
+        >
+          <ul className="space-y-1 text-gray-500 text-xs sm:space-y-2 sm:text-base">
+            <li className="flex items-center gap-1 sm:gap-2">
+              <span className="text-lg sm:text-2xl text-orange-500">
+                <TbCheckbox />
+              </span>
+              Get 20% off on every 1st month
+            </li>
+            <li className="flex items-center gap-1 sm:gap-2">
+              <span className="text-lg sm:text-2xl text-orange-500">
+                <TbCheckbox />
+              </span>
+              Expert AI Interviewer
+            </li>
+          </ul>
+        </div>
 
-    <style>
-      {`
+        <style>
+          {`
         @keyframes slideInFromLeft {
           0% {
             opacity: 0;
@@ -279,9 +304,11 @@ const HeaderImage = () => (
           }
         }
       `}
-    </style>
-  </div>
-);
+        </style>
+      </div>
+    </>
+  );
+};
 
 const BodySection = () => {
   const navigate = useNavigate();
@@ -387,13 +414,68 @@ const BodySection = () => {
 
 const Footer = () => {
   const navigate = useNavigate();
+  const [isScreen450, setIsScreen450] = useState(false);
+  const [email, setEmail] = useState("");
+
+  const isValidEmail = (email) => {
+    // Basic email pattern for validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailPattern.test(email);
+  };
+
+  const handleSubscribe = async () => {
+    try {
+      if (!isValidEmail(email)) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+
+      setEmail("");
+    } catch (error) {
+      toast.error("Subscription failed. Please try again later.");
+    }
+  };
+
+  useEffect(() => {
+    const handleResize = () => {
+      console.log(window.innerWidth);
+
+      if (window.innerWidth < 450) {
+        setIsScreen450(true);
+      } else {
+        setIsScreen450(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize();
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   return (
     <motion.footer
-      className="w-full mx-auto text-white bg-[#1e90ff] p-20 relative overflow-hidden"
+      className={`w-full mx-auto text-white bg-blue-400 ${
+        isScreen450 ? "p-5" : "p-20"
+      } relative overflow-hidden`}
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
-      style={{ backgroundColor: "#1e90ff" }} // Primary Blue
+      // style={{ backgroundColor: "#57abff" }}
     >
       <div
         className="absolute top-0 left-0 right-0 h-2"
@@ -401,9 +483,15 @@ const Footer = () => {
           background: "linear-gradient(to bottom, #ff8c00, transparent)",
         }}
       ></div>
-      <div className="flex flex-wrap justify-around items-center pt-8">
+      <div className="flex flex-wrap justify-around items-start pt-8">
         {/* Logo and Description */}
-        <div className="flex-1 min-w-[200px] text-left mb-5">
+        <div
+          className={` ${
+            isScreen450
+              ? "flex flex-col items-center justify-center mb-10"
+              : "flex-1 min-w-[200px] text-left mb-5 pr-5"
+          }  `}
+        >
           <img
             src={Ruthi_full_Logo}
             alt="Ruthi Logo"
@@ -412,7 +500,7 @@ const Footer = () => {
               navigate("/");
             }}
           />
-          <p className="text-white">
+          <p className={`${isScreen450 ? "text-center" : "text-left"}`}>
             Your partner in smart hiring. Discover opportunities, empower
             hiring, and grow with confidence.
           </p>
@@ -421,7 +509,9 @@ const Footer = () => {
         {/* Subscribe Section */}
         <div className="flex-1 min-w-[200px] text-center mb-5">
           <h2
-            className="text-[#ff8c00] text-3xl font-bold mb-12 animate-bounce"
+            className={`text-[#ff8c00] text-3xl font-bold ${
+              isScreen450 ? "mb-6" : "mb-12"
+            } animate-bounce`}
             style={{ textShadow: "2px 2px 2px rgba(0, 0, 0, 0.3)" }}
           >
             Stay Updated
@@ -436,8 +526,13 @@ const Footer = () => {
               placeholder="Enter your email"
               className="p-3 rounded-md border-none w-52"
               style={{ color: "#111827" }}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-            <button className="bg-[#ff8800] text-white py-2 px-4 rounded-md transition duration-300 hover:bg-[#d77a00]">
+            <button
+              className="bg-[#ff8800] text-white py-2 px-4 rounded-md transition duration-300 hover:bg-[#d77a00]"
+              onClick={handleSubscribe}
+            >
               Subscribe
             </button>
           </div>
@@ -484,6 +579,16 @@ const Footer = () => {
 // Main Component
 const RuthiLandingPage = () => (
   <div className="w-full mx-auto min-h-screen flex flex-col overlow-x-hidden">
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        duration: 5000,
+        style: {
+          background: "#363636",
+          color: "#fff",
+        },
+      }}
+    />
     <Nav />
     <Header />
     <BodySection />

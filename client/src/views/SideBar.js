@@ -157,10 +157,8 @@ export default function SideBar() {
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
   const setIsParsedFirstTime = useSetRecoilState(isParsedResumeFirstTimeState);
 
-
   const [initialDataSections, setInitialDataSections] = useState([]);
   const customToast = useCustomToast();
-
 
   function getInvalidSection() {
     if (invalidSections.length > 0) {
@@ -533,7 +531,7 @@ export default function SideBar() {
       "Experience",
       "Skills",
       ...manuallyAddedSections,
-      "Overview"
+      "Overview",
     ];
 
     const currentIndex = allSections.indexOf(selectedSection);
@@ -553,7 +551,7 @@ export default function SideBar() {
       const nextSection = getInvalidSection();
       if (nextSection) {
         setSelectedSection(nextSection);
-        setInvalidSections(prev => prev.slice(1)); // Remove the first invalid section
+        setInvalidSections((prev) => prev.slice(1)); // Remove the first invalid section
         return;
       }
     }

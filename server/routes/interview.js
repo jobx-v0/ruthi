@@ -54,4 +54,9 @@ router.get(
   AzureService.downloadBlobPDFToFrontend
 );
 
+router.get(
+  "/download-webm-video/:interviewId/:questionId",
+  AzureService.downloadVideoToFrontend
+);
+
 module.exports = router;

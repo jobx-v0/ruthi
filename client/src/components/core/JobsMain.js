@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Button, useDisclosure } from "@nextui-org/react";
-import {
-  fetchJobsAPI,
-  addJobAPI,
-  updateJobAPI,
-  deleteJobAPI,
-} from "../../api/jobApi";
+
+
+import { fetchJobsAPI, addJobAPI, updateJobAPI, deleteJobAPI } from '../../api/jobApi';
+
 import JobPostMain from "./JobPostMain";
 import AddJobModal from "./AddJobModal";
 import { useAuth } from "../../context/AuthContext";

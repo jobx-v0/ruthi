@@ -5,34 +5,7 @@ import { useRecoilState } from "recoil";
 import { personalProjectsState } from "../../store/atoms/userProfileSate";
 import { Rocket, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { z } from "zod";
-
-const projectSchema = z.object({
-  name: z.string()
-    .min(1, "Project name is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Project name must contain at least one letter"),
-  description: z.string().optional(),
-  link: z.string().url("Invalid URL").or(z.literal("")),
-  start_date: z.string().refine(
-    (date) => {
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "Start date cannot be in the future" }
-  ),
-  end_date: z.string().refine(
-    (date) => {
-      if (!date) return true; // Allow empty string for ongoing projects
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "End date cannot be in the future" }
-  ).optional(),
-});
+import { projectSchema } from "../../validators/ZodSchema";
 
 // Add this utility function at the top of your file
 const formatDateForInput = (dateString) => {

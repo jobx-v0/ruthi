@@ -5,13 +5,7 @@ import { Trash2 } from 'react-feather'
 import { IconAward } from '@tabler/icons-react'
 import { useRecoilState } from 'recoil'
 import { awardsAndAchievementsState } from '../../store/atoms/userProfileSate'
-import { z } from 'zod'
-
-
-const awardSchema = z.string()
-  .min(1, "Award name is required")
-  .regex(/^(?=.*[a-zA-Z])/, "Award name must contain at least one letter")
-  .max(100, "Award name must be 100 characters or less");
+import { awardSchema } from '../../validators/ZodSchema'
 
 export default function AwardsAndAchievements() {
   const [awards, setAwards] = useRecoilState(awardsAndAchievementsState)

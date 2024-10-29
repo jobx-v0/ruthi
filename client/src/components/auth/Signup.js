@@ -9,14 +9,13 @@ import { registerUserAPI } from "../../api/authApi";
 import InputField from "../Input";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
-
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { toast } from "react-hot-toast";
 import { fetchUserProfile } from '../../api/userProfileApi';
 import { useAuth } from "../../context/AuthContext";
+import { useCustomToast } from "../utils/useCustomToast";
 
 // import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
@@ -27,6 +26,8 @@ export default function Signup() {
   const navigate = useNavigate();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
   const {setToken} = useAuth();
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false); // Checkbox state
+  const showToast = useCustomToast();
 
   useEffect(() => {
     const fields = candidateSignupFields;
@@ -71,6 +72,11 @@ export default function Signup() {
   const handleSubmitSignUp = async (e) => {
     e.preventDefault();
     var is_valid = true;
+    if (!isTermsAccepted) {
+      toast.error("You must accept the Terms and Conditions.");
+      return; // Exit early if terms are not accepted
+    }
+    
     const fields = candidateSignupFields;
 
     // Create a new object to store the updated sign up state
@@ -148,31 +154,21 @@ export default function Signup() {
           role: "candidate",
         });
         if (success) {
-          // toast.success("Account created successfully! Redirecting to login...");
+          showToast("Successful! Redirecting...", "success");
           setTimeout(() => {
             navigate("/login");
-          }, 1000); // Delay navigation by 2 seconds
+          }, 1000);
         } else {
-          toast.error("Failed to create account. Please try again.");
+          showToast("Failed to create account. Please try again.", "error");
         }
       } catch (error) {
-        toast.error("An error occurred. Please try again later.");
+        showToast("An error occurred. Please try again later.", "error");
       } finally {
         setIsSubmitting(false);
       }
     } else {
-      toast.error("Please correct the errors in the form.");
+      showToast("Please correct the errors in the form.", "error");
     }
-  };
-
-  const extractCompanyNameFromEmail = (email) => {
-    // Extract the domain from the email
-    const domain = email.split("@")[1]; // e.g., 'ruthi.in'
-
-    // Get the company name by splitting the domain and taking the first part
-    const companyName = domain.split(".")[0]; // e.g., 'ruthi'
-
-    return companyName;
   };
 
   //success handler for Google Auth
@@ -184,14 +180,12 @@ export default function Signup() {
       console.log("Decoded JWT:", decoded);
 
       const email = decoded.email;
-      const companyName = extractCompanyNameFromEmail(email);
 
       const response = await axios.post(
         `${REACT_APP_BACKEND_URL}/api/auth/google-auth`,
         {
           token: credentialResponse.credential,
           role: selectedRole,
-          companyName,
         }
       );
 
@@ -202,14 +196,7 @@ export default function Signup() {
         const authToken = response.data.token || response.data.newUsertoken;
         setToken(authToken);
         
-        await toast.promise(
-          new Promise(resolve => setTimeout(resolve, 2000)),
-          { 
-            loading: 'Creating account...',
-            success: 'Account created successfully! Redirecting...',
-            error: 'An error occurred',
-          }
-        );
+        showToast("Account created successfully! Redirecting...", "success");
 
         console.log("response.data.userId", response.data);
 
@@ -233,27 +220,14 @@ export default function Signup() {
       console.error("Error during Google login:", error);
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          console.error("Server responded with error:", error.response.data);
-          toast.error(
-            `Authentication failed: ${
-              error.response.data.message || "Unknown error"
-            }`
-          );
+          showToast(`Authentication failed: ${error.response.data.message || "Unknown error"}`, "error");
         } else if (error.request) {
-          // The request was made but no response was received
-          console.error("No response received:", error.request);
-          toast.error("No response from server. Please try again later.");
+          showToast("No response from server. Please try again later.", "error");
         } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error setting up request:", error.message);
-          toast.error("An error occurred. Please try again.");
+          showToast("An error occurred. Please try again.", "error");
         }
       } else {
-        // Handle non-Axios errors
-        console.error("Non-Axios error:", error);
-        toast.error(error.message || "An unexpected error occurred");
+        showToast(error.message || "An unexpected error occurred", "error");
       }
     }
   };
@@ -347,6 +321,36 @@ export default function Signup() {
                 errorMessage={field.errorMessage}
               />
             ))}
+            {/*create a checkbox for Terms and conditions */}
+             
+            <div className="flex items-start space-x-2">
+              <input
+                type="checkbox"
+                id="terms"
+                name="terms"
+                required
+                className="mt-1"
+                checked={isTermsAccepted}
+                onChange={(e)=> setIsTermsAccepted(e.target.checked)}//assign.
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600">
+                I agree to the 
+                <span
+                  onClick={() => window.location.href = '/TermsAndConditons.html'} 
+                  className="text-blue-600 cursor-pointer "
+                >
+                  Terms and Conditions
+                </span>
+                & 
+                <span
+                  onClick={() => window.location.href = '/PrivacyPolicy.html'} 
+                  className="text-blue-600 cursor-pointer "
+                >
+                  Privacy Policy
+                </span>
+              </label>
+            </div>
+
             <div className="mt-2">
               <FormAction
                 handleClick={handleSubmitSignUp}

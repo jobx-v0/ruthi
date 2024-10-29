@@ -38,7 +38,9 @@ const ProfileCard = ({ candidate, onClose }) => {
             background: "#ddd",
             marginRight: "16px",
           }}
-        ></div>
+        >
+          <img src="https://static-00.iconduck.com/assets.00/user-icon-2048x2048-ihoxz4vq.png"/>
+        </div>
         <div>
           <h1 style={{ fontSize: "24px", fontWeight: "bold" }}>{candidate.userName}</h1>
           <p style={{ color: "gray" }}>

@@ -8,80 +8,7 @@ import {
 } from "../../store/atoms/userProfileSate";
 import { GraduationCap, BookOpen, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { z } from "zod";
-
-const educationSchema = z.object({
-  institution: z
-    .string()
-    .min(1, "Institution is required")
-    .regex(
-      /^[a-zA-Z\s.,'-]+$/,
-      "Institution should only contain letters, spaces, and common punctuation"
-    ),
-  degree: z
-    .string()
-    .min(1, "Degree is required")
-    .regex(
-      /^[a-zA-Z\s.,'-]+$/,
-      "Degree should only contain letters, spaces, and common punctuation"
-    ),
-  start_date: z.string().refine(
-    (date) => {
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
-      return selectedDate >= seventyYearsAgo && selectedDate <= today;
-    },
-    {
-      message: "Start date must be within the last 70 years and not in the future",
-    }
-  ),
-  end_date: z.string().refine(
-    (date) => {
-      if (!date) return true; // Allow empty string for ongoing education
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "End date cannot be in the future" }
-  ).optional(),
-  cgpa_or_percentage: z
-    .string()
-    .regex(/^(\d{1,2}(\.\d{1,2})?|100)$/, "Invalid CGPA or percentage"),
-  description: z.string().optional(),
-});
-
-const courseSchema = z.object({
-  course_name: z
-    .string()
-    .min(1, "Course name is required")
-    .regex(
-      /^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'-]+$/,
-      "Course name must contain at least one letter and can include letters, numbers, spaces, and common punctuation"
-    ),
-  course_provider: z
-    .string()
-    .min(1, "Course provider is required")
-    .regex(
-      /^[a-zA-Z\s.,'-]+$/,
-      "Course provider should only contain letters, spaces, and common punctuation"
-    ),
-  completion_date: z.string().refine(
-    (date) => {
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
-      return selectedDate >= seventyYearsAgo && selectedDate <= today;
-    },
-    {
-      message: "Completion date must be within the last 70 years and not in the future",
-    }
-  ),
-  course_link: z.string().url("Invalid URL").or(z.literal("")),
-});
+import { educationSchema, courseSchema } from "../../validators/ZodSchema";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
@@ -188,13 +115,17 @@ export default function Education() {
 
   const getCurrentDate = () => {
     const today = new Date();
-    return today.toISOString().substring(0, 7); // Return only YYYY-MM
+    return today.toISOString().substring(0, 7);
   };
 
   const getDateLimit = () => {
     const today = new Date();
     const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
-    return seventyYearsAgo.toISOString().substring(0, 7); // Return only YYYY-MM
+    const tenYearsFromNow = new Date(today.getFullYear() + 10, today.getMonth());
+    return {
+        startDateLimit: seventyYearsAgo.toISOString().substring(0, 7),
+        endDateLimit: tenYearsFromNow.toISOString().substring(0, 7),
+    };
   };
 
   return (
@@ -328,7 +259,7 @@ export default function Education() {
                         type="month"
                         id={`start-date-${education.id}`}
                         value={formatDate(education.start_date)}
-                        min={getDateLimit()}
+                        min={getDateLimit().startDateLimit}
                         max={getCurrentDate()}
                         onChange={(e) =>
                           handleEducationChange(
@@ -362,7 +293,7 @@ export default function Education() {
                         id={`end-date-${education.id}`}
                         value={formatDate(education.end_date)}
                         min={education.start_date}
-                        max={getCurrentDate()}
+                        max={getDateLimit().endDateLimit}
                         onChange={(e) =>
                           handleEducationChange(
                             index,

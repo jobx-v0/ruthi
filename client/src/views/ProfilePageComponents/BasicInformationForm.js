@@ -6,42 +6,9 @@ import {
 import { userProfileState } from "../../store/selectors/userProfileState";
 import { IconUserCheck } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-import { z } from "zod";
 import { useState } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { toast } from "react-toastify";
-import { saveUserProfileData } from "../../api/userProfileApi";
-
-// Define the schema
-const personalInfoSchema = z.object({
-  first_name: z
-    .string()
-    .min(1, "First name is required")
-    .regex(/^[a-zA-Z\s]+$/, "Only letters are allowed"),
-  last_name: z
-    .string()
-    .min(1, "Last name is required")
-    .regex(/^[a-zA-Z\s]+$/, "Only letters are allowed"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().regex(/^\d{10}$/, "Phone number must be exactly 10 digits"),
-    expected_salary: z
-    .number()
-    .min(1, "Expected salary must be at least 1")
-    .max(99, "Expected salary must not exceed 99")
-    .or(
-      z
-        .string()
-        .regex(/^[1-9][0-9]?$/, "Expected salary must be between 1 and 99")
-    ),
-});
-
-const socialsSchema = z.object({
-  github: z.string().url("Invalid URL").optional().or(z.literal("")),
-  linkedin: z.string().url("Invalid URL").optional().or(z.literal("")),
-  twitter: z.string().url("Invalid URL").optional().or(z.literal("")),
-  website: z.string().url("Invalid URL").optional().or(z.literal("")),
-});
+import { personalInfoSchema, socialsSchema } from "../../validators/ZodSchema";
 
 const BasicInformationForm = ({ errors: parentErrors}) => {
   const [personalInformation, setPersonalInformation] = useRecoilState(

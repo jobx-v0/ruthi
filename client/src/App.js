@@ -26,7 +26,8 @@ import JobCard from "./components/core/JobCards";
 import Candidates from "./components/core/Candidates";
 import JobDescription from './components/core/JobDescription';
 // import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
-import "react-toastify/dist/ReactToastify.css";
+import 'react-toastify/dist/ReactToastify.css';
+import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
 
 function App() {
@@ -176,6 +177,15 @@ function App() {
             }
             /> */}
 
+            <Route
+              path="/job-portal"
+              element={
+                <ProtectedRoute>
+                   <CandidatesApplied/>
+                </ProtectedRoute>
+              }
+            />
+           
             {/* Routes not requiring protection */}
             <Route path="/test" element={<VideoRecorder />} />
             <Route path="/verification" element={<VerificationPage />} />

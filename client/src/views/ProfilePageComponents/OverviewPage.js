@@ -460,12 +460,15 @@ export default function OverviewPage({ setInvalidSections }) {
       } catch (error) {
         console.error("Error updating profile:", error);
       }
-
+      
       showToast("Profile submitted successfully!", "success");
-      await updateUserAPI({
-        data: { isProfileSubmitted: true },
-        authToken: authToken
-      });
+      await axios.put(
+        `${BACKEND_URL}/api/auth/update`,
+        { isProfileSubmitted: true },
+        {
+          headers: { Authorization: `Bearer ${authToken}` },
+        }
+      );
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error submitting profile:", error);

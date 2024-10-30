@@ -3,8 +3,10 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 const cors = require("cors");
 const yaml = require("js-yaml");
+const path = require('path');
+const fs = require('fs');
 
-const configPath = path.join(__dirname, "config/dev.config.yaml");
+const configPath = path.join(__dirname, '..', 'config', 'dev.yaml');
 const config = yaml.load(fs.readFileSync(configPath, "utf8"));
 // services
 
@@ -47,13 +49,10 @@ const questionRoutes = require("./routes/question");
 const userProfileRoutes = require("./routes/userProfiles");
 
 // Use your authentication routes
-if(emailServiceEnabled){
   app.use("/api/auth", authRoutes);
  // Import your authentication routes
 
-}else{
-   console.log("Email service is disabled.");
-}
+
 
 // Use interview routes
 app.use("/api/interview", interviewRoutes);

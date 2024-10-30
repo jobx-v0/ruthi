@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   candidateSignupFields,
-  employerSignupFields,
+  // employerSignupFields, // Commented out
 } from "../../constants/formFields";
 import FormAction from "../FormAction";
 import { useNavigate } from "react-router-dom";
@@ -9,29 +9,34 @@ import { registerUserAPI } from "../../api/authApi";
 import InputField from "../Input";
 import Ruthi_full_Logo from "../../assets/Ruthi_full_Logo.png";
 import { TextGenerateEffect } from "../../ui/text-generate-effect";
-
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
-import { toast } from "react-hot-toast";
+import { fetchUserProfile } from '../../api/userProfileApi';
+import { useAuth } from "../../context/AuthContext";
+import { useCustomToast } from "../utils/useCustomToast";
 
 // import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {
-  const [isEmployer, setIsEmployer] = useState(false);
+  const [isEmployer, setIsEmployer] = useState(false); // Commented out
   const [signUpState, setSignUpState] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [role, setRole] = useState("candidate");
+  const [role] = useState("candidate"); // Set to "candidate" by default
   const navigate = useNavigate();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+  const {setToken} = useAuth();
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false); // Checkbox state
+  const showToast = useCustomToast();
 
   useEffect(() => {
-    const fields = isEmployer ? employerSignupFields : candidateSignupFields;
+    const fields = candidateSignupFields;
     const initialState = {};
     fields.forEach((field) => (initialState[field.id] = ""));
     setSignUpState(initialState);
-    setRole(isEmployer ? "recruiter" : "candidate");
-  }, [isEmployer]);
+    setIsEmployer(true); // Set to false by default
+    // setRole("candidate"); // This line can be removed as role is now set by default
+  }, []); // Removed dependency on isEmployer
 
   const handleChange = (e) => {
     setSignUpState((prevState) => ({
@@ -47,19 +52,19 @@ export default function Signup() {
       return "Invalid email format";
     }
 
-    // Company email validation (basic check for non-common domains)
-    if (isEmployer) {
-      const commonDomains = [
-        "gmail.com",
-        "yahoo.com",
-        "hotmail.com",
-        "outlook.com",
-      ];
-      const domain = email.split("@")[1];
-      if (commonDomains.includes(domain)) {
-        return "Please use a company email address";
-      }
-    }
+    // // Company email validation (basic check for non-common domains)
+    // if (isEmployer) {
+    //   const commonDomains = [
+    //     "gmail.com",
+    //     "yahoo.com",
+    //     "hotmail.com",
+    //     "outlook.com",
+    //   ];
+    //   const domain = email.split("@")[1];
+    //   if (commonDomains.includes(domain)) {
+    //     return "Please use a company email address";
+    //   }
+    // }
 
     return null;
   };
@@ -67,7 +72,12 @@ export default function Signup() {
   const handleSubmitSignUp = async (e) => {
     e.preventDefault();
     var is_valid = true;
-    const fields = isEmployer ? employerSignupFields : candidateSignupFields;
+    if (!isTermsAccepted) {
+      toast.error("You must accept the Terms and Conditions.");
+      return; // Exit early if terms are not accepted
+    }
+    
+    const fields = candidateSignupFields;
 
     // Create a new object to store the updated sign up state
     let updatedSignUpState = { ...signUpState };
@@ -141,34 +151,24 @@ export default function Signup() {
       try {
         const success = await registerUserAPI({
           ...signUpState,
-          role: isEmployer ? "recruiter" : "candidate",
+          role: "candidate",
         });
         if (success) {
-          // toast.success("Account created successfully! Redirecting to login...");
+          showToast("Successful! Redirecting...", "success");
           setTimeout(() => {
             navigate("/login");
-          }, 1000); // Delay navigation by 2 seconds
+          }, 1000);
         } else {
-          toast.error("Failed to create account. Please try again.");
+          showToast("Failed to create account. Please try again.", "error");
         }
       } catch (error) {
-        toast.error("An error occurred. Please try again later.");
+        showToast("An error occurred. Please try again later.", "error");
       } finally {
         setIsSubmitting(false);
       }
     } else {
-      toast.error("Please correct the errors in the form.");
+      showToast("Please correct the errors in the form.", "error");
     }
-  };
-
-  const extractCompanyNameFromEmail = (email) => {
-    // Extract the domain from the email
-    const domain = email.split("@")[1]; // e.g., 'ruthi.in'
-
-    // Get the company name by splitting the domain and taking the first part
-    const companyName = domain.split(".")[0]; // e.g., 'ruthi'
-
-    return companyName;
   };
 
   //success handler for Google Auth
@@ -180,14 +180,12 @@ export default function Signup() {
       console.log("Decoded JWT:", decoded);
 
       const email = decoded.email;
-      const companyName = extractCompanyNameFromEmail(email);
 
       const response = await axios.post(
         `${REACT_APP_BACKEND_URL}/api/auth/google-auth`,
         {
           token: credentialResponse.credential,
           role: selectedRole,
-          companyName,
         }
       );
 
@@ -195,17 +193,26 @@ export default function Signup() {
 
       // Check if the response contains a token
       if (response.data && (response.data.token || response.data.newUsertoken)) {
-        localStorage.setItem("authToken",response.data.token || response.data.newUsertoken);
-        // toast.success("Account created successfully! Redirecting...");
-        await toast.promise(
-          new Promise(resolve => setTimeout(resolve, 2000)), // 2 seconds delay
-          { 
-            loading: 'Creating account...',
-            success: 'Account created successfully! Redirecting...',
-            error: 'An error occurred',
+        const authToken = response.data.token || response.data.newUsertoken;
+        setToken(authToken);
+        
+        showToast("Account created successfully! Redirecting...", "success");
+
+        console.log("response.data.userId", response.data);
+
+        // Fetch user profile to check if it exists
+        try {
+          const userProfile = await fetchUserProfile(authToken);
+          if (userProfile && Object.keys(userProfile).length > 0) {
+            navigate("/profile", { replace: true });
+          } else {
+            navigate("/uploadResume", { replace: true });
           }
-        );
-        navigate("/uploadResume", { replace: true });
+        } catch (error) {
+          console.error("Error fetching user profile:", error);
+          // If there's an error fetching the profile, assume it doesn't exist
+          navigate("/uploadResume", { replace: true });
+        }
       } else {
         throw new Error("No token received from server");
       }
@@ -213,32 +220,19 @@ export default function Signup() {
       console.error("Error during Google login:", error);
       if (axios.isAxiosError(error)) {
         if (error.response) {
-          // The request was made and the server responded with a status code
-          // that falls out of the range of 2xx
-          console.error("Server responded with error:", error.response.data);
-          toast.error(
-            `Authentication failed: ${
-              error.response.data.message || "Unknown error"
-            }`
-          );
+          showToast(`Authentication failed: ${error.response.data.message || "Unknown error"}`, "error");
         } else if (error.request) {
-          // The request was made but no response was received
-          console.error("No response received:", error.request);
-          toast.error("No response from server. Please try again later.");
+          showToast("No response from server. Please try again later.", "error");
         } else {
-          // Something happened in setting up the request that triggered an Error
-          console.error("Error setting up request:", error.message);
-          toast.error("An error occurred. Please try again.");
+          showToast("An error occurred. Please try again.", "error");
         }
       } else {
-        // Handle non-Axios errors
-        console.error("Non-Axios error:", error);
-        toast.error(error.message || "An unexpected error occurred");
+        showToast(error.message || "An unexpected error occurred", "error");
       }
     }
   };
 
-  const fields = isEmployer ? employerSignupFields : candidateSignupFields;
+  const fields = candidateSignupFields;
   const words =
     "A platform for job-seekers to practice interviews and get evaluated. Hone your skills and get ready for your dream job with real-time feedback and tailored advice.";
 
@@ -287,7 +281,7 @@ export default function Signup() {
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
 
-          <div className="flex space-x-3 mb-4">
+          {/* <div className="flex space-x-3 mb-4">
             <button
               className={`flex-1 px-3 py-2 text-sm ${
                 !isEmployer
@@ -308,14 +302,14 @@ export default function Signup() {
             >
               Employer
             </button>
-          </div>
+          </div> */}
 
           <form onSubmit={handleSubmitSignUp} className="space-y-3 mb-2">
             {fields.map((field) => (
               <InputField
                 key={field.id}
                 handleChange={handleChange}
-                value={signUpState[field.id] || ""} // Ensure a default value
+                value={signUpState[field.id] || ""}
                 labelText={field.labelText}
                 labelFor={field.labelFor}
                 id={field.id}
@@ -327,6 +321,36 @@ export default function Signup() {
                 errorMessage={field.errorMessage}
               />
             ))}
+            {/*create a checkbox for Terms and conditions */}
+             
+            <div className="flex items-start space-x-2">
+              <input
+                type="checkbox"
+                id="terms"
+                name="terms"
+                required
+                className="mt-1"
+                checked={isTermsAccepted}
+                onChange={(e)=> setIsTermsAccepted(e.target.checked)}//assign.
+              />
+              <label htmlFor="terms" className="text-sm text-gray-600">
+                I agree to the 
+                <span
+                  onClick={() => window.location.href = '/TermsAndConditons.html'} 
+                  className="text-blue-600 cursor-pointer "
+                >
+                  Terms and Conditions
+                </span>
+                & 
+                <span
+                  onClick={() => window.location.href = '/PrivacyPolicy.html'} 
+                  className="text-blue-600 cursor-pointer "
+                >
+                  Privacy Policy
+                </span>
+              </label>
+            </div>
+
             <div className="mt-2">
               <FormAction
                 handleClick={handleSubmitSignUp}

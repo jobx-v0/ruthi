@@ -48,7 +48,11 @@ export const ChevronDown = ({ fill, size, height, width, ...props }) => {
   );
 };
 
-export default function Nav({ isInterviewPage, isLandingPage = false }) {
+export default function Nav({
+  isInterviewPage,
+  isLandingPage = false,
+  exitFullScreen,
+}) {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [showUser, setShowUser] = useState(false);
@@ -237,6 +241,7 @@ export default function Nav({ isInterviewPage, isLandingPage = false }) {
                         base: "bg-slate-300",
                         icon: "text-white/70",
                       }}
+                      style={{ cursor: "pointer" }}
                     />
                   </DropdownTrigger>
                   <DropdownMenu aria-label="User Actions" variant="flat">
@@ -246,7 +251,12 @@ export default function Nav({ isInterviewPage, isLandingPage = false }) {
                       <Divider orientation="vertical" />
                     </DropdownItem>
 
-                    <DropdownItem key="profile">My Profile</DropdownItem>
+                    <DropdownItem
+                      key="profile"
+                      onClick={() => navigate("/profile")}
+                    >
+                      My Profile
+                    </DropdownItem>
                     <DropdownItem key="configurations">Saved Jobs</DropdownItem>
                     <DropdownItem key="settings">Settings</DropdownItem>
                     <DropdownItem
@@ -295,8 +305,11 @@ export default function Nav({ isInterviewPage, isLandingPage = false }) {
                   Are you sure to finish the interview?
                 </div>
                 <div className="flex justify-end mt-2">
-                  <Link href="/home" underline="none">
-                    <button className="text-xs text-rose-500 font-semibold bg-none ">
+                  <Link href="/thank-you" underline="none">
+                    <button
+                      className="text-xs text-rose-500 font-semibold bg-none "
+                      onClick={() => exitFullScreen()}
+                    >
                       Finish Anyway
                     </button>
                   </Link>

@@ -39,17 +39,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   interviews: [{ type: Schema.Types.ObjectId, ref: "Interview" }],
-  UserProfile: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserProfile'
-  },
   created_at: { type: Date, default: Date.now },
-  userProfile: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'UserProfile'
-  },
   picture: { type: String }, // Stores the Google profile picture URL (imageUrl)
   isGoogleAuth: { type: Boolean, default: false },
+  isProfileSubmitted: { type: Boolean, default: false },
+  isParsedResume: { type: Boolean, default: false },
+  isParsedResumeFirstTime: { type: Boolean, default: false },
 });
 
 userSchema

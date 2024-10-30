@@ -1,9 +1,9 @@
 import axios from "axios";
-import { toast } from 'react-hot-toast';
+import { toast } from "react-hot-toast";
 
 // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const BACKEND_URL=process.env.REACT_APP_BACKEND_URL;
-console.log("backend:",BACKEND_URL)
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+console.log("backend:", BACKEND_URL);
 const API_URL = BACKEND_URL + "/api/auth";
 console.log("API URL:", API_URL);
 // const API_URL = 'https://jobx-32a058281844.herokuapp.com/api/auth';
@@ -17,7 +17,7 @@ export const loginUserAPI = async (loginState) => {
     if (response.status === 200) {
       const token = response.data.token;
       console.log("Login successful");
-      
+
       // Fetch user information
       const userResponse = await axios.get(`${API_URL}/user/info`, {
         headers: {
@@ -31,9 +31,11 @@ export const loginUserAPI = async (loginState) => {
         const userData = userResponse.data;
         console.log("userData:", userData);
         console.log("isVerified:", userData.isVerified);
-        
+
         try {
-          const profileResponse = await axios.get(`${BACKEND_URL}/api/user-profile/${userData._id}`);
+          const profileResponse = await axios.get(
+            `${BACKEND_URL}/api/user-profile/${userData._id}`
+          );
           console.log("profileResponse:", profileResponse);
           // If we reach here, it means the profile exists
           toast.success("Login successful");
@@ -65,7 +67,7 @@ export const loginUserAPI = async (loginState) => {
     } else {
       toast.error("An unexpected error occurred. Please try again.");
     }
-    return { success: false};
+    return { success: false };
   }
 };
 
@@ -102,4 +104,12 @@ export const registerUserAPI = async (signUpState) => {
       toast.error("Registration failed. Please try again.");
     }
   }
+};
+
+export const updateUserAPI = async ({ data, authToken }) => {
+  await axios.put(`${BACKEND_URL}/api/auth/update`, data, {
+    headers: {
+      Authorization: `Bearer ${authToken}`,
+    },
+  });
 };

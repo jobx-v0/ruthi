@@ -1,5 +1,8 @@
+const path = require("path");
 const Interview = require("../models/Interview");
 const Question = require("../models/Question");
+const Result = require("../models/Result");
+const AzureService = require("./azureService");
 
 const checkExistingInterview = async (user_id, job_id) => {
   const existingInterview = await Interview.findOne({ user_id, job_id });

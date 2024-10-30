@@ -2,11 +2,9 @@ const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const EmailService = require("../services/emailService");
-const { OAuth2Client } = require('google-auth-library');
-
+const { OAuth2Client } = require("google-auth-library");
 
 require("dotenv").config();
-
 
 // Register a new user
 register = async (req, res) => {
@@ -212,9 +210,9 @@ resendVerificationEmail = async (req, res) => {
 
 const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
- googleAuth = async (req, res) => {
+googleAuth = async (req, res) => {
   try {
-    const { token,role,companyName } = req.body;
+    const { token, role } = req.body;
 
     // Verify the Google token
     const ticket = await client.verifyIdToken({
@@ -226,9 +224,7 @@ const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
     console.log("Google Payload:", payload);
 
     const { email, name, picture, sub } = payload;
-    const usernameFromEmail = email.split('@')[0];
-
-    
+    const usernameFromEmail = email.split("@")[0];
 
     // Check if the user already exists in the database by email
     let existingUser = await User.findOne({ email });
@@ -236,9 +232,9 @@ const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
     if (existingUser) {
       // If user exists, generate a token and return it for login
       const token = jwt.sign(
-        { _id: existingUser._id },
+        { id: existingUser._id },
         process.env.JWT_TOKEN_SECRET_KEY,
-        { expiresIn: '1h' }
+        { expiresIn: "1h" }
       );
 
       return res.json({
@@ -251,7 +247,9 @@ const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
     // Check if the username already exists, to prevent duplicates
     let usernameExists = await User.findOne({ username: name });
     if (usernameExists) {
-      return res.status(400).json({ message: "Username already taken. Please choose a different one." });
+      return res.status(400).json({
+        message: "Username already taken. Please choose a different one.",
+      });
     }
 
     // Create a new user if they do not already exist
@@ -260,13 +258,12 @@ const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
       username: usernameFromEmail,
       email: email,
       isVerified: true, // Since Google already verified their email
-      role: role, // Adjust role as needed
+      role: "candidate", // Adjust role as needed
       hashed_password: "", // No password for Google-authenticated users
       salt: "", // No salt needed
-      isGoogleAuth: true, 
+      isGoogleAuth: true,
       picture: picture, // Store profile picture from Google
       created_at: Date.now(),
-      ...(role === 'recruiter' && { companyName }),
     });
 
     // Save the new user to the database
@@ -274,23 +271,44 @@ const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 
     // Generate a JWT token for the new user
     const newUsertoken = jwt.sign(
-      { _id: newUser._id },
+      { id: newUser._id },
       process.env.JWT_TOKEN_SECRET_KEY,
-      { expiresIn: '1h' }
+      { expiresIn: "1h" }
     );
 
     // Return the newly created user and token
     return res.json({
       message: "Registration successful",
-      newUsertoken,
+      token: newUsertoken,
       user: newUser,
     });
   } catch (err) {
     console.error("Google OAuth error:", err);
-    return res.status(500).json({ message: "Server error", error: err.message });
+    return res
+      .status(500)
+      .json({ message: "Server error", error: err.message });
   }
 };
 
+updateUser = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+    const updateData = req.body;
+    if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const updatedUser = await User.findByIdAndUpdate(userId, updateData, {
+      new: true,
+    });
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 const AuthController = {
   register,
@@ -301,6 +319,7 @@ const AuthController = {
   resetPassword,
   resendVerificationEmail,
   googleAuth,
+  updateUser,
 };
 
 module.exports = AuthController;

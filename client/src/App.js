@@ -80,38 +80,38 @@ function App() {
             />
 
             {/* Protected Routes (authenticated pages) */}
-            <Route
+            {/* <Route
               path="/home"
               element={
                 <ProtectedRoute>
                   <Home />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/admin"
               element={
                 <ProtectedRoute>
                   <AdminPage />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/jobs"
               element={
                 <ProtectedRoute>
                   <Jobs />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/new-interview"
               element={
                 <ProtectedRoute>
                   <NewInterview />
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route
               path="/thank-you"
               element={
@@ -136,7 +136,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-             <Route
+             {/* <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
@@ -167,7 +167,7 @@ function App() {
                   <AddNewJob />
                 </ProtectedRoute>
               }
-            />
+            /> */}
             {/* <Route
             path="/recruiter-dashboard"
             element={
@@ -177,17 +177,17 @@ function App() {
             }
             /> */}
 
-            <Route
+            {/* <Route
               path="/job-portal"
               element={
                 <ProtectedRoute>
                    <CandidatesApplied/>
                 </ProtectedRoute>
               }
-            />
+            /> */}
            
             {/* Routes not requiring protection */}
-            <Route path="/test" element={<VideoRecorder />} />
+            {/* <Route path="/test" element={<VideoRecorder />} /> */}
             <Route path="/verification" element={<VerificationPage />} />
             <Route
               path="/verify-email-prompt"

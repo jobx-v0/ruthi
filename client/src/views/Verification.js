@@ -13,7 +13,7 @@ const VerificationPage = () => {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { userInfo } = useAuth(); // Get userInfo from AuthContext
+  const { userInfo, setToken } = useAuth(); // Get userInfo from AuthContext
 
   useEffect(() => {
     if (!isLoading) {
@@ -26,10 +26,9 @@ const VerificationPage = () => {
   }, [isLoading]);
 
   useEffect(() => {
-    // If the user is already verified, navigate to the home page
     if (userInfo?.isVerified) {
       setTimeout(() => {
-        return navigate("/home");
+        return navigate("/profile");
       }, 3000);
     }
 
@@ -40,13 +39,12 @@ const VerificationPage = () => {
         const response = await axios.post(`${API_URL}/verify-email`, {
           token,
         });
+        setToken(token);
 
         if (response.status === 200) {
           setIsVerified(true);
           setIsLoading(false);
-          setTimeout(() => {
-            navigate("/home");
-          }, 2000);
+          navigate("/uploadResume");
         } else {
           throw new Error("Verification failed");
         }
@@ -62,23 +60,23 @@ const VerificationPage = () => {
   }, [navigate, searchParams, userInfo]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="relative">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 sm:px-6 lg:px-8">
+      <div className="relative p-6 max-w-md w-full bg-white rounded-lg shadow-lg transition-transform transform hover:scale-105 duration-200">
         {isLoading ? (
           <div className="flex flex-col items-center">
             <div
-              className={`relative h-32 w-32 transition-opacity ${
+              className={`relative h-24 w-24 transition-opacity ${
                 isTransitioning ? "animate-fade-out" : "opacity-100"
               }`}
             >
-              <div className="absolute inset-0 rounded-full border-4 border-gray-300"></div>
-              <div className="absolute inset-0 rounded-full border-4 border-t-4 border-t-green-500 border-gray-300 animate-spin-slow"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-gray-200"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-t-4 border-t-orange-600 border-gray-200 animate-spin-slow"></div>
             </div>
-            <p className="mt-4 text-lg text-gray-700">
+            <p className="mt-6 text-lg text-gray-700 font-medium">
               Verifying your email...
             </p>
           </div>
-        ) : { isVerified } ? (
+        ) : isVerified ? (
           <div className="flex flex-col items-center">
             <div
               className={`text-green-500 transition-opacity ${
@@ -87,7 +85,7 @@ const VerificationPage = () => {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-32 w-32"
+                className="h-24 w-24"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="#48bb78"
@@ -97,13 +95,13 @@ const VerificationPage = () => {
                 <path d="M9 12l2 2 4-4" />
               </svg>
             </div>
-            <p className="mt-4 text-lg text-gray-700">
+            <p className="mt-6 text-lg text-gray-700 font-medium">
               Email verified successfully!
             </p>
           </div>
         ) : (
           <div className="flex flex-col items-center">
-            <p className="mt-4 text-lg text-gray-700">
+            <p className="mt-6 text-lg text-red-600 font-medium">
               An error occurred while verifying your email. Please try again
               later.
             </p>

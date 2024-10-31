@@ -7,7 +7,6 @@ import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
 const DescriptionCard = ({ jobDetails }) => {
   return (
     <div style={{
-      border: '1px solid #f97316', // Highlighted border color
       borderRadius: '12px',
       padding: '20px',
       backgroundColor: '#ffffff',
@@ -35,7 +34,7 @@ const DescriptionCard = ({ jobDetails }) => {
       }}>
         {jobDetails.title}
       </h1>
-      <hr style={{ border: '1px solid #f97316', marginBottom: '15px' }} />
+      <hr style={{ border: '1px solid black', marginBottom: '15px' }} />
       <p style={{
         color: '#6b7280', // light black or gray
         fontSize: '14px', // Adjusted font size

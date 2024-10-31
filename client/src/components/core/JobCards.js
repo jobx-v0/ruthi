@@ -4,7 +4,9 @@ import { faMapMarkerAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, SidebarBody, SidebarLink } from '../../ui/sidebar';
 import { IconBriefcase, IconUser, IconPlus } from '@tabler/icons-react';
-// JobCard Component
+import { fetchJobsAPI } from '../../api/jobApi';
+
+
 const JobCard = ({ job }) => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -165,41 +167,84 @@ const JobList = () => {
   const [showAll, setShowAll] = useState(false);
   const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
   const [open, setOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [employmentType, setEmploymentType] = useState("");
+  const [location, setLocation] = useState("");
+  const [experience, setExperience] = useState("");
+  const [title, setTitle] = useState("");
 
+  const fetchJobs = async (query = "", page = 1, limit = 1000) => {
+    const authToken = localStorage.getItem('authToken'); // Get authToken from localStorage
+    try {
+      const data = await fetchJobsAPI(authToken, query, page, limit);
+      console.log(data); // Log the data
+  
+      // Filter jobs based on the query
+      const filteredJobs = data.jobs.filter(job => {
+        const jobString = `${job.title} ${job.description} ${job.company_name} ${job.location} ${job.skills_required.join(' ')}`.toLowerCase();
+        return jobString.includes(query.toLowerCase());
+      });
+  
+      setJobs(filteredJobs); // Set filtered jobs in state
+    } catch (error) {
+      setError("Error fetching jobs: " + error.message);
+    }
+  }; 
+  
+  const fetchFilteredJobs = async (employmentType = "", experience = "", page = 1, limit = 1000) => {
+    const authToken = localStorage.getItem('authToken'); // Get authToken from localStorage
+    try {
+      const data = await fetchJobsAPI(authToken, "", page, limit); // Fetch all jobs first
+      console.log(data); // Log the data
+  
+      // Define experience levels
+      const experienceRanges = {
+        "Entry-Level": [0, 0], // 0 years
+        "Mid-Level": [1, 5], // 1-5 years
+        "Senior-Level": [5, Infinity], // More than 5 years
+      };
+  
+      // Filter jobs based on employmentType and experience
+      const filteredJobs = data.jobs.filter(job => {
+        const matchesEmploymentType = employmentType 
+          ? job.employment_type.toLowerCase() === employmentType.toLowerCase() 
+          : true;
+  
+        const matchesExperience = experience 
+          ? job.experience_required >= experienceRanges[experience][0] && job.experience_required <= experienceRanges[experience][1]
+          : true;
+  
+        return matchesEmploymentType && matchesExperience;
+      });
+  
+      console.log(`Filtered jobs count: ${filteredJobs.length}`);
+      setJobs(filteredJobs); // Set filtered jobs in state
+    } catch (error) {
+      setError("Error fetching jobs: " + error.message);
+    }
+  };
+  
+  
+  
+  // Initial fetch for all jobs
   useEffect(() => {
-    const fetchJobs = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        const response = await fetch('http://localhost:3004/api/jobs', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-
-        const data = await response.json();
-        console.log('Rendering job list...', data);
-        setJobs(data.jobs);
-      } catch (error) {
-        setError(error.message);
-      }
-    };
-
     fetchJobs();
   }, []);
 
-  const handleSeeAll = () => {
-    setShowAll(true);
+  // Handle search submission
+  const handleSearch = (e) => {
+    e.preventDefault();
+    fetchJobs(searchQuery); // Fetch jobs based on the search query
   };
 
-  const handleAddJob = (newJob) => {
-    setJobs((prevJobs) => [...prevJobs, newJob]);
-    setIsAddJobModalOpen(false);
+  const handleFilterButtonClick = () => {
+    const selectedEmploymentType = employmentType; // Get from your state or input
+    const selectedExperience = experience; // Get from your state or input
+    fetchFilteredJobs(selectedEmploymentType, selectedExperience);
+  };
+
+  const handleSeeAll = () => {
+    setShowAll(true);
   };
 
   const displayedJobs = showAll ? jobs : jobs.slice(0, 3);
@@ -217,6 +262,55 @@ const JobList = () => {
         </SidebarBody>
       </Sidebar>
        <div className="main-content" style={{ flexGrow: 1, padding: '40px', marginLeft: '80px', transition: 'margin-left 0.3s' }}>
+        <div className='filterandserch flex justify-between mb-6'>
+          <form onSubmit={handleSearch} className="flex items-center space-x-4">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search jobs..."
+              className="border border-gray-300 rounded py-2 px-4 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+            />
+            <button
+              type="submit"
+              className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
+            >
+              Search
+            </button>
+          </form>
+
+          <div className="flex items-center space-x-4">
+            <select
+              value={employmentType}
+              onChange={(e) => setEmploymentType(e.target.value)}
+              className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Select Employment Type</option>
+              <option value="full-time">Full-Time</option>
+              <option value="part-time">Part-Time</option>
+              <option value="intern">Intern</option>
+            </select>
+
+            <select
+              value={experience}
+              onChange={(e) => setExperience(e.target.value)}
+              className="border border-gray-300 rounded-md py-2 px-4 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              <option value="">Select Experience</option>
+              <option value="Entry-Level">Entry-Level</option>
+              <option value="Mid-Level">Mid-Level</option>
+              <option value="Senior-Level">Senior-Level</option>
+            </select>
+
+            <button
+              onClick={handleFilterButtonClick}
+              className="bg-orange-500 text-white font-semibold py-2 px-4 rounded-md hover:bg-orange-600 transition duration-300"
+            >
+              Filter
+            </button>
+          </div>
+        </div>
+
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
           <h1 style={{ fontSize: '23px', fontWeight: 'bold', color: '#1f2937' }}>
             Current Openings ({jobs.length})
@@ -230,18 +324,7 @@ const JobList = () => {
         {!showAll && jobs.length > 3 && (
           <button
             onClick={handleSeeAll}
-            style={{
-              padding: '8px 24px',
-              backgroundColor: '#f97316',
-              color: '#ffffff',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              border: 'none',
-              borderRadius: '6px',
-              marginTop: '20px',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s',
-            }}
+            className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fb923c')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f97316')}
           >

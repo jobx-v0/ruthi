@@ -28,6 +28,9 @@ const AddJobModal = ({ isOpen, onClose, onAddJob, initialJobData, onUpdateJob })
     }
   );
 
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+
   useEffect(() => {
     if (initialJobData) {
       setJobData(initialJobData);
@@ -42,19 +45,44 @@ const AddJobModal = ({ isOpen, onClose, onAddJob, initialJobData, onUpdateJob })
     }));
   };
 
-  const handleAddOrUpdateJob = () => {
-    if (initialJobData) {
-      // Editing existing job
-      // Call a different function to update the job
-      // For now, we'll just log the updated job data
-      console.log("Updated job data:", jobData);
-      onUpdateJob(jobData);
-    } else {
-      // Adding new job
-      // Call the onAddJob function passed from parent component
-      onAddJob(jobData);
+  const handleAddOrUpdateJob = async () => {
+    setErrorMessage(""); // Reset error message
+    // Input validation
+    if (!jobData.title || !jobData.company_name) {
+      setErrorMessage("Title and Company Name are required.");
+      return; 
     }
-    handleCloseModal();
+
+    //if (isNaN(jobData.experience_required) || jobData.experience_required < 0) {
+      //setErrorMessage("Experience required must be a non-negative number.");
+      //return;
+    //}
+
+    //const urlPattern = new RegExp('^(https?://)?(www\\.)?[a-z0-9-]+(\\.[a-z]{2,})+(/[\\w-./?%&=]*)?$');
+    //if (!urlPattern.test(jobData.job_link)) {
+      //setErrorMessage("Invalid Job Link format.");
+      //return;
+    //}
+
+    //if (!urlPattern.test(jobData.company_logo)) {
+      //setErrorMessage("Invalid Company Logo URL format.");
+      //return;
+    //}
+
+    setLoading(true); // Start loading state
+    try {
+      if (initialJobData) {
+        await onUpdateJob(jobData); // Call update job function
+      } else {
+        await onAddJob(jobData); // Call add job function
+      }
+    } catch (error) {
+      console.error("Error saving job data:", error);
+      setErrorMessage("Error saving job data. Please try again.");
+    } finally {
+      setLoading(false); // End loading state
+      handleCloseModal(); // Close modal after operation
+    }
   };
 
   const handleCloseModal = () => {
@@ -69,6 +97,7 @@ const AddJobModal = ({ isOpen, onClose, onAddJob, initialJobData, onUpdateJob })
       company_name: "",
       company_logo: "",
     });
+    setErrorMessage(""); // Reset error message
     onClose();
   };
 
@@ -100,6 +129,7 @@ const AddJobModal = ({ isOpen, onClose, onAddJob, initialJobData, onUpdateJob })
           </h1>
         </ModalHeader>
         <ModalBody>
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
           <Input
             label="Company Name"
             variant="flat"
@@ -139,6 +169,7 @@ const AddJobModal = ({ isOpen, onClose, onAddJob, initialJobData, onUpdateJob })
             value={jobData.experience_required}
             onChange={handleChange}
             placeholder="Years of Experience Required"
+            type="number" // Ensure input is numeric
           />
           <Input
             label="Location"
@@ -171,12 +202,12 @@ const AddJobModal = ({ isOpen, onClose, onAddJob, initialJobData, onUpdateJob })
           >
             <Radio value="full-time">Full-time</Radio>
             <Radio value="part-time">Part-time</Radio>
-            <Radio value="intern">Intern</Radio>
+            <Radio value="intern">Intern</Radio>onAddJob 
           </RadioGroup>
         </ModalBody>
         <ModalFooter>
-          <Button onClick={handleAddOrUpdateJob}>
-            {initialJobData ? "Update Job" : "Add Job"}
+          <Button onClick={handleAddOrUpdateJob} disabled={loading}>
+            {loading ? "Saving..." : initialJobData ? "Update Job" : "Add Job"}
           </Button>
           <Button ghost onClick={handleCloseModal}>
             Cancel

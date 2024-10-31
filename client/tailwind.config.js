@@ -11,6 +11,9 @@ module.exports = {
   theme: {
     xsm: "400px",
     extend: {
+      animation: {
+        "spin-slow": "spin 4s linear infinite",
+      },
       scale: {
         80: "0.80",
       },

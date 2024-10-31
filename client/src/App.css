@@ -1,39 +1,42 @@
-.App {
-  text-align: center;
+/* WebKit browsers (Chrome, Safari) */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px; /* Adjust the width here */
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: black; /* Scrollbar color */
+  border-radius: 10px; /* Rounded edges */
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* Firefox */
+.custom-scrollbar {
+  scrollbar-width: thin; /* Reduces scrollbar width */
+  scrollbar-color: black transparent; /* Scrollbar color and track color */
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-.App-link {
-  color: #61dafb;
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
-@keyframes App-logo-spin {
-  from {
+.spinner {
+  border: 8px solid rgba(0, 0, 0, 0.075); /* Light grey for background */
+  border-top: 8px solid #000000; /* White for the animated part */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  animation: spin 1.5s ease-in-out infinite; /* Smooth transition */
+}
+
+@keyframes spin {
+  0% {
     transform: rotate(0deg);
   }
-
-  to {
+  100% {
     transform: rotate(360deg);
   }
 }

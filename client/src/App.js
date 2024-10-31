@@ -22,7 +22,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
-// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
+import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
 
 function App() {
@@ -131,15 +131,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
-            path="/recruiter-dashboard"
-            element={
-              <ProtectedRoute>
-                <RecruiterDashboard />
-              </ProtectedRoute>
-            }
-            /> */}
-
+            <Route
+              path="/recruiter-dashboard"
+              element={
+                <ProtectedRoute>
+                  <RecruiterDashboard />
+                </ProtectedRoute>
+              }
+            />
             {/* Routes not requiring protection */}
             <Route path="/test" element={<VideoRecorder />} />
             <Route path="/verification" element={<VerificationPage />} />

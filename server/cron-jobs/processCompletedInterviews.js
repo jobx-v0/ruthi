@@ -11,11 +11,13 @@ const processInterview = async (interview) => {
       const res = await AzureService.combineAllChunksInToOneVideo(
         interview.user_id.toString(),
         interview.job_id.toString(),
+        interview._id.toString(),
         question.toString()
       );
 
       const evaluationResult =
         await OpenAIService.evaluateTranscriptionForQuestion(
+          interview.job_id,
           question,
           res.transcription
         );
@@ -53,11 +55,11 @@ const checkCompletedInterviews = async () => {
   try {
     const interview = await Interview.findOne({
       isCompleted: true,
-      evaluation: "not done",
+      evaluation: "completed",
     }).sort({ created_at: 1 });
 
     if (interview) {
-      interview.evaluation = "in process";
+      // interview.evaluation = "in process";
       await interview.save();
       await processInterview(interview);
     } else {
@@ -67,5 +69,5 @@ const checkCompletedInterviews = async () => {
     console.error("Error processing interviews:", error);
   }
 };
-
-setInterval(checkCompletedInterviews, 30 * 60 * 1000);
+// checkCompletedInterviews();
+// setInterval(checkCompletedInterviews, 30 * 60 * 1000);

@@ -124,7 +124,7 @@ const Header = () => {
         </p>
         <button
           className="bg-orange-500 text-white py-2 px-6 rounded-md font-medium animate-fadeInUp delay-400 hover:bg-orange-600 transition duration-300"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/signup")}
         >
           START NOW
         </button>

@@ -73,7 +73,7 @@ export default function Signup() {
     e.preventDefault();
     var is_valid = true;
     if (!isTermsAccepted) {
-      showToast("You must accept the Terms and Conditions.","error");
+      showToast("Please accept the terms and conditions to continue", "error");
       return; // Exit early if terms are not accepted
     }
     
@@ -317,17 +317,17 @@ export default function Signup() {
                 onChange={(e)=> setIsTermsAccepted(e.target.checked)}//assign.
               />
               <label htmlFor="terms" className="text-sm text-gray-600">
-                I agree to the 
+                I agree to the{" "}
                 <span
                   onClick={() => window.location.href = '/TermsAndConditons.html'} 
-                  className="text-blue-600 cursor-pointer "
+                  className="text-blue-600 cursor-pointer"
                 >
                   Terms and Conditions
-                </span>
-                & 
+                </span>{" "}
+                &{" "}
                 <span
                   onClick={() => window.location.href = '/PrivacyPolicy.html'} 
-                  className="text-blue-600 cursor-pointer "
+                  className="text-blue-600 cursor-pointer"
                 >
                   Privacy Policy
                 </span>

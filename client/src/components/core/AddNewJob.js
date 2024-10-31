@@ -1,27 +1,8 @@
-import { z } from "zod";
-import { Sidebar, SidebarBody, SidebarLink } from '../../ui/sidebar';
+import { useState, useEffect } from 'react';
+import { Sidebar, SidebarBody, SidebarLink } from '../../ui/sidebar'; // Adjust the import path as needed
 import { IconBriefcase, IconUser, IconPlus } from '@tabler/icons-react';
-import axios from 'axios'; 
-import { useState } from 'react';
-import { useCustomToast } from "../utils/useCustomToast"; // Import the custom hook
-
-// Define the job schema
-const jobSchema = z.object({
-  title: z.string().min(1, "Job title is required"),
-  job_link: z.string().url("Invalid job link"),
-  employment_type: z.enum(["full-time", "part-time", "contract"], {
-    errorMap: () => ({ message: "Invalid employment type" }),
-  }),
-  location: z.string().min(1, "Location is required"),
-  skills_required: z.string().optional(),
-  experience_required: z.number().min(0, "Experience required must be at least 0"),
-  company_name: z.string().min(1, "Company name is required"),
-  company_logo: z.string().url("Invalid URL for company logo"),
-  description: z.string().min(1, "Job description is required"),
-});
-
-const BACKEND_URL = "YOUR_BACKEND_URL_HERE"; // Define your backend URL
-const authToken = "YOUR_AUTH_TOKEN_HERE"; // Retrieve this from your auth context or state
+import { useCustomToast } from "../utils/useCustomToast"; 
+import { addJobAPI } from "../../api/jobApi"; // Adjust the import path as needed
 
 const JobForm = () => {
   const [open, setOpen] = useState(false);
@@ -31,85 +12,71 @@ const JobForm = () => {
     job_link: "",
     employment_type: "full-time",
     location: "",
-    skills_required: "",
-    experience_required: 0,
+    skills_required: [],
+    experience_required: "",
     company_name: "",
     company_logo: "",
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const showToast = useCustomToast(); // Initialize showToast from custom hook
+  const showToast = useCustomToast();
+  const [authToken, setAuthToken] = useState(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('authToken');
+    setAuthToken(token);
+  }, []);
+
+  const getPostDate = () => {
+    return new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    validateField(name, value);
-  };
-
-  const validateField = (name, value) => {
-    try {
-      jobSchema.shape[name].parse(value);
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    } catch (error) {
-      setErrors((prev) => ({ ...prev, [name]: error.errors[0].message }));
+  
+    switch (name) {
+      case "skills_required":
+        const skillsArray = value.split(",").map(skill => skill.trim());
+        setFormData((prev) => ({ ...prev, [name]: skillsArray }));
+        break;
+  
+      case "experience_required":
+        const experienceValue = Number(value);
+        setFormData((prev) => ({ ...prev, [name]: experienceValue }));
+        break;
+  
+      case "employment_type":
+      case "title":
+      case "description":
+      case "job_link":
+      case "location":
+      case "company_name":
+      case "company_logo":
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        break;
+  
+      default:
+        setFormData((prev) => ({ ...prev, [name]: value }));
+        break;
     }
   };
-
+  const getDescriptionPoints = () => {
+    return formData.description.split('\n').filter(point => point.trim() !== '');
+  };
   const handleJobSubmit = async (e) => {
-    e.preventDefault(); // Prevent default form submission
-    setIsLoading(true); // Start loading state
+    e.preventDefault();
+    setIsLoading(true);
+
     try {
-      // Prepare the data to be submitted
-      const jobDataToSubmit = { ...formData };
-
-      // Check for missing required fields
-      const requiredFields = [
-        'title',
-        'description',
-        'job_link',
-        'employment_type',
-        'location',
-        'company_name'
-      ];
-
-      const missingFields = requiredFields.filter(field => !jobDataToSubmit[field]);
-
-      if (missingFields.length > 0) {
-        const missingFieldsMessage = missingFields.join(", ");
-        showToast(`Please fill in the required fields: ${missingFieldsMessage}`, "error");
-        setIsLoading(false);
-        return;
-      }
-
-      console.log("Data being submitted:", JSON.stringify(jobDataToSubmit, null, 2));
-
-      // Make the API call to add the new job
-      const response = await axios.post(
-        `${BACKEND_URL}/api/jobs`,
-        jobDataToSubmit,
-        {
-          headers: { Authorization: `Bearer ${authToken}` },
-        }
-      );
-
-      console.log("Job added successfully:", response.data);
-      showToast("Job submitted successfully!", "success");
-
-      // Reset form fields after successful submission
-      resetForm();
-      setSubmitted(true); // Set submission state to true
-
+      await addJobAPI(authToken, formData);
+      setSubmitted(true);
+      showToast("Job added successfully!", "success");
     } catch (error) {
-      console.error("Error submitting job:", error);
-      if (error.response) {
-        console.error("Error response:", error.response.data);
-        showToast(`Failed to submit job: ${error.response.data.message || "Unknown error"}`, "error");
-      } else {
-        showToast("Failed to submit job. Please try again.", "error");
-      }
+      console.error(error);
+      showToast("Failed to add job. Please try again.", "error");
     } finally {
-      setIsLoading(false); // End loading state
+      setIsLoading(false);
     }
   };
 
@@ -120,17 +87,14 @@ const JobForm = () => {
       job_link: "",
       employment_type: "full-time",
       location: "",
-      skills_required: "",
+      skills_required: [],
       experience_required: 0,
       company_name: "",
       company_logo: "",
     });
     setErrors({});
-    setSubmitted(false); // Reset submitted state
+    setSubmitted(false);
   };
-
-  // Convert skills to an array for display
-  const skillsArray = formData.skills_required.split(",").map(skill => skill.trim()).filter(skill => skill);
 
   return (
     <div className="flex h-screen">
@@ -141,75 +105,187 @@ const JobForm = () => {
           <SidebarLink link={{ href: '/AddNewJob', label: 'Add New Job', icon: <IconPlus /> }} />
         </SidebarBody>
       </Sidebar>
+
       <div className="flex-1 p-5 flex justify-center items-center">
         <div className="w-full max-w-[70%] p-5 border border-gray-300 rounded-lg bg-white shadow-xl relative">
-          <h2 className="text-center text-2xl text-gray-800">Add New Job</h2>
-          <hr className="my-4 border-gray-300" />
+          <h2 className="text-center text-2xl text-gray-900">Add New Job</h2>
+          <hr className="my-4 border-gray-500" />
           {!submitted ? (
             <form onSubmit={handleJobSubmit} className="flex flex-col">
-              {[
-                { label: "Title", name: "title", type: "text" },
-                { label: "Job Link", name: "job_link", type: "url" },
-                { label: "Experience Required (years)", name: "experience_required", type: "number" },
-                { label: "Company Name", name: "company_name", type: "text" },
-                { label: "Company Logo URL", name: "company_logo", type: "url" },
-                { label: "Location", name: "location", type: "text" },
-              ].map((field, index) => (
-                <div key={index} className="flex flex-col mb-4">
-                  <label className="w-48 text-sm text-gray-600">{field.label}</label>
+              <div className="flex items-center space-x-2">
+              <label
+                htmlFor="postedDate"
+                className="block text-sm font-medium text-gray-900 mb-1"
+              >
+                Posting Date:
+              </label>
+              <input
+                type="date"
+                id="postedDate"
+                name="posted_date"
+                className="w-40 px-3 py-2 rounded-md shadow-sm "
+                value={getPostDate()} // Automatically set the post date
+                readOnly
+              />
+              </div>
+              <div className='one flex space-x-4 mb-4'>
+                <div className="flex items-center w-1/2">
+                  <label className="w-48 text-sm text-gray-900">Title<span className="text-red-500">*</span></label>
                   <input
-                    type={field.type}
-                    name={field.name}
-                    value={formData[field.name]}
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    placeholder="Job Name"
+                    style={{ fontSize: '0.875rem' }}
                     onChange={handleChange}
-                    className={`flex-1 p-2 text-sm border border-gray-300 rounded ${errors[field.name] ? 'border-red-500' : ''}`}
+                    className="w-full px-3 py-2 border rounded-md shadow-sm "
+                    required
                   />
-                  {errors[field.name] && (
-                    <span className="text-red-500 text-xs mt-1">{errors[field.name]}</span>
-                  )}
                 </div>
-              ))}
-              <div className="flex flex-col mb-4">
-                <label className="w-48 text-sm text-gray-600">Skills Required</label>
+                <div className="flex items-center w-1/2">
+                  <label className="w-48 text-sm text-gray-900">Job Link:</label>
+                  <input
+                    type="url"
+                    name="job_link"
+                    value={formData.job_link}
+                    onChange={handleChange}
+                    placeholder="https://.."
+                    style={{ fontSize: '0.875rem' }}
+                    className="w-full px-3 py-2 border rounded-md shadow-sm "
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className='one flex space-x-4 mb-4'>
+                <div className="flex items-center w-1/2">
+                  <label className="w-48 text-sm text-gray-900">Experience Required (years)<span className="text-red-500">*</span></label>
+                  <input
+                    type="number"
+                    name="experience_required"
+                    value={formData.experience_required}
+                    onChange={handleChange}
+                    placeholder="0"
+                    style={{ fontSize: '0.875rem' }}
+                    className="w-full px-3 py-2 border rounded-md shadow-sm "
+                    required
+                  />
+                </div>
+                <div className="flex items-center w-1/2">
+                  <label className="w-48 text-sm text-gray-900">Company Name<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="company_name"
+                    value={formData.company_name}
+                    onChange={handleChange}
+                    placeholder="Your Organization Name"
+                    style={{ fontSize: '0.875rem' }}
+                    className="w-full px-3 py-2 border rounded-md shadow-sm "
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className='one flex space-x-4 mb-4'>
+                <div className="flex items-center w-1/2">
+                  <label className="w-48 text-sm text-gray-900">Company Logo URL:</label>
+                  <input
+                    type="url"
+                    name="company_logo"
+                    value={formData.company_logo}
+                    placeholder="https://.."
+                    style={{ fontSize: '0.875rem' }}
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md shadow-sm "
+                    required
+                  />
+                </div>
+                <div className="flex items-center w-1/2">
+                  <label className="w-48 text-sm text-gray-900">Location<span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    name="location"
+                    value={formData.location}
+                    placeholder=""
+                    onChange={handleChange}
+                    className="w-full px-3 py-2 border rounded-md shadow-sm "
+                    required
+                  />
+                </div>
+              </div>
+              <div className='flex space-x-4 mb-4'>
+              <div className="flex items-center w-1/2"> 
+                <label className="w-48 text-sm text-gray-900">Skills Required<span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   name="skills_required"
-                  value={formData.skills_required}
+                  value={formData.skills_required.join(", ")} 
                   onChange={handleChange}
-                  placeholder="Comma-separated skills"
-                  className={`flex-1 p-2 text-sm border border-gray-300 rounded ${errors.skills_required ? 'border-red-500' : ''}`}
+                  placeholder="Comma-separated values"
+                  style={{ fontSize: '0.875rem' }}
+                  className="w-full px-3 py-2 border rounded-md shadow-sm"
                 />
-                {errors.skills_required && (
-                  <span className="text-red-500 text-xs mt-1">{errors.skills_required}</span>
-                )}
               </div>
+
+              
+              <div className="flex items-center w-1/2"> 
+                <label className="w-48 text-sm text-gray-900">Employment Type<span className="text-red-500">*</span></label>
+                <div className="flex items-center space-x-4"> 
+                  {["full-time", "part-time", "intern"].map((type) => (
+                    <label key={type} className="flex items-center">
+                      <input
+                        type="radio"
+                        name="employment_type"
+                        value={type}
+                        checked={formData.employment_type === type}
+                        onChange={handleChange}
+                        className="mr-2" 
+                      />
+                      {type.charAt(0).toUpperCase() + type.slice(1)} 
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+
               <div className="flex flex-col mb-4">
-                <label className="w-48 text-sm text-gray-600">Job Description</label>
+                <label className="w-48 text-sm text-gray-900">Job Description:</label>
                 <textarea
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
                   rows="4"
-                  className={`flex-1 p-2 text-sm border border-gray-300 rounded ${errors.description ? 'border-red-500' : ''}`}
+                  placeholder="Describe your Job"
+                  style={{ fontSize: '0.875rem' }}
+                  className="flex-1 p-2 text-sm border border-gray-300 rounded"
+                  required
                 />
-                {errors.description && (
-                  <span className="text-red-500 text-xs mt-1">{errors.description}</span>
-                )}
               </div>
-              <button
+              <div className="mt-4">
+              <ul className="list-disc list-inside">
+                {getDescriptionPoints().map((point, index) => (
+                  <li key={index} className="text-sm text-gray-700">
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+              <div className="flex justify-center mt-4">
+              <button 
                 type="submit"
-                className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded mt-4"
+                className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
                 disabled={isLoading}
               >
-                {isLoading ? "Adding..." : "Add Job"}
+                {isLoading ? "Loading..." : "Add Job"}
               </button>
+              </div>
             </form>
           ) : (
             <div className="text-center">
-              <h3 className="text-lg text-green-600">Job submitted successfully!</h3>
+              <h3 className="text-lg text-green-600">Job added successfully!</h3>
               <button
                 onClick={resetForm}
-                className="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded mt-4"
+                className="bg-orange-500 text-white mt-5 font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
               >
                 Add Another Job
               </button>

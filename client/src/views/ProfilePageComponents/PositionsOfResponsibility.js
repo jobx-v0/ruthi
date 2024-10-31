@@ -11,27 +11,12 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { z } from "zod";
+import { positionSchema } from "../../validators/ZodSchema";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
-
-const positionSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Title must contain at least one letter"),
-  organization: z
-    .string()
-    .min(1, "Organization is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Organization must contain at least one letter"),
-  start_date: z.string().min(1, "Start date is required"),
-  end_date: z.string().optional(),
-  description: z.string().optional(),
-});
 
 export default function PositionsOfResponsibility() {
   const [positions, setPositions] = useRecoilState(
@@ -57,8 +42,7 @@ export default function PositionsOfResponsibility() {
   }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   const validateField = (field, value, index) => {
@@ -191,7 +175,7 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-title-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Title<span className="text-red-500">*</span>
+                              Title <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -221,7 +205,7 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-organization-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Organization<span className="text-red-500">*</span>
+                              Organization <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -251,10 +235,10 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-start-date-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Start Date<span className="text-red-500">*</span>
+                              Start Date <span className="text-red-500">*</span>
                             </label>
                             <input
-                              type="date"
+                              type="month"
                               id={`position-start-date-${position.id}`}
                               value={formatDateForInput(position.start_date)}
                               max={getCurrentDate()}
@@ -282,10 +266,10 @@ export default function PositionsOfResponsibility() {
                               htmlFor={`position-end-date-${position.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              End Date<span className="text-red-500">*</span>
+                              End Date <span className="text-red-500">*</span>
                             </label>
                             <input
-                              type="date"
+                              type="month"
                               id={`position-end-date-${position.id}`}
                               value={formatDateForInput(position.end_date)}
                               min={position.start_date}

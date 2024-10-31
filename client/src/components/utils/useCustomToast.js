@@ -1,7 +1,7 @@
 import { toast } from 'react-hot-toast';
 
 const toastConfig = {
-  duration: 2000,
+  duration: 5000,
   position: 'top-right',
 };
 

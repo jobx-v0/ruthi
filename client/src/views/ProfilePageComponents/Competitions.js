@@ -5,27 +5,11 @@ import { useRecoilState } from "recoil";
 import { competitionsState } from "../../store/atoms/userProfileSate";
 import { Flag, Plus, Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { z } from "zod";
-
-const competitionSchema = z.object({
-  name: z.string()
-    .min(1, "Competition name is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Competition name must contain at least one letter"),
-  description: z.string().optional(),
-  date: z.string().refine(
-    (date) => {
-      const selectedDate = new Date(date);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "Competition date cannot be in the future" }
-  ),
-});
+import { competitionSchema } from "../../validators/ZodSchema";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
 
 export default function Competitions() {
@@ -49,8 +33,7 @@ export default function Competitions() {
   }, []); // Empty dependency array means this runs once on mount
 
   const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   const validateField = (field, value, index) => {
@@ -171,7 +154,7 @@ export default function Competitions() {
                               htmlFor={`competition-name-${competition.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Competition Name
+                              Competition Name <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="text"
@@ -191,10 +174,10 @@ export default function Competitions() {
                               htmlFor={`competition-date-${competition.id}`}
                               className="block text-sm font-medium text-gray-700 mb-1"
                             >
-                              Date
+                              Date <span className="text-red-500">*</span>
                             </label>
                             <input
-                              type="date"
+                              type="month"
                               id={`competition-date-${competition.id}`}
                               value={formatDateForInput(competition.date)}
                               max={getCurrentDate()}

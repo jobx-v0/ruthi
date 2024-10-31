@@ -51,11 +51,11 @@ import {
   extracurricularActivitiesState,
   isSubmittedState,
   isParsedResumeState,
+  isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
-import { useNavigate } from "react-router-dom";
 import { useCustomToast } from "../components/utils/useCustomToast";
 
-// Update this function outside of the SidebarDemo component
+// Update this function outside of the sidebar component
 const checkAtomContent = (atoms) => {
   const isEmptyObject = (obj) => {
     return Object.values(obj).every(
@@ -95,7 +95,7 @@ const availableSections = [
   "Extra-curricular Activities",
 ];
 
-export default function SidebarDemo() {
+export default function SideBar() {
   const { authToken } = useAuth();
   const { fetchUserInfo } = useAuth();
   const [open, setOpen] = useState(false);
@@ -133,6 +133,7 @@ export default function SidebarDemo() {
     return hasContent ? "Overview" : "Basic Information";
   });
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
+  const [invalidSections, setInvalidSections] = useState([]);
 
   const setPersonalInformation = useSetRecoilState(personalInformationState);
   const setSocials = useSetRecoilState(socialsState);
@@ -154,14 +155,43 @@ export default function SidebarDemo() {
   );
   const setIsProfileSubmitted = useSetRecoilState(isSubmittedState);
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
+  const setIsParsedFirstTime = useSetRecoilState(isParsedResumeFirstTimeState);
 
   const [initialDataSections, setInitialDataSections] = useState([]);
   const customToast = useCustomToast();
 
+  function getInvalidSection() {
+    if (invalidSections.length > 0) {
+      const firstInvalidSection = invalidSections[0];
+      // Map the section name to the exact string used in the switch statement
+      const sectionMapping = {
+        personal_information: "Basic Information",
+        socials: "Basic Information",
+        education: "Education",
+        courses: "Education",
+        experience: "Experience",
+        skills: "Skills",
+        publications: "Publications",
+        personal_projects: "Personal Projects",
+        awards_and_achievements: "Awards and Achievements",
+        position_of_responsibility: "Positions of Responsibility",
+        competitions: "Competitions",
+        extra_curricular_activities: "Extra-curricular Activities",
+      };
+      return sectionMapping[firstInvalidSection] || firstInvalidSection;
+    }
+    return null;
+  }
+
+  useEffect(() => {
+    const nextSection = getInvalidSection();
+    if (nextSection) {
+      setSelectedSection(nextSection);
+    }
+  }, [invalidSections]);
+
   useEffect(() => {
     const getUserProfile = async () => {
-      if (!authToken) return;
-
       try {
         const userInfo = await fetchUserInfo(authToken);
         if (!userInfo || !userInfo._id) {
@@ -169,21 +199,41 @@ export default function SidebarDemo() {
           return;
         }
 
-        console.log("userInfo from fetchUserInfo:", userInfo);
         setIsProfileSubmitted(userInfo.isProfileSubmitted);
         setIsParsedResume(userInfo.isParsedResume);
+        setIsParsedFirstTime(userInfo.isParsedResumeFirstTime);
 
         // Check atoms for existing data
         const sectionsWithData = [];
-        if (publications.length > 0) sectionsWithData.push("Publications");
-        if (personalProjects.length > 0)
+        if (
+          publications.length > 0 &&
+          !sectionsWithData.includes("Publications")
+        )
+          sectionsWithData.push("Publications");
+        if (
+          personalProjects.length > 0 &&
+          !sectionsWithData.includes("Personal Projects")
+        )
           sectionsWithData.push("Personal Projects");
-        if (awardsAndAchievements.length > 0)
+        if (
+          awardsAndAchievements.length > 0 &&
+          !sectionsWithData.includes("Awards and Achievements")
+        )
           sectionsWithData.push("Awards and Achievements");
-        if (positionsOfResponsibility.length > 0)
+        if (
+          positionsOfResponsibility.length > 0 &&
+          !sectionsWithData.includes("Positions of Responsibility")
+        )
           sectionsWithData.push("Positions of Responsibility");
-        if (competitions.length > 0) sectionsWithData.push("Competitions");
-        if (extracurricularActivities.length > 0)
+        if (
+          competitions.length > 0 &&
+          !sectionsWithData.includes("Competitions")
+        )
+          sectionsWithData.push("Competitions");
+        if (
+          extracurricularActivities.length > 0 &&
+          !sectionsWithData.includes("Extra-curricular Activities")
+        )
           sectionsWithData.push("Extra-curricular Activities");
 
         // If there's existing data, set the initial states
@@ -235,11 +285,7 @@ export default function SidebarDemo() {
           userProfileData.position_of_responsibility?.length > 0 &&
           !sectionsWithData.includes("Positions of Responsibility")
         )
-          console.log(
-            "sectionsWithData:",
-            userProfileData.position_of_responsibility
-          );
-        sectionsWithData.push("Positions of Responsibility");
+          sectionsWithData.push("Positions of Responsibility");
         if (
           userProfileData.competitions?.length > 0 &&
           !sectionsWithData.includes("Competitions")
@@ -251,8 +297,11 @@ export default function SidebarDemo() {
         )
           sectionsWithData.push("Extra-curricular Activities");
 
-        setInitialDataSections(sectionsWithData);
-        setManuallyAddedSections(sectionsWithData);
+        // Remove duplicates from sectionsWithData
+        const uniqueSectionsWithData = [...new Set(sectionsWithData)];
+
+        setInitialDataSections(uniqueSectionsWithData);
+        setManuallyAddedSections(uniqueSectionsWithData);
 
         // If there's any data, set the selected section to "Overview"
         if (
@@ -374,14 +423,6 @@ export default function SidebarDemo() {
     }
   };
 
-  const navigate = useNavigate();
-  // useEffect(() => {
-  //   const authToken = localStorage.getItem("authToken");
-  //   if (!authToken) {
-  //     navigate("/login");
-  //   }
-  // }, [authToken, navigate]);
-
   const sections = [
     "Basic Information",
     "Education",
@@ -486,27 +527,36 @@ export default function SidebarDemo() {
       if (!validateCurrentSection()) return;
     }
 
-    if (direction === "next" && currentIndex === sections.length - 1) {
-      setSelectedSection("Overview");
-      return;
+    const allSections = [
+      "Basic Information",
+      "Education",
+      "Experience",
+      "Skills",
+      ...manuallyAddedSections,
+      "Overview",
+    ];
+
+    const currentIndex = allSections.indexOf(selectedSection);
+    let newIndex;
+
+    if (direction === "next") {
+      newIndex = currentIndex + 1;
+    } else {
+      newIndex = currentIndex - 1;
     }
 
-    const newIndex = direction === "next" ? currentIndex + 1 : currentIndex - 1;
-    if (newIndex >= 0 && newIndex < sections.length) {
-      setSelectedSection(sections[newIndex]);
-    } else if (newIndex === sections.length) {
-      setIsModalOpen(true);
+    if (newIndex >= 0 && newIndex < allSections.length) {
+      setSelectedSection(allSections[newIndex]);
     }
-  };
 
-  const handleOverview = () => {
-    setSelectedSection("Overview");
-    setIsModalOpen(false);
-  };
-
-  const handleStartAddingDetails = () => {
-    setSelectedSection("Basic Information");
-    setIsModalOpen(false);
+    if (invalidSections.length > 0) {
+      const nextSection = getInvalidSection();
+      if (nextSection) {
+        setSelectedSection(nextSection);
+        setInvalidSections((prev) => prev.slice(1)); // Remove the first invalid section
+        return;
+      }
+    }
   };
 
   const getVisibleLinks = () => {
@@ -590,6 +640,7 @@ export default function SidebarDemo() {
             errors={errors}
             isSubmitted={isSubmitted}
             setIsSubmitted={setIsSubmitted}
+            setInvalidSections={setInvalidSections}
           />
         </main>
         {!isSubmitted && selectedSection !== "Overview" && (
@@ -625,7 +676,7 @@ export default function SidebarDemo() {
   );
 }
 
-const Dashboard = ({ selectedSection, errors }) => {
+const Dashboard = ({ selectedSection, errors, setInvalidSections }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -653,8 +704,9 @@ const Dashboard = ({ selectedSection, errors }) => {
               case "Extra-curricular Activities":
                 return <ExtraCurricularActivities />;
               case "Overview":
-                return <OverviewPage />;
+                return <OverviewPage setInvalidSections={setInvalidSections} />;
               default:
+                console.log("No matching section found for:", selectedSection); // Add this line for debugging
                 return <div>Select a section</div>;
             }
           })()}

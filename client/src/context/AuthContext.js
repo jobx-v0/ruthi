@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       setAuthToken(token);
     }
+    setIsLoading(false);
   }, []);
 
   const setToken = useCallback((token) => {

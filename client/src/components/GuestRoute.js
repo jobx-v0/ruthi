@@ -1,10 +1,34 @@
-import React from "react";
-import { Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
- 
+import { useNavigate } from "react-router-dom";
+
+import { fetchUserProfile } from "../api/userProfileApi";
+
 const GuestRoute = ({ children }) => {
-  const { authToken, isLoading } = useAuth();
- 
+  const { authToken, isLoading, fetchUserInfo } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserAndNavigate = async () => {
+      if (authToken) {
+        try {
+          const response = await fetchUserProfile(authToken);
+          if (response) {
+            navigate("/profile");
+          } else {
+            navigate("/uploadResume");
+          }
+        } catch (error) {
+          console.error("Error fetching user info", error);
+        }
+      }
+    };
+
+    if (!isLoading) {
+      fetchUserAndNavigate();
+    }
+  }, [authToken, isLoading, fetchUserInfo, navigate]);
+
   if (isLoading) {
     return (
       <div className="loader-container">
@@ -12,13 +36,8 @@ const GuestRoute = ({ children }) => {
       </div>
     );
   }
- 
-  // If authenticated, redirect to home page
-  if (authToken) {
-    return <Navigate to="/home" />;
-  }
- 
-  return children; // Render login/signup/landing if not authenticated
+
+  return children;
 };
- 
+
 export default GuestRoute;

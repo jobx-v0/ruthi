@@ -250,14 +250,12 @@ export default function Signup() {
     <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Left Side */}
       <div className="w-full lg:w-1/2 text-white p-8 flex flex-col items-center justify-center bg-gradient-to-r from-blue-600 via-blue-500 to-transparent">
-        <div className="flex items-center justify-center mb-8">
           <img
             src={Ruthi_full_Logo}
             alt="Ruthi Logo"
             className="w-24 lg:w-48 h-auto"
           />
-        </div>
-        <div className="text-base lg:text-xl leading-relaxed text-start max-w-md">
+        <div className="text-base lg:text-xl leading-relaxed text-start max-w-md relative hidden lg:block">
           <TextGenerateEffect duration={2} filter={false} words={words} />
         </div>
       </div>

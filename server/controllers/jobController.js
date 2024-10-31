@@ -1,4 +1,6 @@
 const Job = require("../models/Job");
+const mongoose = require("mongoose"); // Add this line
+const { ObjectId } = mongoose.Types;
 
 // Controller function to create a new job posting
 const createJob = async (req, res) => {
@@ -132,10 +134,133 @@ const deleteJobById = async (req, res) => {
   }
 };
 
+const addCustomQuestions = async (req, res) => {
+  try {
+    const jobId = req.params.id;
+    const { questions } = req.body;
+
+    // Check if the questions are an array
+    if (!Array.isArray(questions)) {
+      return res
+        .status(400)
+        .json({ error: "Questions should be an array of objects." });
+    }
+
+    // Find the job by ID
+    const job = await Job.findById(jobId);
+
+    if (!job) {
+      return res.status(404).json({ error: "Job not found." });
+    }
+
+    // Assign an _id to each question and push to the job's questions array
+    questions.forEach((question) => {
+      job.questions.push({
+        _id: new ObjectId(), // Assigning a new ObjectId for each question
+        type: question.type,
+        question: question.question,
+        answer: question.answer, // if you store answers as well
+      });
+    });
+
+    // Save the job
+    await job.save();
+
+    res.status(200).json({ message: "Questions added successfully." });
+  } catch (error) {
+    res.status(500).json({ error: "Server error.", details: error.message });
+  }
+};
+
+// delete a specific question by _id
+const deleteCustomQuestionById = async (req, res) => {
+  try {
+    const { jobId, questionId } = req.params;
+
+    // Convert questionId to ObjectId using 'new'
+    const objectIdQuestionId = new mongoose.Types.ObjectId(questionId);
+
+    // Find the job by ID and update it
+    const job = await Job.findByIdAndUpdate(
+      jobId,
+      { $pull: { questions: { _id: objectIdQuestionId } } }, // Remove the question by ObjectId
+      { new: true }
+    );
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    res.status(200).json({ message: "Question deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting question" });
+  }
+};
+
+// update a specific question by _id
+const updateCustomQuestionById = async (req, res) => {
+  try {
+    const { jobId, questionId } = req.params;
+    const { type, question, answer } = req.body; // Data to update the question
+
+    const objectIdQuestionId = new mongoose.Types.ObjectId(questionId);
+
+    // Find the job and update the question with the given _id
+    const job = await Job.findOneAndUpdate(
+      { _id: jobId, "questions._id": objectIdQuestionId },
+      {
+        $set: {
+          "questions.$.type": type,
+          "questions.$.question": question,
+          "questions.$.answer": answer,
+        },
+      },
+      { new: true }
+    );
+
+    if (!job) {
+      return res.status(404).json({ message: "Job or Question not found" });
+    }
+
+    res.status(200).json({ message: "Question updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error updating question" });
+  }
+};
+
+// delete all questions (remove the 'questions' field)
+const deleteAllCustomQuestions = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    // Find the job by ID and update it by removing the 'questions' field entirely
+    const job = await Job.findByIdAndUpdate(
+      jobId,
+      { $unset: { questions: 1 } }, // Remove the entire questions field
+      { new: true }
+    );
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    res.status(200).json({ message: "All questions deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Error deleting all questions" });
+  }
+};
+
 module.exports = {
   createJob,
   getAllJobs,
   getJobById,
   updateJobById,
   deleteJobById,
+  addCustomQuestions,
+  deleteCustomQuestionById,
+  updateCustomQuestionById,
+  deleteAllCustomQuestions,
 };

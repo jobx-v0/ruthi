@@ -37,8 +37,24 @@ const getQuestionsBySkills = async (req, res) => {
 
     const jobId = req.body.jobId;
 
+    // Fetch the job by ID
     const job = await Job.findById(jobId);
 
+    // If the job contains pre-existing questions, randomly pick the numberOfQuestions
+    if (job.questions && job.questions.length > 0) {
+      const shuffledQuestions = job.questions.sort(() => 0.5 - Math.random());
+      const selectedQuestions = shuffledQuestions
+        .slice(0, numberOfQuestions)
+        .map((question) => ({
+          _id: question._id,
+          type: question.type,
+          question: question.question,
+        }));
+
+      return res.status(200).json(selectedQuestions);
+    }
+
+    // If no questions in the job, fetch based on skills
     const skills = job.skills_required;
 
     const questions = await Question.aggregate([

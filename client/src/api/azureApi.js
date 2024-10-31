@@ -20,10 +20,11 @@ export const getSasURL = async (
   userId,
   jobId,
   questionId,
+  interviewId,
   chunkNumber
 ) => {
   return axios.get(
-    `${API_URL}/sas/${userId}/${jobId}/${questionId}/${chunkNumber}`,
+    `${API_URL}/sas/${userId}/${jobId}/${interviewId}/${questionId}/${chunkNumber}`,
     {
       body: {
         userId,

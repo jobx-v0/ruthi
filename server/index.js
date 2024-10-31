@@ -14,7 +14,9 @@ require("./config/db");
 
 const authRoutes = require("./routes/auth");
 const interviewRoutes = require("./routes/interview");
+const resultRoutes = require("./routes/result");
 const jobRoutes = require("./routes/job");
+const subscribeRoutes = require("./routes/subscription");
 const questionRoutes = require("./routes/question");
 const azureRoutes = require("./routes/azure");
 const openAIRoutes = require("./routes/openAI");
@@ -27,6 +29,9 @@ app.use("/api/auth", authRoutes);
 // Use interview routes
 app.use("/api/interview", interviewRoutes);
 
+// Use result routes
+app.use("/api/result", resultRoutes);
+
 // Use azure routes
 app.use("/api/azure", azureRoutes);
 
@@ -35,6 +40,9 @@ app.use("/api/openai", openAIRoutes);
 
 // Use job routes
 app.use("/api", jobRoutes);
+
+// Use Subscription routes
+app.use("/api", subscribeRoutes);
 
 // Use question routes
 app.use("/api", questionRoutes);

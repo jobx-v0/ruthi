@@ -36,10 +36,10 @@ const handleTranscriptionForOneQuestion = async (req, res) => {
 };
 
 const generateSasToken = async (req, res) => {
-  const { userId, jobId, questionId, chunkNo } = req.params;
+  const { userId, jobId, interviewId, questionId, chunkNo } = req.params;
   try {
     const sasUrl = await AzureService.generateSasTokenForBlob(
-      `${userId}/${jobId}/${questionId}/${chunkNo}.webm`
+      `${userId}/${jobId}/${interviewId}/${questionId}/${chunkNo}.webm`
     );
     res.json({ sasUrl });
   } catch (error) {

@@ -2,9 +2,7 @@ import Nav from "../components/core/Nav";
 import { Settings2, SearchCheck, ChevronUpCircleIcon } from "lucide-react";
 import { Sidebar, SidebarItem } from "../components/core/Sidebar";
 import { useState } from "react";
-import {
-  ConfigurationsMain,
-} from "../components/core/SidebarMainArea";
+import { ConfigurationsMain } from "../components/core/SidebarMainArea";
 import InterviewQuestionsMain from "../components/core/InterviewQuestionsMain";
 import JobsMain from "../components/core/JobsMain";
 
@@ -38,9 +36,11 @@ export default function AdminPage() {
         <main className="flex-1">
           {activeSection === "Configurations" && <ConfigurationsMain />}
           {activeSection === "Jobs" && <JobsMain />}
-          {activeSection === "Interview Questions" && <InterviewQuestionsMain />}
+          {activeSection === "Interview Questions" && (
+            <InterviewQuestionsMain />
+          )}
           {/* Add more main areas for other sections */}
-        </main> 
+        </main>
       </div>
 
       {/* <Nav />

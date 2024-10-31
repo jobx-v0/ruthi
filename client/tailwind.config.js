@@ -9,6 +9,7 @@ module.exports = {
     "./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
+    xsm: "400px",
     extend: {
       animation: {
         "spin-slow": "spin 4s linear infinite",

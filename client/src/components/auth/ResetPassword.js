@@ -4,6 +4,7 @@ import axios from "axios";
 import NotificationBanner from "../NotificationBanner";
 import useNotification from "../../services/useNotification";
 import { TextInput } from "@tremor/react";
+import { useCustomToast } from "../utils/useCustomToast";
 
 const ResetPassword = () => {
   const [password, setPassword] = useState("");
@@ -13,12 +14,13 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const { notification, showNotification, closeNotification } =
     useNotification();
+  const toast = useCustomToast();
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      showNotification("Passwords do not match", "error");
+      toast("Passwords do not match", "error");
       return;
     }
 
@@ -29,15 +31,15 @@ const ResetPassword = () => {
         `${process.env.REACT_APP_BACKEND_URL}/api/auth/reset-password`,
         { token, password }
       );
-      showNotification("Password reset successful! Redirecting you to login page...", "success");
+      toast(
+        "Password reset successful! Redirecting you to login page...",
+        "success"
+      );
       setTimeout(() => {
         navigate("/login");
-      }, 5000);
+      }, 2000);
     } catch (error) {
-      showNotification(
-        "Failed to reset password. Please try again later.",
-        "error"
-      );
+      toast("Failed to reset password. Please try again later.", "error");
     }
     setLoading(false);
   };

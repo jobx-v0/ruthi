@@ -88,14 +88,14 @@ export const registerUserAPI = async (signUpState) => {
 
     if (response.status === 201) {
       console.log("Registration successful");
-      toast.success("Registration successful");
+      toast.success(response.data.message);
       return true;
     }
   } catch (error) {
     console.log("Registration failed", error);
     if (error.response && error.response.status === 400) {
-      console.log("Username is already in use.");
-      toast.error("Username is already in use.");
+      console.log("Username is already in use.", error);
+      toast.error(error.response.data.message);
     } else if (error.response && error.response.status === 500) {
       console.error("Error during registration:", error);
       toast.error("Network or server error. Please try again later.");

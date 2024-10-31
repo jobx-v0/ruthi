@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const EmailService = require("../services/emailService");
 const { OAuth2Client } = require("google-auth-library");
+const limiter = require('../middleware/rateLimiter');
 
 require("dotenv").config();
 
@@ -24,9 +25,14 @@ register = async (req, res) => {
 
     // Check if the username already exists in the database
     const existingUser = await User.findOne({ username });
+    const existingUserWithmail = await User.findOne({ email });
     if (existingUser) {
       console.log("Username already exists!!!");
       return res.status(400).json({ message: "Username is already in use." });
+    }
+    if (existingUserWithmail) {
+      console.log("Email already exists!!!");
+      return res.status(400).json({ message: "Email is already in use." });
     }
 
     // Create a new user document and set the virtual 'password' field
@@ -43,7 +49,7 @@ register = async (req, res) => {
     await newUser.save();
 
     // Send verification email
-    // await EmailService.sendVerificationEmail(newUser);
+    await EmailService.sendVerificationEmail(newUser);
     console.log("New User Saved");
 
     res.status(201).json({
@@ -108,7 +114,11 @@ verifyEmail = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
-    const user = await User.findById(decoded.userId);
+    console.log("decoded jwt:", decoded);
+    const userId = decoded._id || decoded.id;
+
+    const user = await User.findById(userId);
+    console.log("user from DB: ", user);
 
     if (!user) {
       return res.status(404).send("User not found");
@@ -118,17 +128,25 @@ verifyEmail = async (req, res) => {
       return res.status(400).send("Email is already verified");
     }
 
+    // const newToken = jwt.sign(
+    //   { userId: user._id}, // Payload
+    //   process.env.JWT_TOKEN_SECRET_KEY, // Secret key
+    //   { expiresIn: "1h" } // Token expires in 24 hours
+    // );
+
     user.isVerified = true;
     await user.save();
 
-    return res.status(200).send("Email verified successfully!");
+    return res
+      .status(200)
+      .send({ message: "Email verified successfully!", token });
   } catch (error) {
     return res.status(400).send("Invalid or expired token");
   }
 };
 
 // Forgot Password Endpoint
-forgotPassword = async (req, res) => {
+forgotPassword = [limiter, async (req, res) => {
   const { email } = req.body;
 
   try {
@@ -143,16 +161,16 @@ forgotPassword = async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: "An error occurred. Please try again." });
   }
-};
+}];
 
 resetPassword = async (req, res) => {
   const { token, password } = req.body;
-  console.log("hello....");
   try {
     console.log("token", token);
     const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
     console.log("decoded", decoded);
-    const user = await User.findById(decoded.userId);
+    const userId = decoded._id || decoded.id;
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -183,7 +201,7 @@ getUser = async (req, res) => {
   }
 };
 
-resendVerificationEmail = async (req, res) => {
+resendVerificationEmail = [limiter, async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
@@ -206,7 +224,7 @@ resendVerificationEmail = async (req, res) => {
     console.error("Error resending verification email:", error);
     res.status(500).json({ message: "Failed to resend verification email." });
   }
-};
+}];
 
 const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 

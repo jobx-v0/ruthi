@@ -76,8 +76,6 @@ const getAllJobs = async (req, res) => {
 };
 
 // Controller function to get a single job posting by ID
-const mongoose = require('mongoose');
-
 const getJobById = async (req, res) => {
   const { id } = req.params;
 

@@ -11,43 +11,12 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { z } from "zod";
+import { positionSchema } from "../../validators/ZodSchema";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
   return dateString.substring(0, 7); // Return only YYYY-MM
 };
-
-const positionSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Title must contain at least one letter"),
-  organization: z
-    .string()
-    .min(1, "Organization is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Organization must contain at least one letter"),
-  start_date: z.string().refine(
-    (date) => {
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "Start date cannot be in the future" }
-  ),
-  end_date: z.string().refine(
-    (date) => {
-      if (!date) return true; // Allow empty string for ongoing positions
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "End date cannot be in the future" }
-  ).optional(),
-  description: z.string().optional(),
-});
 
 export default function PositionsOfResponsibility() {
   const [positions, setPositions] = useRecoilState(

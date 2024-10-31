@@ -38,7 +38,7 @@ export const requiredFields = {
   publications: ["name","date"],
   courses: ["course_name", "course_provider", "completion_date"],
   skills: ["skill_name", "skill_proficiency"],
-  personal_projects: ["name", "description", "start_date", "end_date"],
+  personal_projects: ["name", "start_date", "end_date"],
   position_of_responsibility: ["title", "organization", "start_date", "end_date"],
   competitions: ["name", "date"],
 };

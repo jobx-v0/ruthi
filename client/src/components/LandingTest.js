@@ -137,7 +137,7 @@ const Header = () => {
         </p>
         <button
           className="bg-orange-500 text-white py-2 px-6 rounded-md font-medium animate-fadeInUp delay-400 hover:bg-orange-600 transition duration-300"
-          onClick={() => navigate("/login")}
+          onClick={() => navigate("/signup")}
         >
           START NOW
         </button>
@@ -219,7 +219,7 @@ const HeaderImage = ({ isScreen1050 }) => {
               <span className="text-lg sm:text-2xl text-orange-500">
                 <TbCheckbox />
               </span>
-              Get 20% off on every 1st month
+              Tailored AI-based Search across candidates
             </li>
             <li className="flex items-center gap-1 sm:gap-2">
               <span className="text-lg sm:text-2xl text-orange-500">
@@ -465,7 +465,7 @@ const Footer = () => {
 
   return (
     <motion.footer
-      className={`w-full mx-auto text-white bg-blue-400 ${
+      className={`w-full mx-auto text-black ${
         isScreen450 ? "p-5" : "p-20"
       } relative overflow-hidden`}
       initial={{ opacity: 0, y: 50 }}
@@ -473,12 +473,12 @@ const Footer = () => {
       transition={{ duration: 1 }}
       // style={{ backgroundColor: "#57abff" }}
     >
-      <div
+      {/* <div
         className="absolute top-0 left-0 right-0 h-2"
         style={{
           background: "linear-gradient(to bottom, #ff8c00, transparent)",
         }}
-      ></div>
+      ></div> */}
       <div className="flex flex-wrap justify-around items-start pt-8">
         {/* Logo and Description */}
         <div
@@ -505,14 +505,14 @@ const Footer = () => {
         {/* Subscribe Section */}
         <div className="flex-1 min-w-[200px] text-center mb-5">
           <h2
-            className={`text-[#ff8c00] text-3xl font-bold ${
+            className={`text-[#03045e] text-3xl font-bold ${
               isScreen450 ? "mb-6" : "mb-12"
             } animate-bounce`}
             style={{ textShadow: "2px 2px 2px rgba(0, 0, 0, 0.3)" }}
           >
             Stay Updated
           </h2>
-          <p className="text-white mb-2">
+          <p className="text-black mb-2">
             Subscribe to receive the latest job postings and updates directly to
             your inbox.
           </p>
@@ -536,36 +536,36 @@ const Footer = () => {
 
         {/* Social Icons */}
         <div className="flex-1 min-w-[200px] text-center mb-5">
-          <h3 className="text-lg text-white mb-2">Follow Us</h3>
+          <h3 className="text-lg text-black mb-2">Follow Us</h3>
           <div className="flex gap-4 justify-center mt-2">
             <a
               href="#"
-              className="text-white transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
+              className="text-black transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
             >
               <FaFacebookF size={24} />
             </a>
             <a
               href="#"
-              className="text-white transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
+              className="text-black transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
             >
               <FaTwitter size={24} />
             </a>
             <a
               href="#"
-              className="text-white transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
+              className="text-black transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
             >
               <FaInstagram size={24} />
             </a>
             <a
               href="#"
-              className="text-white transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
+              className="text-black transition duration-300 hover:text-[#ff8c00] transform hover:scale-110"
             >
               <FaLinkedinIn size={24} />
             </a>
           </div>
         </div>
       </div>
-      <div className="mt-8 text-center text-white text-sm border-t border-opacity-20 pt-4">
+      <div className="mt-8 text-center text-black text-sm border-t border-opacity-20 pt-4">
         <p>&copy; {new Date().getFullYear()} Ruthi. All rights reserved.</p>
       </div>
     </motion.footer>
@@ -585,10 +585,14 @@ const RuthiLandingPage = () => (
         },
       }}
     />
-    <Nav />
-    <Header />
+    <div className="bg-[#e0ebfd]">
+      <Nav />
+      <Header />
+    </div>
     <BodySection />
-    <Footer />
+    <div className="bg-[#e0ebfd]">
+      <Footer />
+    </div>
   </div>
 );
 

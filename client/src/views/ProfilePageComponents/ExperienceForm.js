@@ -4,40 +4,7 @@ import { useRecoilState } from "recoil";
 import { experienceState } from "../../store/atoms/userProfileSate";
 import { IconBriefcase } from "@tabler/icons-react";
 import { motion } from "framer-motion";
-import { z } from "zod";
-
-const experienceSchema = z.object({
-  company: z.string()
-    .min(1, "Company name is required")
-    .regex(/^(?=.*[a-zA-Z])[a-zA-Z0-9\s.,'-]+$/, "Company name must contain at least one letter and can include letters, numbers, spaces, and common punctuation"),
-  position: z.string()
-    .min(1, "Position is required")
-    .regex(/^[a-zA-Z0-9\s.,'-]+$/, "Position should only contain letters, numbers, spaces, and common punctuation"),
-  start_date: z.string().refine(
-    (date) => {
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      const seventyYearsAgo = new Date(today.getFullYear() - 70, today.getMonth());
-      return selectedDate >= seventyYearsAgo && selectedDate <= today;
-    },
-    {
-      message: "Start date must be within the last 70 years and not in the future",
-    }
-  ),
-  end_date: z.string().refine(
-    (date) => {
-      if (!date) return true; // Allow empty string for currently working
-      const [year, month] = date.split('-');
-      const selectedDate = new Date(year, month - 1);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "End date cannot be in the future" }
-  ).optional(),
-  description: z.string().optional(),
-  currently_working: z.boolean(),
-});
+import { experienceSchema } from "../../validators/ZodSchema";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';

@@ -21,6 +21,7 @@ const questionRoutes = require("./routes/question");
 const azureRoutes = require("./routes/azure");
 const openAIRoutes = require("./routes/openAI");
 const userProfileRoutes = require("./routes/userProfiles");
+const jobsAppliedRoutes=require("./routes/jobsAppliedRoute");
 
 // Use your authentication routes
 app.use("/api/auth", authRoutes);
@@ -47,6 +48,8 @@ app.use("/api", subscribeRoutes);
 app.use("/api", questionRoutes);
 
 app.use("/api/user-profile", userProfileRoutes);
+
+app.use('/api/',jobsAppliedRoutes);
 
 // Start the server
 const port = process.env.PORT || 3001;

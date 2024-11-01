@@ -77,19 +77,25 @@ const getAllJobs = async (req, res) => {
 
 // Controller function to get a single job posting by ID
 const getJobById = async (req, res) => {
+  const { id } = req.params;
+
+  // Validate the Object ID format
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ message: "Invalid job ID." });
+  }
+
   try {
-    const job = await Job.findById(req.params.id);
+    const job = await Job.findById(id);
     if (!job) {
       return res.status(404).json({ message: "Job posting not found." });
     }
     res.json(job);
   } catch (error) {
     console.error(error);
-    res
-      .status(500)
-      .json({ message: "Failed to retrieve job posting. Please try again." });
+    res.status(500).json({ message: "Failed to retrieve job posting. Please try again." });
   }
 };
+
 
 // Controller function to update a job posting by ID
 const updateJobById = async (req, res) => {

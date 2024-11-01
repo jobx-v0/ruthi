@@ -166,7 +166,9 @@ export default function SideBar() {
       // Map the section name to the exact string used in the switch statement
       const sectionMapping = {
         personal_information: "Basic Information",
+        socials: "Basic Information",
         education: "Education",
+        courses: "Education",
         experience: "Experience",
         skills: "Skills",
         publications: "Publications",
@@ -557,16 +559,6 @@ export default function SideBar() {
     }
   };
 
-  // const handleOverview = () => {
-  //   setSelectedSection("Overview");
-  //   setIsModalOpen(false);
-  // };
-
-  // const handleStartAddingDetails = () => {
-  //   setSelectedSection("Basic Information");
-  //   setIsModalOpen(false);
-  // };
-
   const getVisibleLinks = () => {
     if (isSubmitted) {
       return [
@@ -685,8 +677,6 @@ export default function SideBar() {
 }
 
 const Dashboard = ({ selectedSection, errors, setInvalidSections }) => {
-  console.log("Current selected section:", selectedSection); // Add this line for debugging
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">

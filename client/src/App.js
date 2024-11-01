@@ -9,7 +9,6 @@ import Login from "./views/Login";
 import ThankYouPage from "./views/ThankYouPage";
 import { NextUIProvider } from "@nextui-org/react";
 import Jobs from "./views/Jobs";
-import VideoRecorder from "./components/VideoRecorder";
 import NewInterview from "./views/NewInterview";
 import LandingTest from "./components/LandingTest";
 import VerificationPage from "./views/Verification";
@@ -135,12 +134,12 @@ function App() {
               path="/recruiter-dashboard"
               element={
                 <ProtectedRoute>
-                  <RecruiterDashboard />
+                  <JobCard />
                 </ProtectedRoute>
               }
             /> */}
             {/* Routes not requiring protection */}
-            <Route path="/test" element={<VideoRecorder />} />
+            {/* <Route path="/test" element={<VideoRecorder />} /> */}
             <Route path="/verification" element={<VerificationPage />} />
             <Route
               path="/verify-email-prompt"

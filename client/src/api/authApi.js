@@ -1,5 +1,4 @@
 import axios from "axios";
-import { toast } from "react-hot-toast";
 
 // const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -38,17 +37,14 @@ export const loginUserAPI = async (loginState) => {
           );
           console.log("profileResponse:", profileResponse);
           // If we reach here, it means the profile exists
-          toast.success("Login successful");
           return { success: true, token, userData, hasProfile: true };
         } catch (profileError) {
           if (profileError.response && profileError.response.status === 404) {
             // Profile doesn't exist
-            toast.success("Login successful. Please upload your resume.");
             return { success: true, token, userData, hasProfile: false };
           } else {
             // Handle other errors
             console.error("Error checking user profile:", profileError);
-            toast.error("Error checking user profile. Please try again.");
             return { success: false, error: "Error checking user profile" };
           }
         }
@@ -58,16 +54,15 @@ export const loginUserAPI = async (loginState) => {
     console.log("Login failed", error);
     if (error.response) {
       if (error.response.status === 404) {
-        toast.error("User not found. Please check your username.");
+        return { success: false, error: "User not found. Please check your username." };
       } else if (error.response.status === 401) {
-        toast.error("Invalid password. Please check your password.");
+        return { success: false, error: "Invalid password. Please check your password." };
       } else {
-        toast.error("Network or server error. Please try again later.");
+        return { success: false, error: "Network or server error. Please try again later." };
       }
     } else {
-      toast.error("An unexpected error occurred. Please try again.");
+      return { success: false, error: "An unexpected error occurred. Please try again." };
     }
-    return { success: false };
   }
 };
 
@@ -88,20 +83,19 @@ export const registerUserAPI = async (signUpState) => {
 
     if (response.status === 201) {
       console.log("Registration successful");
-      toast.success(response.data.message);
       return true;
     }
   } catch (error) {
     console.log("Registration failed", error);
     if (error.response && error.response.status === 400) {
       console.log("Username is already in use.", error);
-      toast.error(error.response.data.message);
+      return { success: false, error: error.response.data.message };
     } else if (error.response && error.response.status === 500) {
       console.error("Error during registration:", error);
-      toast.error("Network or server error. Please try again later.");
+      return { success: false, error: "Network or server error. Please try again later." };
     } else {
       console.log("Failed");
-      toast.error("Registration failed. Please try again.");
+      return { success: false, error: "Registration failed. Please try again." };
     }
   }
 };

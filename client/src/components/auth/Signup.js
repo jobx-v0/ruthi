@@ -17,6 +17,7 @@ import { fetchUserProfile } from "../../api/userProfileApi";
 import { useAuth } from "../../context/AuthContext";
 import { useCustomToast } from "../utils/useCustomToast";
 //import { toast } from 'react-hot-toast';
+//import { toast } from 'react-hot-toast';
 
 // import { LinkedIn } from 'react-linkedin-login-oauth2';
 export default function Signup() {

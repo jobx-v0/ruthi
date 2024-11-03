@@ -67,6 +67,7 @@ const Header = () => {
     marginTop: "0px",
     marginBottom: "0px",
   });
+  const [isScreen1050, setIsScreen1050] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -77,18 +78,30 @@ const Header = () => {
       } else {
         setMargin({ marginTop: "0px", marginBottom: "0px" });
       }
+
+      if (window.innerWidth < 1050) {
+        setIsScreen1050(true);
+      } else {
+        setIsScreen1050(false);
+      }
     };
 
     window.addEventListener("resize", handleResize);
-    handleResize(); // Call on mount
+    handleResize();
 
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return (
-    <header className="flex flex-col md:grid md:grid-cols-2 md:gap-8 items-center w-full max-w-6xl mx-auto p-4">
+    <header
+      className={`flex flex-col md:grid ${
+        isScreen1050 ? "md:grid-cols-1" : "md:grid-cols-2 md:gap-8"
+      }  items-center w-full max-w-6xl mx-auto p-4`}
+    >
       <div
-        className="space-y-6 text-center md:text-left"
+        className={`space-y-6 text-center ${
+          isScreen1050 ? "px-14 py-16" : "md:text-left"
+        } `}
         style={{
           marginTop: margin.marginTop,
           marginBottom: margin.marginBottom,
@@ -129,7 +142,7 @@ const Header = () => {
           START NOW
         </button>
       </div>
-      <HeaderImage />
+      <HeaderImage isScreen1050={isScreen1050} />
       <style>
         {`
           @keyframes fadeInUp {
@@ -149,29 +162,12 @@ const Header = () => {
 };
 
 // HeaderImage Component
-const HeaderImage = () => {
-  const [isScreen450, setIsScreen450] = useState(false);
-  useEffect(() => {
-    const handleResize = () => {
-      console.log(window.innerWidth);
-
-      if (window.innerWidth < 450) {
-        setIsScreen450(true);
-      } else {
-        setIsScreen450(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    handleResize(); // Call on mount
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+const HeaderImage = ({ isScreen1050 }) => {
   return (
     <>
       <div
         className="relative flex justify-center items-center animate-scaleUp delay-500 mt-8 md:mt-0"
-        style={{ display: isScreen450 ? "none" : "" }}
+        style={{ display: isScreen1050 ? "none" : "" }}
       >
         <span
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[250px] w-[250px] sm:h-[400px] sm:w-[400px] md:h-[500px] md:w-[500px] bg-blue-400 rounded-full"

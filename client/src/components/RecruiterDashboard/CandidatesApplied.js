@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ProfileCard from "./profileCard";
+import FilterDropdown from "./CandidatesFilter"
 
 
 const stageBadgeColors = {
@@ -14,12 +15,20 @@ const stageBadgeColors = {
 const CandidatesApplied=()=> {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOrder, setSortOrder] = useState("asc");
-  const [dateRange, setDateRange] = useState("last30");
+  const [dateRange, setDateRange] = useState("None");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null); // State for selected candidate
   const [candidates, setCandidates] = useState([])
+  const [displayFilters, setDisplayFilters] = useState(false);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(candidates.length / itemsPerPage);
+  const [filters, setFilters] = useState({
+    role: [],
+    experience: [],
+    skills: [],
+    engagement: [],
+    payRange: "",
+  });
 
   useEffect(() => {
     //log data
@@ -52,6 +61,8 @@ const CandidatesApplied=()=> {
     }, [candidates]);
 
 
+
+
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
@@ -72,17 +83,56 @@ const CandidatesApplied=()=> {
     setSelectedCandidate(candidate); // Set the selected candidate
   };
 
+    // Function to calculate the start date based on the selected range
+    const getStartDateForRange = (range) => {
+      const currentDate = new Date();
+      switch (range) {
+        case "last30":
+          return new Date(currentDate.setDate(currentDate.getDate() - 30));
+        case "last60":
+          return new Date(currentDate.setDate(currentDate.getDate() - 60));
+        case "last90":
+          return new Date(currentDate.setDate(currentDate.getDate() - 90));
+        default:
+          return null; // Return a very old date if no range selected
+      }
+    };
+
   const filteredCandidates = candidates
-    .filter((candidate) =>
-      `${candidate.userName} ${candidate.appliedRole}`
-        .toLowerCase()
-        .includes(searchQuery)
-    )
-    .sort((a, b) =>
-      sortOrder === "asc"
-        ? a.userName.localeCompare(b.userName)
-        : b.appliedRole.localeCompare(a.appliedRole)
-    );
+  .filter((candidate) => {
+    // Check if candidate matches the role filter
+    if (filters.role.length && !filters.role.includes(candidate.appliedRole)) return false;
+
+    // // Check if candidate matches the experience, engagement, and payRange filters (add conditions based on your structure)
+    // if (filters.engagement && candidate !== filters.experience) return false;
+    // if (filters.payRange && candidate.payRange < filters.payRange.min || candidate.payRange > filters.payRange.max) return false;
+
+    // Check if candidate has all the required skills in selectedSkills
+    if (!filters.skills.every((skill) =>
+      candidate.skills.some(
+        (candidateSkill) => candidateSkill.name === skill
+      )
+    )) return false;
+
+
+        // Filter based on date range
+        const appliedDate = new Date(candidate.appliedDate);
+        const startDate = getStartDateForRange(dateRange);
+        if  (appliedDate < startDate) return false;
+
+    return true;
+  })
+  .filter((candidate) =>
+    `${candidate.userName} ${candidate.appliedRole}`.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  .sort((a, b) =>
+    sortOrder === "asc"
+      ? a.userName.localeCompare(b.userName)
+      : b.userName.localeCompare(a.userName)
+  );
+
+console.log(filteredCandidates);
+
 
   const paginatedCandidates = filteredCandidates.slice(
     (currentPage - 1) * itemsPerPage,
@@ -115,6 +165,12 @@ const CandidatesApplied=()=> {
     return array[arrayIndex];
   }
 
+  //filter by Role, Experience, slary, stage["Applied","Screening","Hired","Interview","Rejected"]
+
+  const handleFilterChange = (updatedFilters) => {
+    setFilters(updatedFilters);
+  };
+
   return (
     <div className="container mx-auto p-4 space-y-4">
       {/* Sidebar for Selected Candidate Details */}
@@ -142,6 +198,10 @@ const CandidatesApplied=()=> {
           />
         </div>
 
+        {/* filter candidates */}
+        <div className="flex flex-wrap gap-2">
+         <FilterDropdown selectedFilters={filters} onFilterChange={handleFilterChange}/>
+        </div>
         {/* Sort and Date Range */}
         <div className="flex flex-wrap justify-end items-center gap-2">
           <select
@@ -158,6 +218,7 @@ const CandidatesApplied=()=> {
             className="border border-gray-300 px-4 py-2 rounded"
             value={dateRange}
           >
+            <option value="None" selected>None</option>
             <option value="last30">Last 30 days</option>
             <option value="last60">Last 60 days</option>
             <option value="last90">Last 90 days</option>
@@ -171,7 +232,17 @@ const CandidatesApplied=()=> {
 
       {/* Candidate Table */}
       <div className="overflow-x-auto">
-        <table className="w-full border border-gray-200">
+        {filteredCandidates.length===0?
+        ( <div className="flex flex-col justify-center items-center h-64">
+          <img
+            src="https://cdn2.iconfinder.com/data/icons/delivery-and-logistic/64/Not_found_the_recipient-no_found-person-user-search-searching-4-1024.png"
+            alt="No candidates"
+            className="w-32 h-32 mb-4"
+          />
+          <h2 className="text-lg font-semibold">No Candidates Found</h2>
+          <p className="text-gray-500">No candidates have applied within the selected date range.</p>
+        </div>):
+           (<table className="w-full border border-gray-200">
           <thead className="bg-gray-200">
             <tr>
               <th className="px-4 py-2">Select</th>
@@ -226,7 +297,7 @@ const CandidatesApplied=()=> {
             ))}
           </tbody>
 
-        </table>
+        </table>)}
       </div>
 
       {/* Pagination Controls */}

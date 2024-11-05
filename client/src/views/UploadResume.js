@@ -161,6 +161,7 @@ export default function Component() {
           if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
             const formData = new FormData();
             formData.append("file", file, file.name);
+            formData.append("userId", userId);
 
             const extract = await axios.post(
               `${RESUME_PARSER_URL}/parse-resume`,

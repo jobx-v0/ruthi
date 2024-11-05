@@ -3,112 +3,57 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchJobByIdAPI } from '../../api/jobApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
+import EditJobModel from "./EditJobModel";
 
 const DescriptionCard = ({ jobDetails }) => {
   return (
-    <div style={{
-      borderRadius: '12px',
-      padding: '20px',
-      backgroundColor: '#ffffff',
-      boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-      marginBottom: '20px',
-      width: '80%', // Decreased width
-      height: '600px', // Increased height
-      overflow: 'auto', // Ensure content fits well within the card
-    }}>
+    <div className="rounded-lg p-6 bg-white shadow-md mb-5 w-4/5 h-[600px] overflow-auto">
       <img 
         src={jobDetails.company_logo} 
         alt={jobDetails.company_name} 
-        style={{ 
-          width: '80px', // Adjusted size for logo
-          height: '80px',
-          borderRadius: '50%', // Rounded logo
-          marginBottom: '10px', 
-          border: '2px solid #f97316' // Highlighted border around logo
-        }} 
+        className="w-20 h-20 rounded-full mb-2 border-2 border-orange-500"
       />
-      <h1 style={{
-        color: '#000000',
-        fontSize: '20px', // Adjusted font size
-        marginBottom: '5px'
-      }}>
-        {jobDetails.title}
-      </h1>
-      <hr style={{ border: '1px solid black', marginBottom: '15px' }} />
-      <p style={{
-        color: '#6b7280', // light black or gray
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      <h1 className="text-black text-lg mb-1">{jobDetails.title}</h1>
+      <hr className="border-black mb-4" />
+      <p className="text-gray-600 text-sm mb-2">
         <strong>Company Name:</strong> {jobDetails.company_name}
       </p>
-      <p style={{
-        color: '#6b7280',
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      <p className="text-gray-600 text-sm mb-2">
         <strong>Posted Date:</strong> {new Date(jobDetails.posted_date).toLocaleDateString()}
       </p>
-      <p style={{
-        color: '#6b7280',
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      <p className="text-gray-600 text-sm mb-2">
         <strong>Job Type:</strong> {jobDetails.employment_type}
       </p>
-      <p style={{
-        color: '#6b7280',
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      <p className="text-gray-600 text-sm mb-2">
         <strong>Experience Required:</strong> {jobDetails.experience_required} years
       </p>
-      <p style={{
-        color: '#6b7280',
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      <p className="text-gray-600 text-sm mb-2 flex items-center">
         <strong>
-          <FontAwesomeIcon icon={faMapMarkerAlt} style={{ marginRight: '5px' ,color:'#fb923c'}} />
+          <FontAwesomeIcon icon={faMapMarkerAlt} className="mr-1 text-orange-500" />
           Location:
         </strong> {jobDetails.location}
       </p>
-      <div style={{ marginBottom: '10px' }}>
+      <div className="mb-2">
         <strong>Description:</strong>
-        <ul style={{ paddingLeft: '20px', listStyleType: 'disc' }}>
+        <ul className="pl-5 list-disc">
           <li>{jobDetails.description}</li>
         </ul>
       </div>
-      <p style={{
-        color: '#6b7280',
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      <div className="mb-2">
         <strong>Skills Required:</strong>
-        <ul style={{ paddingLeft: '20px', listStyleType: 'disc' }}>
+        <ul className="pl-5 list-disc">
           {jobDetails.skills_required.map((skill, index) => (
             <li key={index}>{skill}</li>
           ))}
         </ul>
-      </p>
-      <p style={{
-        color: '#6b7280',
-        fontSize: '14px', // Adjusted font size
-        lineHeight: '1.5',
-        marginBottom: '10px'
-      }}>
+      </div>
+      <p className="text-gray-600 text-sm mb-2">
         <strong>Job Link:</strong>
         <a 
           href={jobDetails.job_link} 
           target="_blank" 
           rel="noopener noreferrer" 
-          style={{ color: '#1d4ed8', fontWeight: 'bold', textDecoration: 'underline' }}
+          className="text-blue-700 font-bold underline"
         >
           Click here to view the job
         </a>
@@ -122,6 +67,8 @@ const JobDescription = () => {
   const [jobDetails, setJobDetails] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
+
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -146,40 +93,31 @@ const JobDescription = () => {
   }, [id]);
 
   if (error) {
-    return <div>Error: {error}</div>;
+    return <div className="text-red-500">Error: {error}</div>;
   }
 
   if (!jobDetails) {
-    return <div>Loading...</div>;
+    return <div className="text-gray-500">Loading...</div>;
   }
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh', // Full viewport height for centering
-      padding: '20px', 
-      flexDirection: 'column' // Arrange children in a column
-    }}>
+    <div className="flex justify-center items-center min-h-screen p-5 flex-col">
       <DescriptionCard jobDetails={jobDetails} />
-      <div style={{ display: 'flex', justifyContent: 'flex-end', width: '100%' }}>
-        <button onClick={() => navigate('/candidates')} style={{
-          padding: '10px 20px',
-          backgroundColor: '#f97316',
-          color: '#ffffff',
-          fontSize: '14px',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          transition: 'background-color 0.3s',
-          marginRight: '150px'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fb923c'}
-        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f97316'}>
+      <div className="flex justify-end w-full">
+        <button 
+          onClick={() => setEditModalOpen(true)} 
+          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 mr-10"
+        >
+          Edit Job
+        </button>
+        <button 
+          onClick={() => navigate('/candidates')} 
+          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 mr-36"
+        >
           Show Candidates
         </button>
       </div>
+      {isEditModalOpen && <EditJobModel onClose={() => setEditModalOpen(false)} />} {/* Render the EditJobModel */}
     </div>
   );
 };

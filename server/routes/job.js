@@ -2,11 +2,10 @@ const express = require("express");
 const router = express.Router();
 const JobController = require("../controllers/jobController");
 const { authMiddleware } = require("../middleware/authMiddleware");
-const { authMiddleware } = require("../middleware/authMiddleware");
 
 // Create a new job posting
-router.post("/postjob",   JobController.createJob);//isAdmin,authMiddleware,
-router.post("/postjob",   JobController.createJob);//isAdmin,authMiddleware,
+router.post("/postjob",  authMiddleware, JobController.createJob);//isAdmin,,
+router.post("/postjob",   authMiddleware,JobController.createJob);//isAdmin,authMiddleware,
 
 // Get all job postings
 router.get("/jobs",  authMiddleware, JobController.getAllJobs);

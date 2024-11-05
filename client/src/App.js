@@ -28,6 +28,7 @@ import JobDescription from "./components/core/JobDescription";
 import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
+import EditJob from  "./components/core/EditJobModel";
 
 function App() {
   return (
@@ -135,8 +136,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
-            <Route
+             <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
@@ -169,13 +169,21 @@ function App() {
               }
             />
             <Route
-              path="/recruiter-dashboard"
+              path="/EditJobModel/:id"
               element={
                 <ProtectedRoute>
-                  <RecruiterDashboard />
+                  <EditJob />
                 </ProtectedRoute>
               }
             />
+            {/* <Route
+            path="/recruiter-dashboard"
+            element={
+              <ProtectedRoute>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            }
+            /> */}
 
             <Route
               path="/job-portal"

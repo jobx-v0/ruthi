@@ -3,13 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt, faClock } from '@fortawesome/free-solid-svg-icons';
 import { useNavigate } from 'react-router-dom';
 import { Sidebar, SidebarBody, SidebarLink } from '../../ui/sidebar';
-import { IconBriefcase, IconUser, IconPlus } from '@tabler/icons-react';
-import { fetchJobsAPI } from '../../api/jobApi';
+import { IconBriefcase, IconUser, IconPlus, IconTrash} from '@tabler/icons-react';
+import { fetchJobsAPI , deleteJobAPI } from '../../api/jobApi';
+import ConfirmationModal from './ConfirmDeleteCard';
+import { useCustomToast } from "../utils/useCustomToast"; 
 
-
-const JobCard = ({ job }) => {
+const JobCard = ({ job, onOpenModal  }) => {
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
 
   const formatPostedDate = (date) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -52,17 +52,34 @@ const JobCard = ({ job }) => {
       }}
     >
       <div style={{ paddingBottom: '15px' }}>
-        <img
-          src={job.company_logo}
-          alt={`${job.company_name} logo`}
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: '8px',
-            marginBottom: '15px',
-            boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
-          }}
-        />
+        <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between', // Positions children at opposite ends
+              alignItems: 'center', // Centers items vertically
+              position: 'relative', // Required for absolute positioning of the icon
+              marginBottom: '15px', // Add space below the flex container
+            }}
+            >
+            <img
+              src={job.company_logo}
+              alt={`${job.company_name} logo`}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
+              }}
+            />
+            {/* Delete Icon */}
+            <IconTrash
+            onClick={(e) => {
+              e.stopPropagation(); // Prevents navigation on delete
+              onOpenModal(job._id); // Open the modal with job ID
+            }}
+            style={{ color: '#f87171', cursor: 'pointer', fontSize: '20px' }}
+          />
+          </div>        
         {/* Posted date */}
         <span
           style={{
@@ -165,13 +182,18 @@ const JobList = () => {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
   const [showAll, setShowAll] = useState(false);
-  const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [employmentType, setEmploymentType] = useState("");
-  const [location, setLocation] = useState("");
   const [experience, setExperience] = useState("");
-  const [title, setTitle] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+  const showToast = useCustomToast();
+  
+  const handleOpenModal = (jobId) => {
+    setJobToDelete(jobId);
+    setIsModalOpen(true);
+  };
 
   const fetchJobs = async (query = "", page = 1, limit = 1000) => {
     const authToken = localStorage.getItem('authToken'); // Get authToken from localStorage
@@ -224,7 +246,20 @@ const JobList = () => {
     }
   };
   
-  
+  const handleDelete = async () => {
+    const authToken = localStorage.getItem('authToken');
+    try {
+      await deleteJobAPI(authToken, jobToDelete);
+      setJobs(jobs.filter(job => job._id !== jobToDelete)); 
+      showToast("Job Deleted successfully!", "success");      
+    } catch (error) {
+      console.error("Error deleting job:", error);
+      showToast("Job Not deleted !", "failed");    
+    } finally {
+      setIsModalOpen(false); 
+      setJobToDelete(null); 
+    }
+  };
   
   // Initial fetch for all jobs
   useEffect(() => {
@@ -252,7 +287,7 @@ const JobList = () => {
   return (
     <div
       className="dashboard"
-      style={{ display: 'flex', width: '100%', minHeight: '100vh', backgroundColor: '#f9fafb' }}
+      style={{ display: 'flex', width: '100%', minHeight: '100vh', backgroundColor: isModalOpen ? '#4b5563' : '#f9fafb' }} // Change background based on modal state
     >
       <Sidebar open={open} setOpen={setOpen} className="flex-shrink-0">
         <SidebarBody className="flex flex-col justify-start py-9">
@@ -317,10 +352,16 @@ const JobList = () => {
           </h1>
         </div>
         <div className="job-list" style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', marginTop: '15px' }}>
-          {displayedJobs.map((job) => (
-            <JobCard key={job._id} job={job} />
+          {displayedJobs.map(job => (
+            <JobCard key={job._id} job={job} onOpenModal={handleOpenModal} />
           ))}
         </div>
+        <ConfirmationModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onConfirm={handleDelete}
+        />
+        
         {!showAll && jobs.length > 3 && (
           <button
             onClick={handleSeeAll}
@@ -329,8 +370,20 @@ const JobList = () => {
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f97316')}
           >
             See All
+          </button> 
+        )}
+        {showAll && (
+          <button
+            onClick={() => setShowAll(false)}
+            className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#fb923c')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#f97316')}
+          >
+            See Less
           </button>
         )}
+
+
       </div>
     </div>
   );

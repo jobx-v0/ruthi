@@ -1,5 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-import ChatBotUI from "../chatbot/ChatBotUI";
+// import ChatBotUI from "../chatbot/ChatBotUI";
 import { useEffect, useState } from "react";
 
 const JobPostMain = ({
@@ -24,13 +24,13 @@ const JobPostMain = ({
     setShowModal((prev) => !prev);
   };
 
-  useEffect(() => {
-    if (showModal) {
-      document.body.classList.add("no-scroll");
-    } else {
-      document.body.classList.remove("no-scroll");
-    }
-  }, [showModal]);
+  // useEffect(() => {
+  //   if (showModal) {
+  //     document.body.classList.add("no-scroll");
+  //   } else {
+  //     document.body.classList.remove("no-scroll");
+  //   }
+  // }, [showModal]);
 
   return (
     <>
@@ -118,13 +118,13 @@ const JobPostMain = ({
           </button>
         </div>
       </div>
-      {showModal && (
+      {/* {showModal && (
         <ChatBotUI
           handleApplyNow={handleApplyNow}
           job_id={_id}
           company={company}
         />
-      )}
+      )} */}
     </>
   );
 };

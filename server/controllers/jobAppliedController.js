@@ -29,7 +29,9 @@ const createApplication = async (req, res) => {
             userEmail: userProfileDetails ? userProfileDetails.personal_information.email : "N/A",
             userPhone: userProfileDetails ? userProfileDetails.personal_information.phone : "N/A",
             appliedDate: newApplication.appliedDate,
-            applicationStage: newApplication.stage
+            applicationStage: newApplication.stage,
+            linkedin: userProfileDetails.socials? userProfileDetails.socials.linkedin : "N/A", // Included only if user has provided socials in their profile
+            github:userProfileDetails.socials?userProfileDetails.socials.github:"N/A",
         };
 
         return res.status(201).json({
@@ -51,9 +53,13 @@ const getAppliedCandidates = async (req, res) => {
         // Map through each application to fetch associated details
         const appliedApplications = await Promise.all(applications.map(async (application) => {
             const [userProfileDetails, jobDetails] = await Promise.all([
-                UserProfile.findById(application.userProfile, 'personal_information.first_name personal_information.email personal_information.phone'),
-                Job.findById(application.job, 'title location')
+                UserProfile.findById(application.userProfile, 'personal_information.first_name personal_information.email personal_information.phone socials.linkedin socials.github skills'),
+                Job.findById(application.job, 'title location employment_type')
             ]);
+            const skillsArray = userProfileDetails ? userProfileDetails.skills.map(skill => ({
+                name: skill.skill_name,
+                proficiency: skill.skill_proficiency
+            })) : [];
 
             // Format each application with desired fields and handle missing details
             return {
@@ -64,7 +70,10 @@ const getAppliedCandidates = async (req, res) => {
                 userEmail: userProfileDetails ? userProfileDetails.personal_information.email : "N/A",
                 userPhone: userProfileDetails ? userProfileDetails.personal_information.phone : "N/A",
                 appliedDate: application.appliedDate,
-                applicationStage: application.stage
+                applicationStage: application.stage,
+                employment_type:jobDetails.employment_type,
+                socials: userProfileDetails? userProfileDetails.socials : {}, // Included only if user has provided socials in their profile
+                skills: skillsArray // Formated skills as an array for easier use in frontend
             };
         }));
 

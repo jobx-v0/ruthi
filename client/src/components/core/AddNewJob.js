@@ -3,7 +3,7 @@ import { Sidebar, SidebarBody, SidebarLink } from "../../ui/sidebar";
 import { IconBriefcase, IconUser, IconPlus } from "@tabler/icons-react";
 import { useCustomToast } from "../utils/useCustomToast";
 import { addJobAPI } from "../../api/jobApi";
-import { IconTrash } from "@tabler/icons-react";
+import { Plus, Trash2 } from "lucide-react";
 
 const JobForm = () => {
   const [open, setOpen] = useState(false);
@@ -26,7 +26,6 @@ const JobForm = () => {
   const [authToken, setAuthToken] = useState(null);
   const [questionEntries, setQuestionEntries] = useState([]);
   const [showQuestions, setShowQuestions] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -75,11 +74,6 @@ const JobForm = () => {
     }
   };
 
-  // Function to handle adding a new question entry
-  const handleAddQuestion = () => {
-    const newQuestion = { question: "", answer: "" };
-    setQuestionEntries((prev) => [...prev, newQuestion]);
-  };
   // Function to handle deleting a question entry
   const handleDeleteQuestion = (index) => {
     const updatedQuestions = questionEntries.filter((_, i) => i !== index);
@@ -88,7 +82,13 @@ const JobForm = () => {
       ...prevData,
       questions: updatedQuestions,
     }));
-    setShowQuestions(false);
+  };
+  const handleAddQuestiona = () => {
+    setShowQuestions(true);
+    setQuestionEntries((prevEntries) => [
+      ...prevEntries,
+      { question: "", answer: "" },
+    ]);
   };
 
   const resetForm = () => {
@@ -105,6 +105,7 @@ const JobForm = () => {
       questions: [],
     });
     setErrors({});
+    setQuestionEntries([]);
     setSubmitted(false);
   };
 
@@ -320,23 +321,19 @@ const JobForm = () => {
               </div>
               <hr className="my-4 border-t-1 border-gray-900" />
               {/* Questions Section */}
-              <h3 className="text-lg text-gray-800 mt-4">Questions</h3>
-              <label className="flex items-center mb-4">
-                <input
-                  type="checkbox"
-                  checked={showQuestions}
-                  onChange={() => {
-                    if (showQuestions) {
-                      setQuestionEntries([]);
-                    } else {
-                      handleAddQuestion();
-                    }
-                    setShowQuestions(!showQuestions);
+              <div className="flex items-center justify-between mr-5">
+                <h3 className="text-lg text-gray-800 mt-4">Questions</h3>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleAddQuestiona();
                   }}
-                  className="mr-2"
-                />
-                Add Questions
-              </label>
+                  className="p-2 bg-blue-100 text-blue-600 hover:bg-blue-200 rounded-full"
+                  aria-label="Add question"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
               <div
                 className={`transition-all duration-2000 ${
                   showQuestions
@@ -355,7 +352,7 @@ const JobForm = () => {
                         onClick={() => handleDeleteQuestion(index)}
                         className="absolute top-2 right-2 text-red-500 hover:text-red-700 focus:outline-none"
                       >
-                        <IconTrash />
+                        <Trash2 />
                       </button>
 
                       <div className="flex flex-col space-y-4">
@@ -379,10 +376,6 @@ const JobForm = () => {
                             className="w-full px-3 py-2 border rounded-md shadow-sm mt-1"
                             required
                           />
-                          {/* Preview description for question */}
-                          <p className="text-m text-gray-500 mt-5">
-                            Question: {entry.question || "No question provided"}
-                          </p>
                         </div>
 
                         <div>
@@ -404,15 +397,12 @@ const JobForm = () => {
                             placeholder="Enter answer (Optional)"
                             className="w-full px-3 py-2 border rounded-md shadow-sm mt-1"
                           />
-                          {/* Preview description for answer */}
-                          <p className="text-m text-gray-500 mt-5">
-                            Answer: {entry.answer || "No answer provided"}
-                          </p>
                         </div>
                       </div>
                     </div>
                   ))}
               </div>
+              {/*end */}
               <div className="flex justify-center mt-4">
                 <button
                   type="submit"

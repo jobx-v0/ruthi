@@ -5,6 +5,11 @@ const router=express.Router();
 
 router.post('/jobApplications',JobAppliedController.createApplication);
 
-router.get('/jobApplications/all', JobAppliedController.getAppliedCandidates);
+router.get('/jobApplications/all', JobAppliedController.getAppliedCandidates);4
+
+router.put('/update-stage', JobAppliedController.updateApplicationStage);
+
+// Get Hiring Stages for a Candidate
+router.get('/:id/stages', JobAppliedController.getStages);
 
 module.exports=router;

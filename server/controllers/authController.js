@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const EmailService = require("../services/emailService");
 const { OAuth2Client } = require("google-auth-library");
-const limiter = require('../middleware/rateLimiter');
+const limiter = require("../middleware/rateLimiter");
 
 require("dotenv").config();
 
@@ -87,6 +87,13 @@ login = async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
+    // Check if the user is verified
+    if (!user.isVerified) {
+      return res
+        .status(403)
+        .json({ message: "You are not verified.", email: user.email });
+    }
+
     // Verify the user's password using the virtual 'password' field
     if (user.authenticate(password)) {
       // Password is correct, generate a JWT token
@@ -146,22 +153,25 @@ verifyEmail = async (req, res) => {
 };
 
 // Forgot Password Endpoint
-forgotPassword = [limiter, async (req, res) => {
-  const { email } = req.body;
+forgotPassword = [
+  limiter,
+  async (req, res) => {
+    const { email } = req.body;
 
-  try {
-    const user = await User.findOne({ email });
+    try {
+      const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await EmailService.sendPasswordResetMail(user);
+      res.json({ message: "Password reset link sent" });
+    } catch (error) {
+      res.status(500).json({ message: "An error occurred. Please try again." });
     }
-
-    await EmailService.sendPasswordResetMail(user);
-    res.json({ message: "Password reset link sent" });
-  } catch (error) {
-    res.status(500).json({ message: "An error occurred. Please try again." });
-  }
-}];
+  },
+];
 
 resetPassword = async (req, res) => {
   const { token, password } = req.body;
@@ -201,30 +211,33 @@ getUser = async (req, res) => {
   }
 };
 
-resendVerificationEmail = [limiter, async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
-    }
+resendVerificationEmail = [
+  limiter,
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required." });
+      }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User is already verified." });
-    }
+      if (user.isVerified) {
+        return res.status(400).json({ message: "User is already verified." });
+      }
 
-    // Send verification email again
-    await EmailService.sendVerificationEmail(user);
-    res.status(200).json({ message: "Verification email sent." });
-  } catch (error) {
-    console.error("Error resending verification email:", error);
-    res.status(500).json({ message: "Failed to resend verification email." });
-  }
-}];
+      // Send verification email again
+      await EmailService.sendVerificationEmail(user);
+      res.status(200).json({ message: "Verification email sent." });
+    } catch (error) {
+      console.error("Error resending verification email:", error);
+      res.status(500).json({ message: "Failed to resend verification email." });
+    }
+  },
+];
 
 const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 

@@ -24,10 +24,11 @@ import ReachOut from "./components/ReachOut";
 import JobCard from "./components/core/JobCards";
 import Candidates from "./components/core/Candidates";
 import JobDescription from "./components/core/JobDescription";
-// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
+import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
+import ChatBotUI from "./components/chatbot/ChatBotUI";
 
 function App() {
   return (
@@ -104,6 +105,14 @@ function App() {
               }
             />
             <Route
+              path="/chatbot"
+              element={
+                <ProtectedRoute>
+                  <ChatBotUI />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/new-interview"
               element={
                 <ProtectedRoute>
@@ -168,14 +177,14 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
+            {/* <Route
               path="/recruiter-dashboard"
               element={
                 <ProtectedRoute>
                   <RecruiterDashboard />
                 </ProtectedRoute>
               }
-            />
+            /> */}
 
             <Route
               path="/job-portal"

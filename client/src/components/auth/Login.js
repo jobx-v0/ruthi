@@ -47,6 +47,11 @@ export default function Login() {
           navigate("/profile");
         }
       } else {
+        console.log("errorcode: ", result.errorCode)
+        if (result.errorCode === 403) {
+          console.log("email got  login side: ", result);
+          navigate("/verify-email-prompt", { state: { email: result.email } });
+        }
         customToast(result.error || "Login failed. Please try again.", "error");
       }
     } catch (error) {
@@ -111,7 +116,11 @@ export default function Login() {
     <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Left Side Content */}
       <div className="w-full lg:w-1/2 text-white p-8 flex flex-col items-center justify-center bg-gradient-to-r from-blue-600 via-blue-500 to-transparent">
-          <img src={Ruthi_full_Logo} alt="Ruthi Logo" className="w-24 lg:w-48 h-auto" />
+        <img
+          src={Ruthi_full_Logo}
+          alt="Ruthi Logo"
+          className="w-24 lg:w-48 h-auto"
+        />
         <div className="text-xl leading-relaxed text-center max-w-md relative hidden lg:block">
           <TextGenerateEffect duration={2} filter={false} words={words} />
         </div>

@@ -17,10 +17,8 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
 
   const { authToken } = useAuth();
 
-  // Ref to the chat container
   const chatContainerRef = useRef(null);
 
-  // Scroll to bottom whenever messages change
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -36,11 +34,9 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
         },
       });
 
-      // Filter out any jobs that have the same `_id`
       let jobs = res.data.jobs.filter((job) => job._id !== job_id);
       console.log(company, job_id);
 
-      // Append the new job entry only if it wasn't present in the original list
       jobs.push({ company_name: company, _id: job_id });
 
       setCompanies(jobs);
@@ -65,7 +61,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
         }
       );
 
-      // Set messages from the API response if available; otherwise, use default
       const messages = res.data?.chatHistory?.length
         ? res.data.chatHistory.map((msg) => ({
             sender: msg.sender,
@@ -75,7 +70,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
 
       setMessages(messages);
 
-      // Set options based on nextOptions in the response or use the default
       const options = res.data?.nextOptions?.length
         ? res.data.nextOptions.map((opt) => ({
             text: opt.text,
@@ -110,7 +104,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
     setActiveJobId(job_id);
   };
 
-  // Handle user response and fetch the next step from the backend
   const handleUserResponse = async (response) => {
     if (response.value === "input-date") {
       if (!date) {
@@ -124,7 +117,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
       }
     }
 
-    // Display the user's response in the chat
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: "User", text: response.text },
@@ -150,7 +142,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
         }
       );
 
-      // Update chat with the bot's response from the backend
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender: "Bot", text: res.data.nextMessage },
@@ -169,7 +160,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
         setDisplayTimePicker(false);
       }
 
-      // Update options with the new set of buttons for the user
       setOptions(res.data.nextOptions || []);
     } catch (error) {
       console.error("Error fetching next options:", error);
@@ -183,10 +173,30 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
     }
   };
 
+  const renderMessageText = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+
+    return text.split(urlRegex).map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            Click here.
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div className="fixed z-10 inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
       <div className="relative w-3/4 h-3/4 bg-white rounded-lg shadow-lg flex">
-        {/* Close Button */}
         <button
           onClick={handleApplyNow}
           className="absolute text-xl top-3 right-3 text-gray-600 hover:text-gray-800"
@@ -194,7 +204,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
           ✕
         </button>
 
-        {/* Left Sidebar - Companies List */}
         <aside className="w-1/3 p-4 border-r border-gray-200">
           <h2 className="text-xl font-bold mb-4">Applied Companies</h2>
           <ul>
@@ -214,14 +223,12 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
           </ul>
         </aside>
 
-        {/* Chat Section */}
         <main className="flex-1 flex flex-col p-4">
           <h1 className="text-2xl font-bold mb-4">Schedule an Interview</h1>
           <div
             ref={chatContainerRef} // Reference to the chat container
             className="flex-1 p-4 bg-gray-100 rounded shadow-inner overflow-y-auto"
           >
-            {/* Display chat messages */}
             {messages?.map((message, index) => (
               <div
                 key={index}
@@ -236,12 +243,11 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
                       : "bg-blue-500 text-white"
                   } p-2 rounded-lg max-w-xs`}
                 >
-                  {message.text}
+                  {renderMessageText(message.text)}
                 </div>
               </div>
             ))}
 
-            {/* Loading indicator */}
             {loading ? (
               <p>Loading...</p>
             ) : (
@@ -262,7 +268,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
                   />
                 ) : null}
 
-                {/* Action Buttons below the last bot message */}
                 <div className="mt-4 flex space-x-2">
                   {options?.map((option) => (
                     <button

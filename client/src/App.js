@@ -29,6 +29,8 @@ import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
 import ChatBotUI from "./components/chatbot/ChatBotUI";
+import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
+import InterviewPreview from "./components/interview/InterviewPreview";
 
 function App() {
   return (
@@ -117,6 +119,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <NewInterview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-preview"
+              element={
+                <ProtectedRoute>
+                  <InterviewPreview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/verify-interview/:token"
+              element={
+                <ProtectedRoute>
+                  <InterviewTokenVerifier />
                 </ProtectedRoute>
               }
             />

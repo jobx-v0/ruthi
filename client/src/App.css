@@ -23,6 +23,10 @@
   scrollbar-width: none; /* Firefox */
 }
 
+.no-scroll {
+  overflow: hidden;
+}
+
 .spinner {
   border: 8px solid rgba(0, 0, 0, 0.075); /* Light grey for background */
   border-top: 8px solid #000000; /* White for the animated part */
@@ -41,7 +45,7 @@
   }
 }
 
-.heading{
+.heading {
   color: black;
   font-weight: bold;
   font-size: 34px;

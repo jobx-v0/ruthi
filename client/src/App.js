@@ -9,7 +9,6 @@ import Login from "./views/Login";
 import ThankYouPage from "./views/ThankYouPage";
 import { NextUIProvider } from "@nextui-org/react";
 import Jobs from "./views/Jobs";
-import VideoRecorder from "./components/VideoRecorder";
 import NewInterview from "./views/NewInterview";
 import LandingTest from "./components/LandingTest";
 import VerificationPage from "./views/Verification";
@@ -22,8 +21,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
+import JobCard from "./components/core/JobCards";
+import Candidates from "./components/core/Candidates";
+import JobDescription from "./components/core/JobDescription";
 // import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
+import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
+import AddNewJob from "./components/core/AddNewJob";
 
 function App() {
   return (
@@ -131,17 +135,59 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
-            path="/recruiter-dashboard"
-            element={
-              <ProtectedRoute>
-                <RecruiterDashboard />
-              </ProtectedRoute>
-            }
-            /> */}
+
+            <Route
+              path="/JobCards"
+              element={
+                <ProtectedRoute>
+                  <JobCard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/Candidates"
+              element={
+                <ProtectedRoute>
+                  <Candidates />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/JobDescription/:id"
+              element={
+                <ProtectedRoute>
+                  <JobDescription />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/AddNewJob"
+              element={
+                <ProtectedRoute>
+                  <AddNewJob />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/recruiter-dashboard"
+              element={
+                <ProtectedRoute>
+                  <RecruiterDashboard />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/job-portal"
+              element={
+                <ProtectedRoute>
+                  <CandidatesApplied />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Routes not requiring protection */}
-            <Route path="/test" element={<VideoRecorder />} />
+            {/* <Route path="/test" element={<VideoRecorder />} /> */}
             <Route path="/verification" element={<VerificationPage />} />
             <Route
               path="/verify-email-prompt"

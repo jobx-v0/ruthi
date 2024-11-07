@@ -5,7 +5,13 @@ import { saveChunksLengthAPI } from "../api/interviewApi";
 
 const CHUNK_SIZE = 5 * 1024 * 1024;
 
-const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
+const VideoRecorder = ({
+  questionId,
+  jobId,
+  userId,
+  onTimerActiveChange,
+  interviewId,
+}) => {
   const videoRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const [capturing, setCapturing] = useState(false);
@@ -80,6 +86,7 @@ const VideoRecorder = ({ questionId, jobId, userId, onTimerActiveChange }) => {
         userId,
         jobId,
         questionId,
+        interviewId,
         chunkNumber
       );
       const sasUrl = response.data.sasUrl;

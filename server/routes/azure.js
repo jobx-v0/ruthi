@@ -4,7 +4,7 @@ const router = express.Router();
 const AzureController = require("../controllers/azureController");
 
 router.get(
-  "/sas/:userId/:jobId/:questionId/:chunkNo",
+  "/sas/:userId/:jobId/:interviewId/:questionId/:chunkNo",
   AzureController.generateSasToken
 );
 

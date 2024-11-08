@@ -35,7 +35,6 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
       });
 
       let jobs = res.data.jobs.filter((job) => job._id !== job_id);
-      console.log(company, job_id);
 
       jobs.push({ company_name: company, _id: job_id });
 

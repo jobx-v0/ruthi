@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 function InterviewTokenVerifier() {
   const { token } = useParams();
   const [status, setStatus] = useState("loading");
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { authToken } = useAuth();
 
   useEffect(() => {
     if (status !== "loading") {
@@ -23,7 +25,12 @@ function InterviewTokenVerifier() {
       try {
         const response = await axios.post(
           "http://localhost:8080/api/interview/verify-interview-token",
-          { token }
+          { token },
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
         );
         const { status: tokenStatus, job_id } = response.data;
 

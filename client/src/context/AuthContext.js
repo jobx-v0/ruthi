@@ -6,13 +6,22 @@ const API_URL = BACKEND_URL + "/api/auth";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [authToken, setAuthToken] = useState(localStorage.getItem("authToken"));
+  const [authToken, setAuthToken] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      setAuthToken(token);
+    }
+    setIsLoading(false);
+  }, []);
 
   const setToken = useCallback((token) => {
     setAuthToken(token);
     if (token) {
+      console.log("Set token:", token);
       localStorage.setItem("authToken", token);
     } else {
       localStorage.removeItem("authToken");

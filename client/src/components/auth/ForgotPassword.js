@@ -2,12 +2,14 @@ import { useState } from "react";
 import axios from "axios";
 import NotificationBanner from "../NotificationBanner";
 import useNotification from "../../services/useNotification";
+import { useCustomToast } from "../utils/useCustomToast";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const { notification, showNotification, closeNotification } =
     useNotification();
+  const toast = useCustomToast();
 
   const handleForgotPassword = async (e) => {
     e.preventDefault();
@@ -17,12 +19,9 @@ const ForgotPassword = () => {
         `${process.env.REACT_APP_BACKEND_URL}/api/auth/forgot-password`,
         { email }
       );
-      showNotification(
-        "Password reset link sent. Please check your email.",
-        "success"
-      );
+      toast("Password reset link sent. Please check your email.", "success");
     } catch (error) {
-      showNotification(
+      toast(
         "Failed to send password reset link. Please try again later.",
         "error"
       );
@@ -44,7 +43,8 @@ const ForgotPassword = () => {
           Forgot Password
         </h1>
         <p className="text-gray-600 mb-6 text-center">
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we'll send you a link to reset your
+          password.
         </p>
         <form onSubmit={handleForgotPassword}>
           <input

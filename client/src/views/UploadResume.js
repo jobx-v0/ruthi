@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import dummyProfileData from "../examples/dummy-profile-data.json"; // Import the JSON file
 import { useAuth } from "../context/AuthContext";
 import {
   Upload,
@@ -9,6 +10,7 @@ import {
   Smile,
   Brain,
   Rocket,
+  Twitter,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -28,21 +30,25 @@ import {
   competitionsState,
   extracurricularActivitiesState,
   isParsedResumeState,
+  isParsedResumeFirstTimeState,
 } from "../store/atoms/userProfileSate";
-import { toast } from "react-toastify";
-
+import { useCustomToast } from "../components/utils/useCustomToast";
+import { saveUserProfileData, fetchUserProfile } from "../api/userProfileApi";
+import { updateUserAPI } from "../api/authApi";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const AZURE_URL = BACKEND_URL + "/api/azure";
-const RESUME_PARSER_URL = process.env.REACT_APP_RESUME_PARSER_URL + "/api/resume";
-
+const RESUME_PARSER_URL =
+  process.env.REACT_APP_RESUME_PARSER_URL + "/api/resume";
+console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
 
 export default function Component() {
   const [file, setFile] = useState(null);
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const navigate = useNavigate();
+  const showToast = useCustomToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { fetchUserInfo } = useAuth();
+  const { authToken, fetchUserInfo } = useAuth();
 
   const [loadingStep, setLoadingStep] = useState(0);
   const loadingSteps = [
@@ -54,16 +60,6 @@ export default function Component() {
   ];
 
   useEffect(() => {
-    console.log("File state updated:", file);
-    const authToken = localStorage.getItem("authToken");
-    if(!authToken){
-      toast.error("Please login to continue");
-      navigate("/login");
-      return;
-    }
-  }, [file]);
-
-  useEffect(() => {
     let interval;
     if (isLoading) {
       interval = setInterval(() => {
@@ -72,6 +68,25 @@ export default function Component() {
     }
     return () => clearInterval(interval);
   }, [isLoading]);
+
+  useEffect(() => {
+    const checkUserProfile = async () => {
+      try {
+        const response = await fetchUserProfile(authToken);
+        if (response) {
+          navigate("/profile");
+        }
+      } catch (profileError) {
+        console.error("Error checking user profile:", profileError);
+      }
+    };
+
+    checkUserProfile();
+  }, [authToken, navigate]);
+
+  const handleSkipClick = () => {
+    navigate("/profile");
+  };
 
   const handleFileChange = (event) => {
     if (event.target.files && event.target.files.length > 0) {
@@ -100,111 +115,168 @@ export default function Component() {
     extracurricularActivitiesState
   );
   const setIsParsedResume = useSetRecoilState(isParsedResumeState);
-
-
+  const setIsParsedResumeFirstTime = useSetRecoilState(
+    isParsedResumeFirstTimeState
+  );
   const handleContinueClick = async () => {
-    setIsParsedResume(true);
     const userInfo = await fetchUserInfo();
-    const userId = userInfo._id;
+    const userId = userInfo._id || userInfo.id;
+
     if (file) {
       setIsLoading(true);
-      console.log("File uploaded:", file);
-
-      const response = await axios.get(`${AZURE_URL}/sas/${userId}`);
-      const { sasUrl } = response.data;
-      console.log("SAS URL:", sasUrl);
-
-      const blob = new Blob([file], { type: file.type });
-      console.log("Blob:", blob);
-
-      await axios.put(sasUrl, blob, {
-        headers: {
-          "x-ms-blob-type": "BlockBlob",
-        },
-      });
-
-      const res = await axios.get(`${RESUME_PARSER_URL}/health_check`);
-      console.log("RESUME_PARSER_URL:", RESUME_PARSER_URL);
-      console.log("Health check response:", res);
-
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-      console.log("Form data:", formData);
-      
       try {
-        const extract = await axios.post(
-          `${RESUME_PARSER_URL}/parse-resume`,
-          formData,
-          {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-            withCredentials: true,
+        console.log("File uploaded:", file);
+
+        // Step 1: Check if parsed data already exists using the user profile API
+        let parsedData;
+        try {
+          const response = await fetchUserProfile(authToken);
+
+          // If we reach here, it means the profile exists with parsed data
+          console.log("response", response);
+
+          if (response) {
+            parsedData = response;
+            console.log("Using cached parsed data:", parsedData);
+
+            // Update Recoil atoms with cached parsed data
+            updateRecoilAtoms(parsedData);
           }
-        );
-        console.log("Extract response:", extract);
+        } catch (profileError) {
+          console.error("Error checking user profile:", profileError);
+          setIsLoading(false);
+          return;
+        }
 
-        const parsedData = extract.data.parsed_data;
+        // Step 2: Upload resume to Azure using SAS URL
+        const sasResponse = await axios.get(`${AZURE_URL}/sas/${userId}`);
+        const { sasUrl } = sasResponse.data;
+        const blob = new Blob([file], { type: file.type });
+        await axios.put(sasUrl, blob, {
+          headers: { "x-ms-blob-type": "BlockBlob" },
+        });
 
-        // Update Recoil atoms with parsed data
-        setPersonalInformation(parsedData.personal_information || []);
-        setSocials(parsedData.socials || []);
-        setCourses(parsedData.courses || []);
-        setEducation(parsedData.education || []);
-        setExperience(parsedData.experience || []);
-        setPublications(parsedData.publications || []);
-        setSkills(parsedData.skills || []);
-        setPersonalProjects(parsedData.personal_projects || []);
-        setAwardsAndAchievements(parsedData.awards_and_achievements || []);
-        setPositionsOfResponsibility(parsedData.position_of_responsibility || []);
-        setCompetitions(parsedData.competitions || []);
-        setExtracurricularActivities(parsedData.extra_curricular_activities || []);
-        console.log("User profile updated with parsed data");
+        // Step 3: Call the sensitive resume parsing API if no cached parsed data
+        if (!parsedData) {
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
+            const formData = new FormData();
+            formData.append("file", file, file.name);
+            formData.append("userId", userId);
+
+            const extract = await axios.post(
+              `${RESUME_PARSER_URL}/parse-resume`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+              }
+            );
+            parsedData = extract.data.parsed_data;
+            await saveUserProfileData(authToken, parsedData);
+            setIsParsedResume(true);
+            setIsParsedResumeFirstTime(true);
+          } else {
+            console.log("dummyProfileData", dummyProfileData);
+            parsedData = dummyProfileData;
+          }
+
+          // Step 4: Extract links from resume
+          const formData = new FormData();
+          formData.append("file", file, file.name);
+
+          if (process.env.REACT_APP_ENABLE_AI_EVALUATION.trim() === "true") {
+            const linksResponse = await axios.post(
+              `${RESUME_PARSER_URL}/extract-links`,
+              formData,
+              {
+                headers: { "Content-Type": "multipart/form-data" },
+                withCredentials: true,
+              }
+            );
+            console.log("links:", linksResponse);
+            const extractedLinks = linksResponse.data.extracted_links;
+            parsedData.socials = {
+              github: extractedLinks.github || "",
+              linkedin: extractedLinks.linkedin || "",
+            };
+            console.log("parsedSocial", parsedData.socials);
+          }
+
+          // Step 5: Update Recoil atoms with final parsed data
+          console.log("atoms are getting populated here:");
+          updateRecoilAtoms(parsedData);
+
+          // Step 6: Store parsed data in MongoDB
+          await saveUserProfileData(authToken, parsedData);
+          console.log("Parsed data stored in MongoDB");
+          setIsParsedResume(true);
+          setIsParsedResumeFirstTime(true);
+          await updateUserAPI({
+            data: { isParsedResume: true, isParsedResumeFirstTime: true },
+            authToken: authToken,
+          });
+        }
+
+        // Step 7: Push the updated parsed data to the database using PUT
+        await saveUserProfileData(authToken, { parsedData });
+        console.log("Updated parsed data pushed to MongoDB");
 
         setIsLoading(false);
         navigate("/profile");
       } catch (error) {
-        console.error("Error parsing resume:", error);
+        console.error("Error saving profile data:", error);
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+        }
+        showToast("An unexpected error occurred. Please try again.", "error");
         setIsLoading(false);
-        // Handle error (e.g., show error message to user)
       }
-    } else if (linkedinUrl !== "") {
-      // Connect with LinkedIn
-      console.log("LinkedIn connected:", linkedinUrl);
     }
   };
 
-  const handleLinkedinChange = (event) => {
-    setLinkedinUrl(event.target.value);
+  // Helper function to update frontend state with parsed data
+  const updateRecoilAtoms = (parsedData) => {
+    setPersonalInformation(parsedData.personal_information || []);
+    setSocials(parsedData.socials || []);
+    setCourses(parsedData.courses || []);
+    setEducation(parsedData.education || []);
+    setExperience(parsedData.experience || []);
+    setPublications(parsedData.publications || []);
+    setSkills(parsedData.skills || []);
+    setPersonalProjects(parsedData.personal_projects || []);
+    setAwardsAndAchievements(parsedData.awards_and_achievements || []);
+    setPositionsOfResponsibility(parsedData.position_of_responsibility || []);
+    setCompetitions(parsedData.competitions || []);
+    setExtracurricularActivities(parsedData.extra_curricular_activities || []);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       {isLoading ? (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
             className="bg-white rounded-lg p-8 flex flex-col items-center max-w-md w-full"
           >
             <div className="w-48 h-48 relative">
-              <motion.div 
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-0 border-4 border-orange-200 rounded-full"
               />
-              <motion.div 
+              <motion.div
                 animate={{ rotate: -360 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-3 border-4 border-orange-400 rounded-full"
               />
-              <motion.div 
+              <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
                 className="absolute inset-6 border-4 border-orange-600 rounded-full"
               />
-              <motion.div 
+              <motion.div
                 key={loadingStep}
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -212,10 +284,12 @@ export default function Component() {
                 transition={{ duration: 0.5 }}
                 className="absolute inset-0 flex items-center justify-center"
               >
-                {React.createElement(loadingSteps[loadingStep].icon, { className: "w-16 h-16 text-orange-500" })}
+                {React.createElement(loadingSteps[loadingStep].icon, {
+                  className: "w-16 h-16 text-orange-500",
+                })}
               </motion.div>
             </div>
-            <motion.p 
+            <motion.p
               key={loadingStep}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -292,9 +366,7 @@ export default function Component() {
               <div className="flex justify-between items-center mt-8">
                 <button
                   className="text-gray-600 hover:text-orange-600 font-medium"
-                  onClick={() => {
-                    window.location.href = "/profile";
-                  }}
+                  onClick={handleSkipClick}
                 >
                   Skip for now
                 </button>

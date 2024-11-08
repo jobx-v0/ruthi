@@ -1,17 +1,26 @@
 "use client";
 
-import React from 'react';
+import React from "react";
 import { motion } from "framer-motion";
 import { FaCheckCircle, FaEdit } from "react-icons/fa";
-import { useSetRecoilState } from 'recoil';
-import { isSubmittedState } from '../../store/atoms/userProfileSate';
+import { useSetRecoilState } from "recoil";
+import { isSubmittedState } from "../../store/atoms/userProfileSate";
+import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
+import { updateUserAPI } from "../../api/authApi";
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 export default function ThankyouCard() {
   const setIsSubmitted = useSetRecoilState(isSubmittedState);
-
-  const handleEditProfile = () => {
+  const { authToken } = useAuth();
+  const handleEditProfile = async() => {
     setIsSubmitted(false);
-    localStorage.setItem('isSubmitted', 'false');
+    localStorage.setItem("isSubmitted", "false");
+    await updateUserAPI({
+      data: { isProfileSubmitted: false },
+      authToken: authToken
+    });
   };
 
   return (
@@ -30,15 +39,18 @@ export default function ThankyouCard() {
         >
           <FaCheckCircle className="w-full h-full text-orange-500" />
         </motion.div>
-        
+
         <h1 className="text-4xl font-bold text-gray-800 mb-4">Thank You!</h1>
-        
+
         <p className="text-gray-600 mb-6 leading-relaxed">
-          We've successfully created your profile. We're excited to help you find the perfect job opportunities that match your skills and aspirations.
+          We've successfully created your profile. We're excited to help you
+          find the perfect job opportunities that match your skills and
+          aspirations.
         </p>
-        
+
         <p className="text-gray-600 mb-8 leading-relaxed">
-          We'll be in touch soon with curated job matches and personalized career advice. Keep an eye on your inbox for updates!
+          We'll be in touch soon with curated job matches and personalized
+          career advice. Keep an eye on your inbox for updates!
         </p>
 
         <div className="flex justify-center">

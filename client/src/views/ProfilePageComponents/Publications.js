@@ -5,29 +5,12 @@ import { useRecoilState } from "recoil";
 import { publicationsState } from "../../store/atoms/userProfileSate";
 import { BookOpen, Plus, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { z } from "zod";
-import { toast } from 'react-toastify';
+import { publicationSchema } from "../../validators/ZodSchema";
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0];
+  return dateString.substring(0, 7); // Return only YYYY-MM
 };
-
-const publicationSchema = z.object({
-  name: z.string()
-    .min(1, "Publication name is required")
-    .regex(/^(?=.*[a-zA-Z])/, "Publication name must contain at least one letter"),
-  link: z.string().url("Invalid URL").or(z.literal("")),
-  date: z.string().refine(
-    (date) => {
-      const selectedDate = new Date(date);
-      const today = new Date();
-      return selectedDate <= today;
-    },
-    { message: "Publication date cannot be in the future" }
-  ),
-});
 
 export default function Publications() {
   const [publications, setPublications] = useRecoilState(publicationsState);
@@ -36,8 +19,7 @@ export default function Publications() {
   // const { userInfo } = useAuth();
 
   const getCurrentDate = () => {
-    const today = new Date();
-    return today.toISOString().split("T")[0];
+    return new Date().toISOString().substring(0, 7); // Return only YYYY-MM
   };
 
   useEffect(() => {
@@ -125,7 +107,7 @@ export default function Publications() {
                       htmlFor={`publication-name-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Name
+                      Publication Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -165,10 +147,10 @@ export default function Publications() {
                       htmlFor={`publication-date-${publication.id}`}
                       className="block text-sm font-medium text-gray-700 mb-1"
                     >
-                      Publication Date
+                      Publication Date <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="date"
+                      type="month"
                       id={`publication-date-${publication.id}`}
                       value={formatDateForInput(publication.date)}
                       max={getCurrentDate()}

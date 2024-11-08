@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast, Toaster } from "react-hot-toast";
 
 const InterviewPreview = ({ profilePic }) => {
   const [showModal, setShowModal] = useState(false);
@@ -8,30 +10,39 @@ const InterviewPreview = ({ profilePic }) => {
   const [cameras, setCameras] = useState([]);
   const [microphones, setMicrophones] = useState([]);
   const [speakers, setSpeakers] = useState([]);
+  const [micLevel, setMicLevel] = useState(0);
   const [capturedPic, setCapturedPic] = useState(profilePic);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const streamRef = useRef(null);
 
-  useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then((devices) => {
-      const videoDevices = devices.filter(
-        (device) => device.kind === "videoinput"
-      );
-      const audioInputDevices = devices.filter(
-        (device) => device.kind === "audioinput"
-      );
-      const audioOutputDevices = devices.filter(
-        (device) => device.kind === "audiooutput"
-      );
-      setCameras(videoDevices);
-      setMicrophones(audioInputDevices);
-      setSpeakers(audioOutputDevices);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { jobId } = location.state || {};
 
-      if (videoDevices.length > 0) {
-        setSelectedCamera(videoDevices[0].deviceId);
-      }
-    });
+  useEffect(() => {
+    if (jobId) {
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
+        const videoDevices = devices.filter(
+          (device) => device.kind === "videoinput"
+        );
+        const audioInputDevices = devices.filter(
+          (device) => device.kind === "audioinput"
+        );
+        const audioOutputDevices = devices.filter(
+          (device) => device.kind === "audiooutput"
+        );
+        setCameras(videoDevices);
+        setMicrophones(audioInputDevices);
+        setSpeakers(audioOutputDevices);
+
+        if (videoDevices.length > 0) {
+          setSelectedCamera(videoDevices[0].deviceId);
+        }
+      });
+    } else {
+      navigate("/jobs");
+    }
   }, []);
 
   const startCamera = () => {
@@ -68,23 +79,50 @@ const InterviewPreview = ({ profilePic }) => {
   };
 
   const capturePhoto = () => {
-    const context = canvasRef.current.getContext("2d");
-    context.drawImage(
-      videoRef.current,
-      0,
-      0,
-      canvasRef.current.width,
-      canvasRef.current.height
-    );
-    const newPic = canvasRef.current.toDataURL("image/png");
-    setCapturedPic(newPic);
-    stopCamera();
-    setShowModal(false);
-    console.log("Updating backend with new profile photo", newPic);
+    // Set the canvas size to match the 1:1 ratio of the video
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    // Set canvas dimensions to be square based on video width (assuming 1:1 ratio)
+    const size = video.videoWidth; // Use video width or height (since it's 1:1, they are equal)
+    canvas.width = size;
+    canvas.height = size;
+
+    // Draw video frame onto the canvas
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(video, 0, 0, size, size);
+
+    // Capture the photo as a data URL or any format you need
+    const capturedImage = canvas.toDataURL("image/png");
+
+    // Do something with the captured image (e.g., save it or display it)
+    setCapturedPic(capturedImage);
+    setShowModal(false); // Close modal after capturing
   };
 
   const testSpeaker = () => {
     const audio = new Audio("/test-speaker.mp3");
+
+    const audioContext = new (window.AudioContext ||
+      window.webkitAudioContext)();
+    const analyser = audioContext.createAnalyser();
+    const source = audioContext.createMediaElementSource(audio);
+    source.connect(analyser);
+    analyser.connect(audioContext.destination);
+
+    analyser.fftSize = 512;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+    let animationFrameId;
+
+    const updateLevel = () => {
+      analyser.getByteFrequencyData(dataArray);
+      const volume =
+        dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+      const normalizedVolume = Math.min(volume / 256, 1);
+      setMicLevel(normalizedVolume * 100);
+
+      animationFrameId = requestAnimationFrame(updateLevel);
+    };
 
     if (selectedSpeaker && audio.setSinkId) {
       audio
@@ -93,6 +131,8 @@ const InterviewPreview = ({ profilePic }) => {
           audio.play().catch((error) => {
             console.error("Error playing sound:", error);
           });
+
+          updateLevel();
         })
         .catch((err) => {
           console.error("Error setting speaker output:", err);
@@ -101,55 +141,151 @@ const InterviewPreview = ({ profilePic }) => {
       audio.play().catch((error) => {
         console.error("Error playing sound:", error);
       });
+
+      updateLevel();
     }
+
+    audio.onended = () => {
+      cancelAnimationFrame(animationFrameId);
+      setMicLevel(0);
+      audioContext.close();
+    };
   };
 
   const testMicrophone = () => {
-    navigator.mediaDevices
-      .getUserMedia({ audio: { deviceId: selectedMic } })
-      .then((stream) => {
-        const mediaRecorder = new MediaRecorder(stream);
-        let audioChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-          audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
-          const audioUrl = URL.createObjectURL(audioBlob);
-          const audio = new Audio(audioUrl);
-
-          audio.play();
-        };
-
-        mediaRecorder.start();
-        setTimeout(() => {
-          mediaRecorder.stop();
-          stream.getTracks().forEach((track) => track.stop());
-        }, 3000);
+    if (!selectedMic) {
+      toast("Warning: Please select a microphone!", {
+        icon: "⚠️",
       });
+      return;
+    }
+
+    const constraints = {
+      audio: {
+        deviceId: { exact: selectedMic },
+      },
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+      const audioContext = new (window.AudioContext ||
+        window.webkitAudioContext)();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+
+      source.connect(analyser);
+      analyser.fftSize = 512;
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      let animationFrameId;
+
+      const updateMicLevel = () => {
+        analyser.getByteFrequencyData(dataArray);
+        const volume =
+          dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
+        const normalizedVolume = Math.min(volume / 256, 1);
+        setMicLevel(normalizedVolume * 100);
+
+        animationFrameId = requestAnimationFrame(updateMicLevel);
+      };
+
+      updateMicLevel();
+
+      const mediaRecorder = new MediaRecorder(stream);
+      let audioChunks = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/wav" });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+
+        stream.getTracks().forEach((track) => track.stop());
+        audioContext.close();
+
+        cancelAnimationFrame(animationFrameId);
+
+        setMicLevel(0);
+
+        audio.play().catch((error) => {
+          console.error("Error playing audio: ", error);
+        });
+      };
+
+      mediaRecorder.start();
+      setTimeout(() => {
+        mediaRecorder.stop();
+      }, 5000);
+    });
+  };
+
+  const handleContinue = () => {
+    if (capturedPic) {
+      navigate("/new-interview", { state: { jobId: jobId } });
+    } else {
+      toast("Warning: Please add a photo before continuing.", {
+        icon: "⚠️",
+      });
+    }
+  };
+
+  const MicLevelBoxes = ({ micLevel }) => {
+    const numBoxes = 10;
+
+    const filledBoxes = Math.round((micLevel / 100) * numBoxes);
+
+    return (
+      <div className="mt-4 flex space-x-1">
+        {Array.from({ length: numBoxes }).map((_, index) => (
+          <div
+            key={index}
+            className={`w-12 h-4 border-2 ${
+              index < filledBoxes ? "bg-green-500" : "bg-gray-200"
+            }`}
+          />
+        ))}
+      </div>
+    );
   };
 
   return (
-    <div className="max-w-md mx-auto p-6">
-      <div className="flex flex-col items-center">
-        <div className="flex flex-col space-y-4 items-center">
-          <div className="w-48 h-48 rounded-full overflow-hidden bg-gray-200">
+    <div className="h-screen flex justify-center items-center">
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+        }}
+      />
+      <div className="max-w-4xl p-6 flex items-start">
+        {/* Profile Section */}
+        <div
+          className="flex flex-col items-center justify-center mr-8"
+          style={{ height: "430px", width: "400px" }}
+        >
+          <div className="w-48 h-48 rounded-full overflow-hidden bg-gray-200 mb-4">
             <img
               src={capturedPic || "https://via.placeholder.com/150"}
               alt="Profile"
-              className="object-cover w-full h-full"
+              className="object-cover w-full h-full" // Ensure image covers the container in 1:1 ratio
             />
           </div>
+
           <button
-            className="bg-gray-500 text-white px-4 py-2 rounded"
+            className="mt-4 bg-gray-500 text-white px-4 py-2 rounded"
             onClick={() => {
               if (selectedCamera) {
                 setShowModal(true);
                 startCamera();
               } else {
-                alert("Please select a camera first.");
+                toast("Warning: Please select a camera!", {
+                  icon: "⚠️",
+                });
               }
             }}
           >
@@ -157,7 +293,8 @@ const InterviewPreview = ({ profilePic }) => {
           </button>
         </div>
 
-        <div className="mt-6 w-full">
+        {/* Device Settings Section */}
+        <div className="flex-1">
           <h2 className="text-2xl font-semibold text-center">
             Device Settings
           </h2>
@@ -219,11 +356,16 @@ const InterviewPreview = ({ profilePic }) => {
               Test Microphone
             </button>
           </div>
-        </div>
 
-        <button className="mt-6 bg-green-500 text-white px-6 py-2 rounded">
-          Continue
-        </button>
+          <MicLevelBoxes micLevel={micLevel} />
+
+          <button
+            className="mt-6 bg-green-500 text-white px-6 py-2 rounded w-full"
+            onClick={handleContinue}
+          >
+            Continue
+          </button>
+        </div>
       </div>
 
       {showModal && (
@@ -236,7 +378,7 @@ const InterviewPreview = ({ profilePic }) => {
               ref={videoRef}
               autoPlay
               muted
-              className="w-full h-64 mb-4 rounded border"
+              className="w-64 h-64 mb-4 rounded border" // Video in 1:1 ratio
             />
             <canvas ref={canvasRef} className="hidden"></canvas>
             <div className="flex justify-center space-x-4">

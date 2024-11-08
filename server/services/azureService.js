@@ -9,7 +9,11 @@ const ffmpeg = require("fluent-ffmpeg");
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
 const path = require("path");
+const fsExtra = require("fs-extra");
 const InterviewService = require("./interviewService");
+const Face_Recognition = require("./facial_recognition");
+const Interview = require("../models/Interview");
+const Result = require("../models/Result");
 
 require("dotenv").config();
 
@@ -167,6 +171,24 @@ const uploadBlob = async (sasUrl, content) => {
       `Failed to upload blob: ${error.message}`,
       "UPLOAD_ERROR"
     );
+  }
+};
+
+const uploadPdf = async (sasUrl, pdfFilePath) => {
+  try {
+    const pdfData = fs.readFileSync(pdfFilePath);
+
+    // Upload the file using a PUT request
+    const response = await axios.put(sasUrl, pdfData, {
+      headers: {
+        "x-ms-blob-type": "BlockBlob", // Required for uploading blobs
+        "Content-Type": "application/pdf", // Set the correct content type
+      },
+    });
+
+    console.log("PDF uploaded successfully:", response.status);
+  } catch (error) {
+    console.error("Error uploading PDF:", error.message);
   }
 };
 
@@ -378,9 +400,9 @@ const deleteChunksFromAzure = async (chunks) => {
   }
 };
 
-const getChunks = async (userId, jobId, questionId) => {
+const getChunks = async (userId, jobId, interviewId, questionId) => {
   const chunks = await fetchChunksFromAzure(
-    `${userId}/${jobId}/${questionId}`.toString()
+    `${userId}/${jobId}/${interviewId}/${questionId}`.toString()
   );
 
   if (chunks.length === 0) {
@@ -391,12 +413,16 @@ const getChunks = async (userId, jobId, questionId) => {
   }
 };
 
-const deleteChunksFromLocalDir = async (
-  chunkPaths,
-  userId,
-  jobId,
-  questionId
-) => {
+const deleteTimeStampPhotos = async (timeStampImagesPath) => {
+  try {
+    await fsExtra.remove(timeStampImagesPath);
+    console.log(`Successfully deleted ${timeStampImagesPath}`);
+  } catch (err) {
+    console.error(`Error deleting directory ${timeStampImagesPath}:`, err);
+  }
+};
+
+const deleteChunksFromLocalDir = async (chunkPaths) => {
   chunkPaths.forEach((chunkPath) => {
     try {
       fs.unlinkSync(chunkPath);
@@ -404,38 +430,72 @@ const deleteChunksFromLocalDir = async (
       console.error(`Error deleting chunk ${chunkPath}:`, err);
     }
   });
+};
 
-  const questionDir = path.join(
+const deleteVideoFromLocalDir = async (videoPath) => {
+  try {
+    fs.unlinkSync(videoPath);
+  } catch (err) {
+    console.error(`Error deleting chunk ${videoPath}:`, err);
+  }
+};
+
+const deleteAudioFromLocalDir = async (audioPath) => {
+  try {
+    fs.unlinkSync(audioPath);
+  } catch (err) {
+    console.error(`Error deleting chunk ${audioPath}:`, err);
+  }
+};
+
+const deleteJobIdDir = async (userId, jobId) => {
+  const jobIdDir = path.join(__dirname, "tempChunks", userId, jobId);
+
+  try {
+    fs.rmSync(jobIdDir, { recursive: true, force: true });
+  } catch (err) {
+    console.error(`Error deleting userId directory ${jobIdDir}:`, err);
+  }
+};
+
+// Get the length (duration) of an audio file
+const getAudioDuration = (audioPath) => {
+  return new Promise((resolve, reject) => {
+    ffmpeg.ffprobe(audioPath, (err, metadata) => {
+      if (err) {
+        return reject(`Error retrieving audio info: ${err.message}`);
+      }
+
+      const audioStream = metadata.streams.find(
+        (stream) => stream.codec_type === "audio"
+      );
+
+      if (!audioStream || !metadata.format || !metadata.format.duration) {
+        return reject(new Error("Unable to retrieve audio duration"));
+      }
+
+      resolve(metadata.format.duration);
+    });
+  });
+};
+
+// Download all chunks and save them locally in the proper directory
+const combineAllChunksInToOneVideo = async (
+  userId,
+  jobId,
+  interviewId,
+  questionId
+) => {
+  const chunks = await getChunks(userId, jobId, interviewId, questionId);
+
+  const tempDir = path.join(
     __dirname,
     "tempChunks",
     userId,
     jobId,
+    interviewId,
     questionId
   );
-  const jobDir = path.join(__dirname, "tempChunks", userId, jobId);
-
-  try {
-    fs.rmSync(questionDir, { recursive: true, force: true });
-  } catch (err) {
-    console.error(`Error deleting questionId directory ${questionDir}:`, err);
-  }
-
-  if (fs.existsSync(jobDir) && fs.readdirSync(jobDir).length === 0) {
-    try {
-      fs.rmSync(jobDir, { recursive: true, force: true });
-    } catch (err) {
-      console.error(`Error deleting jobId directory ${jobDir}:`, err);
-    }
-  }
-
-  console.log("Directories cleaned up.");
-};
-
-// Download all chunks and save them locally in the proper directory
-const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
-  const chunks = await getChunks(userId, jobId, questionId);
-
-  const tempDir = path.join(__dirname, "tempChunks", userId, jobId, questionId);
 
   ensureDirectoryExists(tempDir);
 
@@ -446,12 +506,14 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
     chunkPaths.push(localPath);
   }
 
-  const combinedVideoName = `${userId}${jobId}${questionId}.webm`;
+  const combinedVideoName = `${userId}${jobId}${interviewId}${questionId}.webm`;
   const combinedVideoPath = path.join(tempDir, combinedVideoName);
-  const audioPath = path.join(tempDir, `${userId}${jobId}${questionId}.wav`);
+  const audioPath = path.join(
+    tempDir,
+    `${userId}${jobId}${interviewId}${questionId}.wav`
+  );
 
-  combineChunks(chunkPaths, combinedVideoPath);
-  console.log("Video chunks combined.");
+  await combineChunks(chunkPaths, combinedVideoPath);
 
   await new Promise((resolve) => setTimeout(resolve, 5000));
 
@@ -461,32 +523,148 @@ const combineAllChunksInToOneVideo = async (userId, jobId, questionId) => {
     );
   }
 
-  console.log(combinedVideoPath);
+  await deleteChunksFromLocalDir(chunkPaths);
 
   await extractAudio(combinedVideoPath, audioPath);
 
-  const transcription = await transcribeAudio(audioPath);
+  const duration = await getAudioDuration(audioPath);
 
-  await InterviewService.updateAnswer(
-    userId,
-    jobId,
-    questionId,
-    transcription.toString().trim()
+  const timeStampImagesPath = path.join(tempDir, "photos");
+  ensureDirectoryExists(timeStampImagesPath);
+
+  await Face_Recognition.captureRandomFrames(
+    duration,
+    combinedVideoPath,
+    timeStampImagesPath
   );
-  console.log("Updated answer in DB successfully");
+
+  const trust_score = await Face_Recognition.processImages(timeStampImagesPath);
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  await deleteTimeStampPhotos(timeStampImagesPath);
 
   await uploadFinalVideoToAzure(
     combinedVideoPath,
-    `${userId}/${jobId}/${questionId}/${combinedVideoName}`
+    `${userId}/${jobId}/${interviewId}/${questionId}/${combinedVideoName}`
   );
 
   await deleteChunksFromAzure(chunks);
 
-  await new Promise((resolve) => setTimeout(resolve, 2000));
+  await deleteVideoFromLocalDir(combinedVideoPath);
 
-  await deleteChunksFromLocalDir(chunkPaths, userId, jobId, questionId);
+  const transcription = await transcribeAudio(audioPath);
 
-  return transcription.toString().trim();
+  await InterviewService.updateAnswer(
+    interviewId,
+    questionId,
+    transcription.toString().trim()
+  );
+
+  await deleteAudioFromLocalDir(audioPath);
+
+  await deleteJobIdDir(userId, jobId);
+
+  return { trust_score, transcription: transcription.toString().trim() };
+};
+
+const downloadBlobPDFToFrontend = async (req, res) => {
+  try {
+    const interviewDoc = await Interview.findById(req.params.interviewId);
+    const resultDoc = await Result.findOne({ interview_id: interviewDoc._id });
+
+    const blobName = path.join(
+      `${interviewDoc.user_id}`,
+      `${interviewDoc.job_id}`,
+      `${interviewDoc._id}`,
+      `Report${interviewDoc.user_id}${interviewDoc.job_id}${interviewDoc._id}${resultDoc._id}.pdf`
+    );
+
+    const sasUrl = await generateSasTokenForBlob(blobName);
+
+    const response = await axios.get(sasUrl, { responseType: "stream" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="file.pdf"');
+
+    response.data.pipe(res);
+  } catch (error) {
+    res.status(500).send("Error downloading PDF: " + error.message);
+  }
+};
+
+const downloadVideoToFrontend = async (req, res) => {
+  try {
+    const { interviewId, questionId } = req.params;
+
+    const interviewDoc = await Interview.findById(interviewId);
+
+    const videoName = path
+      .join(
+        `${interviewDoc.user_id}`,
+        `${interviewDoc.job_id}`,
+        `${interviewDoc._id}`,
+        `${questionId}`,
+        `${interviewDoc.user_id}${interviewDoc.job_id}${interviewDoc._id}${questionId}.webm`
+      )
+      .replace(/\\/g, "/");
+
+    const sasUrl = await generateSasTokenForBlob(videoName);
+
+    const response = await axios.get(sasUrl, { responseType: "stream" });
+
+    res.setHeader("Content-Type", "video/webm");
+    res.setHeader("Content-Disposition", 'inline; filename="video.webm"');
+
+    response.data.pipe(res);
+  } catch (error) {
+    console.error("Error in video download:", error);
+    res.status(500).send("Error downloading video: " + error.message);
+  }
+};
+
+const tempUse = async (userId, jobId, interviewId, questionId) => {
+  const chunks = await getChunks(userId, jobId, interviewId, questionId);
+
+  const tempDir = path.join(
+    __dirname,
+    "tempChunks",
+    userId,
+    jobId,
+    interviewId,
+    questionId
+  );
+
+  ensureDirectoryExists(tempDir);
+
+  const chunkPaths = [];
+  for (const chunk of chunks) {
+    const localPath = path.join(__dirname, "tempChunks", chunk);
+    await downloadChunk(chunk, localPath);
+    chunkPaths.push(localPath);
+  }
+
+  const combinedVideoName = `${userId}${jobId}${interviewId}${questionId}.webm`;
+  const combinedVideoPath = path.join(tempDir, combinedVideoName);
+
+  await combineChunks(chunkPaths, combinedVideoPath);
+
+  await new Promise((resolve) => setTimeout(resolve, 5000));
+
+  if (!fs.existsSync(combinedVideoPath)) {
+    throw new Error(
+      `Error combining video: ${combinedVideoPath} does not exist.`
+    );
+  }
+
+  await deleteChunksFromLocalDir(chunkPaths);
+
+  await uploadFinalVideoToAzure(
+    combinedVideoPath,
+    `${userId}/${jobId}/${interviewId}/${questionId}/${combinedVideoName}`
+  );
+
+  await deleteJobIdDir(userId, jobId);
 };
 
 const AzureService = {
@@ -498,6 +676,11 @@ const AzureService = {
   combineAllChunksInToOneVideo,
   extractAudio,
   transcribeAudio,
+  ensureDirectoryExists,
+  uploadPdf,
+  downloadBlobPDFToFrontend,
+  downloadVideoToFrontend,
+  tempUse,
 };
 
 module.exports = AzureService;

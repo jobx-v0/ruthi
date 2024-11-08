@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const { authMiddleware } = require("../middleware/authMiddleware");
 const InterviewController = require("../controllers/interviewController.js");
+const InterviewService = require("../services/interviewService.js");
+const AzureService = require("../services/azureService.js");
 
 // Use the authMiddleware to protect the /questions route
 router.get("/questions", authMiddleware, InterviewController.getQuestions);
@@ -46,5 +48,15 @@ router.post("/save-chunk-number", InterviewController.saveChunkNumber);
 router.post("/submit-interview", InterviewController.submitInterview);
 
 router.post("/update-answer", InterviewController.updateAnswer);
+
+router.get(
+  "/download-pdf/:interviewId",
+  AzureService.downloadBlobPDFToFrontend
+);
+
+router.get(
+  "/download-webm-video/:interviewId/:questionId",
+  AzureService.downloadVideoToFrontend
+);
 
 module.exports = router;

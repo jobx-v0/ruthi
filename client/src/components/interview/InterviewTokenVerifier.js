@@ -148,8 +148,9 @@ function InterviewTokenVerifier() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center">
-            <p className="mt-6 text-lg text-red-600 font-medium">
+          <div className="flex flex-col items-center bg-red-100 p-5 rounded-lg">
+            <h2 className="text-xl font-bold text-red-600 ">Error</h2>
+            <p className="mt-6 text-lg text-red-600 font-medium text-center">
               An error occurred while verifying the interview link. Please try
               again later.
             </p>

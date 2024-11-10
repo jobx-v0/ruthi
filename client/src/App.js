@@ -24,7 +24,6 @@ import ReachOut from "./components/ReachOut";
 import JobCard from "./components/core/JobCards";
 import Candidates from "./components/core/Candidates";
 import JobDescription from "./components/core/JobDescription";
-// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
@@ -148,7 +147,7 @@ function App() {
               path="/Candidates"
               element={
                 <ProtectedRoute>
-                  <Candidates />
+                  <CandidatesApplied />
                 </ProtectedRoute>
               }
             />
@@ -176,14 +175,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
-            path="/recruiter-dashboard"
-            element={
-              <ProtectedRoute>
-                <RecruiterDashboard />
-              </ProtectedRoute>
-            }
-            /> */}
 
             <Route
               path="/job-portal"

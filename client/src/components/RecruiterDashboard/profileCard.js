@@ -7,6 +7,7 @@ import {
 import "react-vertical-timeline-component/style.min.css";
 import { TiTick } from "react-icons/ti";
 import { RxCross2 } from "react-icons/rx";
+import axios from "axios"; // Import axios
 
 const ProfileCard = ({ candidate, onClose, updateCandidateStage }) => {
   const [activeTab, setActiveTab] = useState("Hiring Stage");
@@ -27,17 +28,15 @@ const ProfileCard = ({ candidate, onClose, updateCandidateStage }) => {
     const fetchHiringStages = async () => {
       try {
         console.log("fetching from Backend Using useEffect()");
-        const response = await fetch(
-          `http://localhost:3001/api/${candidate._id}/stages`
-        );
-        const data = await response.json();
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/${candidate._id}/stages`); 
+        const data = response.data;
         console.log("Stages from backend:", data.stage);
 
         const result = Object.entries(data.stage).map(([key, value]) => {
           return { [key]: value };
         });
         console.log("result:", result);
-        setHiringStages(result); // Update hiring stages state with fetched data
+        setHiringStages(result);
       } catch (error) {
         console.error("Error fetching hiring stages", error);
       }
@@ -51,18 +50,12 @@ const ProfileCard = ({ candidate, onClose, updateCandidateStage }) => {
   const updateHiringStage = async (key) => {
     console.log("Candidate:", candidate);
     try {
-      const response = await fetch("http://localhost:3001/api/update-stage", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          applicationId: candidate._id,
-          key: key,
-        }),
+      const response = await axios.put(`${process.env.REACT_APP_BACKEND_URL}/api/update-stage`, {
+        applicationId: candidate._id,
+        key: key,
       });
 
-      const data = await response.json();
+      const data = response.data;
       updateCandidateStage(candidate._id, key);
       SetProfileStage(key);
       console.log("Data from API", data);

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import ProfileCard from "./profileCard";
 import FilterDropdown from "./CandidatesFilter";
+import axios from "axios";
 
 const stageBadgeColors = {
   Applied: "#ab21df",
@@ -35,14 +36,9 @@ const CandidatesApplied = () => {
 
     const getCandidates = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:3001/api/jobApplications/all"
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/jobApplications/all`);
         console.log("response", response);
-        const data = await response.json();
+        const data = response.data;
         console.log("Data from API", data);
         setCandidates(data.appliedApplications);
       } catch (error) {
@@ -310,7 +306,7 @@ const CandidatesApplied = () => {
                       <div className="font-medium text-black">
                         {candidate.userName}
                       </div>
-                      <div className="text-sm text-gray-500 text-black">
+                      <div className="text-sm text-gray-500">
                         {candidate.userEmail}
                       </div>
                     </div>

@@ -37,7 +37,7 @@ const jobSchema = new Schema({
   company_logo: {
     type: String, // Assuming the company logo is stored as a URL
   },
-  questions: [],
+  custom_interview: [],
 });
 
 const Job = mongoose.model("Job", jobSchema);

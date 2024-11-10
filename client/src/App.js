@@ -25,9 +25,7 @@ import JobCard from "./components/core/JobCards";
 import Candidates from "./components/core/Candidates";
 import JobDescription from "./components/core/JobDescription";
 import "react-toastify/dist/ReactToastify.css";
-import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
-import AddNewJob from "./components/core/AddNewJob";
-import EditJob from  "./components/core/EditJobModel";
+import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
 
 function App() {
   return (
@@ -132,6 +130,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UploadResume />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/MainReqDashboard"
+              element={
+                <ProtectedRoute>
+                  <MainReqDashboard />
                 </ProtectedRoute>
               }
             />

@@ -20,7 +20,11 @@ function FilterDropdown({ selectedFilters, onFilterChange }) {
 
   return (
     <div className="relative">
-      <button onClick={toggleDropdown} className="bg-black text-white py-2 px-4 rounded">
+      <button onClick={(e) => {
+          e.preventDefault(); 
+          toggleDropdown();
+        }}
+        className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300">
         Filter
       </button>
 

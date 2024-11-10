@@ -21,14 +21,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
-import JobCard from "./components/core/JobCards";
-import Candidates from "./components/core/Candidates";
-import JobDescription from "./components/core/JobDescription";
 // import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
-import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
-import AddNewJob from "./components/core/AddNewJob";
-import EditJob from  "./components/core/EditJobModel";
+import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
 
 function App() {
   return (
@@ -136,19 +131,19 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/MainReqDashboard"
+              element={
+                <ProtectedRoute>
+                  <MainReqDashboard />
+                </ProtectedRoute>
+              }
+            />
              <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
                   <JobCard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/Candidates"
-              element={
-                <ProtectedRoute>
-                  <Candidates />
                 </ProtectedRoute>
               }
             />
@@ -176,14 +171,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
-            path="/recruiter-dashboard"
-            element={
-              <ProtectedRoute>
-                <RecruiterDashboard />
-              </ProtectedRoute>
-            }
-            /> */}
 
             <Route
               path="/job-portal"

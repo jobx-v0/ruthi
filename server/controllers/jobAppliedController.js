@@ -93,6 +93,7 @@ const getAppliedCandidates = async (req, res) => {
         // Format each application with desired fields and handle missing details
         return {
           _id: application._id,
+          job_id: application.job,
           appliedRole: jobDetails ? jobDetails.title : "N/A",
           appliedLocation: jobDetails ? jobDetails.location : "N/A",
           userName: userProfileDetails

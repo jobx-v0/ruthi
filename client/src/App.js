@@ -21,11 +21,13 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
-import JobCard from "./components/core/JobCards";
-import Candidates from "./components/core/Candidates";
-import JobDescription from "./components/core/JobDescription";
+import JobCard from "./components/RecruiterDashboard/JobCards";
+import JobDescription from "./components/RecruiterDashboard/JobDescription";
 import "react-toastify/dist/ReactToastify.css";
 import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
+import AddNewJob from "./components/RecruiterDashboard/AddNewJob";
+import EditJob from "./components/RecruiterDashboard/EditJobModel";
+import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 
 function App() {
   return (
@@ -146,14 +148,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <JobCard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/Candidates"
-              element={
-                <ProtectedRoute>
-                  <CandidatesApplied />
                 </ProtectedRoute>
               }
             />

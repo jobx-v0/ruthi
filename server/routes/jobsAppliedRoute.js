@@ -5,7 +5,7 @@ const router=express.Router();
 
 router.post('/jobApplications',JobAppliedController.createApplication);
 
-router.get('/jobApplications/all', JobAppliedController.getAppliedCandidates);4
+router.get('/jobApplications/all', JobAppliedController.getAppliedCandidates);
 
 router.put('/update-stage', JobAppliedController.updateApplicationStage);
 

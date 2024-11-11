@@ -190,7 +190,7 @@ const CandidatesApplied = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 space-y-4">
+    <div className="container mx-auto p-4 space-y-4 max-w-[990px]">
       {/* Sidebar for Selected Candidate Details */}
       <h1 className="heading">Candidates</h1>
       {selectedCandidate && (

@@ -1,20 +1,15 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt, faClock } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
-import { Sidebar, SidebarBody, SidebarLink } from "../../ui/sidebar";
-import {
-  IconBriefcase,
-  IconUser,
-  IconSearch,
-  IconTrash,
-} from "@tabler/icons-react";
+import { IconSearch, IconTrash } from "@tabler/icons-react";
 import { fetchJobsAPI, deleteJobAPI } from "../../api/jobApi";
 import ConfirmationModal from "./ConfirmDeleteCard";
 import { useCustomToast } from "../utils/useCustomToast";
 import FilterDropdown from "./CandidatesFilter";
 
-const JobCard = ({ job, onOpenModal }) => {
+const JobCard = ({ job, onOpenModal, applicationCount }) => {
   const navigate = useNavigate();
 
   const formatPostedDate = (date) => {
@@ -184,33 +179,19 @@ const JobCard = ({ job, onOpenModal }) => {
         </div>
       </div>
 
-      <a
-        href={job.job_link}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{
-          color: "#3b82f6",
-          fontSize: "15px",
-          fontWeight: "500",
-          textAlign: "center",
-          padding: "10px",
-          backgroundColor: "#f3f4f6",
-          borderRadius: "10px",
-          textDecoration: "none",
-          transition: "background-color 0.3s, color 0.3s",
-          width: "100%",
-          display: "block",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
-        }}
-        onMouseEnter={(e) =>
-          (e.currentTarget.style.backgroundColor = "#e0e7ff")
-        }
-        onMouseLeave={(e) =>
-          (e.currentTarget.style.backgroundColor = "#f3f4f6")
-        }
-      >
-        Applications
-      </a>
+      <div className="flex flex-row items-center">
+        <span
+          style={{
+            fontSize: "30px",
+            fontWeight: "bold",
+            marginRight: "5px",
+            color: "#1f2937",
+          }}
+        >
+          {applicationCount}
+        </span>
+        <span>Applications</span>
+      </div>
     </div>
   );
 };
@@ -224,6 +205,7 @@ const JobList = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
+  const [applications, setApplications] = useState([]);
   const showToast = useCustomToast();
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
@@ -237,45 +219,68 @@ const JobList = () => {
     setJobToDelete(jobId);
     setIsModalOpen(true);
   };
+  //write the code to fetch the applications using the axios
+  const fetchApplications = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_BACKEND_URL}/api/jobApplications/all`
+      );
+      setApplications(response.data);
+      const data2 = response.data;
+      console.log("data of appli", data2);
+      //continue
+    } catch (error) {
+      setError(error.message);
+    }
+  };
 
   const fetchJobs = async (query = "", page = 1, limit = 1000) => {
     const authToken = localStorage.getItem("authToken"); // Get authToken from localStorage
     try {
       const data = await fetchJobsAPI(authToken, query, page, limit);
-      console.log(data); // Log the data
+      console.log(data, "jobs data"); // Log the data
 
       // Filter jobs based on the query and the selected filters
-    const filteredJobs = data.jobs.filter((job) => {
-      let isMatch = true;
+      const filteredJobs = data.jobs.filter((job) => {
+        let isMatch = true;
 
-      // Apply search query filter
-      if (query && !job.title.toLowerCase().includes(query.toLowerCase())) {
-        isMatch = false;
-      }
+        // Apply search query filter
+        if (query && !job.title.toLowerCase().includes(query.toLowerCase())) {
+          isMatch = false;
+        }
 
-      // Apply filters for role, experience, skills, engagement, and payRange
-      if (filters.role.length && !filters.role.includes(job.role)) {
-        isMatch = false;
-      }
+        // Apply filters for role, experience, skills, engagement, and payRange
+        if (filters.role.length && !filters.role.includes(job.role)) {
+          isMatch = false;
+        }
 
-      if (filters.experience.length && !filters.experience.includes(job.experience_required)) {
-        isMatch = false;
-      }
+        if (
+          filters.experience.length &&
+          !filters.experience.includes(job.experience_required)
+        ) {
+          isMatch = false;
+        }
 
-      if (filters.skills.length && !filters.skills.some((skill) => job.skills_required.includes(skill))) {
-        isMatch = false;
-      }
+        if (
+          filters.skills.length &&
+          !filters.skills.some((skill) => job.skills_required.includes(skill))
+        ) {
+          isMatch = false;
+        }
 
-      if (filters.engagement.length && !filters.engagement.includes(job.engagement)) {
-        isMatch = false;
-      }
+        if (
+          filters.engagement.length &&
+          !filters.engagement.includes(job.engagement)
+        ) {
+          isMatch = false;
+        }
 
-      if (filters.payRange && job.payRange !== filters.payRange) {
-        isMatch = false;
-      }
+        if (filters.payRange && job.payRange !== filters.payRange) {
+          isMatch = false;
+        }
 
-      return isMatch;
-    });
+        return isMatch;
+      });
       setJobs(filteredJobs); // Set filtered jobs in state
     } catch (error) {
       setError("Error fetching jobs: " + error.message);
@@ -300,6 +305,7 @@ const JobList = () => {
   // Initial fetch for all jobs
   useEffect(() => {
     fetchJobs();
+    fetchApplications();
     fetchJobs(searchQuery, 1, 1000, filters);
   }, [filters]);
 
@@ -318,17 +324,16 @@ const JobList = () => {
       className="dashboard"
       style={{
         display: "flex",
-        width: "100%",
+        width: "990px",
         minHeight: "100vh",
-        backgroundColor: isModalOpen ? "#4b5563" : "#f9fafb",
+        margin: "0 auto",
       }} // Change background based on modal state
     >
       <div
         className="main-content"
         style={{
           flexGrow: 1,
-          padding: "40px",
-          marginLeft: "80px",
+          padding: "20px",
           transition: "margin-left 0.3s",
         }}
       >
@@ -389,7 +394,12 @@ const JobList = () => {
           }}
         >
           {displayedJobs.map((job) => (
-            <JobCard key={job._id} job={job} onOpenModal={handleOpenModal} />
+            <JobCard
+              key={job._id}
+              job={job}
+              onOpenModal={handleOpenModal}
+              applicationCount={job.applicationCount}
+            />
           ))}
         </div>
         <ConfirmationModal

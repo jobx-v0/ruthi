@@ -59,12 +59,13 @@ const EditJobModel = () => {
     }
   };
   return (
-    <div className="flex h-screen justify-center w-full items-center overflow-auto">
-      <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-5xl p-6 max-h-[900px] overflow-y-auto">
+    <div className="flex h-screen justify-center w-full items-center">
+      <div className="bg-white rounded-lg shadow-lg w-3/4 max-w-5xl p-6 max-h-[900px] overflow-hidden ">
         <h2 className="text-xl font-bold mb-4 text-center text-gray-800">
           Edit Job
         </h2>
         <hr className="border-gray-400 mb-6" />
+        <div className="overflow-y-auto max-h-[600px] scrollbar-hide">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -348,6 +349,67 @@ const EditJobModel = () => {
               )}
             </div>
           </div>
+          <div className="mb-4 w-full flex flex-col">
+            <label
+              className="text-sm text-gray-700 mb-2"
+              htmlFor="custom_interview"
+            >
+              Custom Interview Questions:
+            </label>
+            <div className="flex flex-col w-full">
+              {jobData.custom_interview &&
+              jobData.custom_interview.length > 0 ? (
+                jobData.custom_interview.map((item, index) => (
+                  <div
+                    key={index}
+                    className="p-3 mb-2 border rounded-md shadow-sm bg-gray-50"
+                  >
+                    <div className="text-sm font-semibold text-gray-800">
+                      Question {index + 1}:
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full p-2 border rounded-md text-gray-700"
+                      value={item.question}
+                      onChange={(e) => {
+                        const updatedCustomInterview = [
+                          ...jobData.custom_interview,
+                        ];
+                        updatedCustomInterview[index].question = e.target.value;
+                        setJobData({
+                          ...jobData,
+                          custom_interview: updatedCustomInterview,
+                        });
+                      }}
+                    />
+                    <div className="text-sm font-semibold text-gray-800 mt-2">
+                      Answer:
+                    </div>
+                    <input
+                      type="text"
+                      className="w-full p-2 border rounded-md text-gray-700"
+                      value={item.answer}
+                      onChange={(e) => {
+                        const updatedCustomInterview = [
+                          ...jobData.custom_interview,
+                        ];
+                        updatedCustomInterview[index].answer = e.target.value;
+                        setJobData({
+                          ...jobData,
+                          custom_interview: updatedCustomInterview,
+                        });
+                      }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <span className="text-gray-500 text-sm">
+                  No custom interview questions available.
+                </span>
+              )}
+            </div>
+          </div>
+
           <div className="flex justify-between mt-6 w-full">
             <button
               type="button"
@@ -365,6 +427,7 @@ const EditJobModel = () => {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

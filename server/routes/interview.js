@@ -24,6 +24,7 @@ router.post("/create-interview", InterviewController.createInterview);
 
 router.post(
   "/verify-interview-token",
+  authMiddleware,
   InterviewController.verifyInterviewToken
 );
 

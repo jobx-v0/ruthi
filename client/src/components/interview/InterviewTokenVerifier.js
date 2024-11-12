@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../../context/AuthContext";
 
 function InterviewTokenVerifier() {
   const { token } = useParams();
   const [status, setStatus] = useState("loading");
   const navigate = useNavigate();
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const { authToken } = useAuth();
 
   useEffect(() => {
     if (status !== "loading") {
@@ -23,7 +25,12 @@ function InterviewTokenVerifier() {
       try {
         const response = await axios.post(
           "http://localhost:8080/api/interview/verify-interview-token",
-          { token }
+          { token },
+          {
+            headers: {
+              Authorization: `Bearer ${authToken}`,
+            },
+          }
         );
         const { status: tokenStatus, job_id } = response.data;
 
@@ -141,8 +148,9 @@ function InterviewTokenVerifier() {
             </p>
           </div>
         ) : (
-          <div className="flex flex-col items-center">
-            <p className="mt-6 text-lg text-red-600 font-medium">
+          <div className="flex flex-col items-center bg-red-100 p-5 rounded-lg">
+            <h2 className="text-xl font-bold text-red-600 ">Error</h2>
+            <p className="mt-6 text-lg text-red-600 font-medium text-center">
               An error occurred while verifying the interview link. Please try
               again later.
             </p>

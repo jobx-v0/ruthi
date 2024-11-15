@@ -10,6 +10,10 @@ module.exports = {
   ],
   theme: {
     xsm: "400px",
+    sm: "576px",
+    md: "767x",
+    lg: "1024px",
+    xl: "1280px",
     extend: {
       animation: {
         "spin-slow": "spin 4s linear infinite",

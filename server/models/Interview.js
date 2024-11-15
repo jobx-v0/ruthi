@@ -1,44 +1,73 @@
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 
-Schema.Types.String.checkRequired((v) => v != null);
-
-const interviewSchema = new Schema({
-  user_id: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  job_id: {
-    type: Schema.Types.ObjectId,
-    ref: "Job",
-    required: true,
-  },
-  data: [
-    {
-      question: {
-        type: Schema.Types.ObjectId,
-        ref: "Question",
-        required: true,
-      },
-      answer: { type: String, required: true },
-      number_of_chunks: {
-        type: Number,
-        expires: "24h",
-      },
-      _id: false,
+const interviewQuestionSchema = new mongoose.Schema(
+  {
+    question: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Question",
     },
-  ],
-  created_at: { type: Date, default: Date.now },
-  isCompleted: { type: Boolean, default: false },
-  evaluation: {
-    type: String,
-    enum: ["not done", "in process", "completed"], // Enum to represent different states
-    default: "not done", // Default value
+    answer: {
+      type: String,
+    },
   },
+  { _id: false }
+); // Prevent auto-generating an _id for this sub-document
+
+const interviewSchema = new mongoose.Schema(
+  {
+    user_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    job_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    scheduledTime: {
+      type: Date,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: ["Scheduled", "Completed", "Cancelled"],
+      default: "Scheduled",
+    },
+    evaluation: {
+      type: String,
+      enum: ["not done", "in process", "completed"],
+      default: "not done",
+    },
+    interviewType: {
+      type: String,
+      enum: ["Technical", "HR"],
+      required: true,
+    },
+    interviewQuestions: [interviewQuestionSchema], // Array of interview questions
+    platformLink: {
+      type: String, // Link to interview platform (e.g., Zoom, Google Meet)
+      required: true,
+    },
+    emailSent: {
+      type: Boolean,
+      default: false,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { collection: "chatbot_interviews" }
+);
+
+// Middleware to update `updatedAt` on save
+interviewSchema.pre("save", function (next) {
+  this.updatedAt = Date.now();
+  next();
 });
 
-// Model
 const Interview = mongoose.model("Interview", interviewSchema);
-
 module.exports = Interview;

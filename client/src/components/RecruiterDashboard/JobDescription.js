@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMapMarkerAlt } from "@fortawesome/free-solid-svg-icons";
 const DescriptionCard = ({ jobDetails }) => {
   return (
-    <div className="rounded-lg p-8 bg-white shadow-lg mb-6 w-4/5 h-auto border-2 border-gray-200">
+    <div className="rounded-lg p-8 bg-white shadow-lg mb-6 h-auto border-2 border-gray-200">
       <div className="flex items-center justify-between mb-6">
         <img
           src={jobDetails.company_logo}
@@ -151,16 +151,16 @@ const JobDescription = () => {
   return (
     <div className="flex justify-center items-center min-h-screen p-5 flex-col">
       <DescriptionCard jobDetails={jobDetails} />
-      <div className="flex justify-end w-full">
+      <div className="flex justify-between gap-5 w-3/5">
         <button
           onClick={() => navigate(`/EditJobModel/${id}`)}
-          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 mr-10"
+          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 "
         >
           Edit Job
         </button>
         <button
           onClick={() => navigate("/candidates")}
-          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 mr-36"
+          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300"
         >
           Show Candidates
         </button>

@@ -28,6 +28,10 @@ import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
 import AddNewJob from "./components/RecruiterDashboard/AddNewJob";
 import EditJob from "./components/RecruiterDashboard/EditJobModel";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
+import AddNewJob from "./components/core/AddNewJob";
+import ChatBotUI from "./components/chatbot/ChatBotUI";
+import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
+import InterviewPreview from "./components/interview/InterviewPreview";
 
 function App() {
   return (
@@ -68,7 +72,6 @@ function App() {
                 </GuestRoute>
               }
             />
-
             <Route
               path="/reach-out"
               element={
@@ -77,7 +80,6 @@ function App() {
                 </GuestRoute>
               }
             />
-
             {/* Protected Routes (authenticated pages) */}
             <Route
               path="/home"
@@ -104,10 +106,34 @@ function App() {
               }
             />
             <Route
+              path="/chatbot"
+              element={
+                <ProtectedRoute>
+                  <ChatBotUI />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/new-interview"
               element={
                 <ProtectedRoute>
                   <NewInterview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-preview"
+              element={
+                <ProtectedRoute>
+                  <InterviewPreview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/verify-interview/:token"
+              element={
+                <ProtectedRoute>
+                  <InterviewTokenVerifier />
                 </ProtectedRoute>
               }
             />
@@ -139,15 +165,19 @@ function App() {
               path="/MainReqDashboard"
               element={
                 <ProtectedRoute>
-                  <MainReqDashboard />
+                  <ProtectedRouteForAdmin>
+                    <MainReqDashboard />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
             />
-             <Route
+            <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
-                  <JobCard />
+                  <ProtectedRouteForAdmin>
+                    <JobCard />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
             />
@@ -155,7 +185,19 @@ function App() {
               path="/JobDescription/:id"
               element={
                 <ProtectedRoute>
-                  <JobDescription />
+                  <ProtectedRouteForAdmin>
+                    <JobDescription />
+                  </ProtectedRouteForAdmin>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/JobCards"
+              element={
+                <ProtectedRoute>
+                  <ProtectedRouteForAdmin>
+                    <JobList />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
             />
@@ -163,7 +205,9 @@ function App() {
               path="/AddNewJob"
               element={
                 <ProtectedRoute>
-                  <AddNewJob />
+                  <ProtectedRouteForAdmin>
+                    <AddNewJob />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
             />
@@ -171,7 +215,9 @@ function App() {
               path="/EditJobModel/:id"
               element={
                 <ProtectedRoute>
-                  <EditJob />
+                  <ProtectedRouteForAdmin>
+                    <EditJob />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
             />
@@ -180,11 +226,12 @@ function App() {
               path="/job-portal"
               element={
                 <ProtectedRoute>
-                  <CandidatesApplied />
+                  <ProtectedRouteForAdmin>
+                    <CandidatesApplied />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
             />
-
             {/* Routes not requiring protection */}
             {/* <Route path="/test" element={<VideoRecorder />} /> */}
             <Route path="/verification" element={<VerificationPage />} />

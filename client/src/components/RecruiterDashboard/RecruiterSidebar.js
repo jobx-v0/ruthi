@@ -1,14 +1,17 @@
 import CandidatesApplied from "./CandidatesApplied";
 import JobList from "./JobCards";
 import React, { useState } from "react";
-
 import { Sidebar, SidebarBody, SidebarLink } from "../../ui/sidebar";
 import { IconUsers, IconList } from "@tabler/icons-react";
 
 const DashboardSidebar = ({ selectedSection, setSelectedSection }) => {
   const sections = [
     { label: "Jobs", icon: <IconList />, key: "Job List" },
-    { label: "Candidates Applied", icon: <IconUsers />, key: "Candidates Applied" },
+    {
+      label: "Candidates Applied",
+      icon: <IconUsers />,
+      key: "Candidates Applied",
+    },
   ];
 
   return (
@@ -26,8 +29,8 @@ const DashboardSidebar = ({ selectedSection, setSelectedSection }) => {
             isActive={selectedSection === section.key}
             onClick={() => setSelectedSection(section.key)}
             style={{
-                marginBottom: index !== sections.length - 1 ? "10px" : "0px", // Add space between links
-              }}
+              marginBottom: index !== sections.length - 1 ? "0.625rem" : "0rem", // Add space between links
+            }}
           />
         ))}
       </SidebarBody>
@@ -56,9 +59,7 @@ const MainReqDashboard = () => {
         setSelectedSection={setSelectedSection}
       />
 
-      <div className="flex-1 p-4 overflow-y-auto">
-        {renderContent()}
-      </div>
+      <div className="flex-1 p-4 overflow-y-auto">{renderContent()}</div>
     </div>
   );
 };

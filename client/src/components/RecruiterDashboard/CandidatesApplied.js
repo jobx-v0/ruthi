@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ProfileCard from "./profileCard";
 import FilterDropdown from "./CandidatesFilter";
 import axios from "axios";
+import { IconSearch } from "@tabler/icons-react";
 
 const stageBadgeColors = {
   Applied: "#ab21df",
@@ -18,6 +19,7 @@ const CandidatesApplied = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null); // State for selected candidate
   const [candidates, setCandidates] = useState([]);
+  const profileCardRef = useRef(null);
   const [displayFilters, setDisplayFilters] = useState(false);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(candidates.length / itemsPerPage);
@@ -30,14 +32,28 @@ const CandidatesApplied = () => {
   });
 
   useEffect(() => {
-    //log data
-    console.log("Fetching candidates from API...");
-    // Fetch candidates from the API
+    // Handle clicks outside of the profile card
+    const handleClickOutside = (event) => {
+      if (profileCardRef.current && !profileCardRef.current.contains(event.target)) {
+        setSelectedCandidate(null); // Close profile card if click is outside
+      }
+    };
 
+    document.addEventListener('mousedown', handleClickOutside);  // Add event listener
+
+    // Cleanup event listener on component unmount
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);  // Empty dependency array ensures this effect runs once
+
+  useEffect(() => {
+    console.log("Fetching candidates from API...");
     const getCandidates = async () => {
       try {
-        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/jobApplications/all`);
-        console.log("response", response);
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/jobApplications/all`
+        );
         const data = response.data;
         console.log("Data from API", data);
         setCandidates(data.appliedApplications);
@@ -49,7 +65,7 @@ const CandidatesApplied = () => {
     return () => {
       console.log("Component unmounted");
     };
-  }, []);
+  }, []);  
 
   useEffect(() => {
     console.log("Updated candidates:", candidates);
@@ -79,10 +95,6 @@ const CandidatesApplied = () => {
     setSearchQuery(e.target.value.toLowerCase());
   };
 
-  const handleCheckboxChange = (candidate) => {
-    setSelectedCandidate(candidate); // Set the selected candidate
-  };
-
   // Function to calculate the start date based on the selected range
   const getStartDateForRange = (range) => {
     const currentDate = new Date();
@@ -97,7 +109,16 @@ const CandidatesApplied = () => {
         return null; // Return a very old date if no range selected
     }
   };
-
+  const handleCheckboxChange = (index) => {
+    setSelectedCandidate((prevSelected) => {
+      // If the candidate is already selected, remove it
+      if (prevSelected === index) {
+        return null;
+      }
+      // Otherwise, select the candidate at the given index
+      return index;
+    });
+  };
   const filteredCandidates = candidates
     .filter((candidate) => {
       // Check if candidate matches the role filter
@@ -192,9 +213,15 @@ const CandidatesApplied = () => {
   return (
     <div className="container mx-auto p-4 space-y-4 max-w-[990px]">
       {/* Sidebar for Selected Candidate Details */}
+       {selectedCandidate && (
+      <div className="fixed top-0 left-0 w-full h-full bg-black opacity-50 z-0"></div>
+    )}
       <h1 className="heading">Candidates</h1>
       {selectedCandidate && (
-        <div className="sidebar fixed top-0 right-0 w-1/3 h-full bg-white shadow-lg p-4 z-10">
+        <div
+        className="sidebar fixed top-0 right-0 w-1/3 h-full bg-white shadow-lg p-2 z-10"
+        ref={profileCardRef}  // Assign the ref to the profile card
+      >
           <ProfileCard
             candidate={selectedCandidate}
             stageBadgeColors={stageBadgeColors}
@@ -206,25 +233,34 @@ const CandidatesApplied = () => {
       )}
 
       {/* Search Bar */}
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-        <div className="w-full md:w-1/3 relative">
-          <input
-            type="text"
-            placeholder="Search candidates..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="w-full px-4 py-2 border border-gray-300 rounded"
-          />
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row items-center gap-4">
+          <div className="w-full md:w-2/3 relative">
+            <input
+              type="text"
+              placeholder="Search candidates..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className={`w-full px-4 pr-10 py-2 border rounded-full transition ${
+                selectedCandidate ? "bg-black opacity-20 text-white" : "bg-white"
+              }`}
+            />
+            <IconSearch
+              size={20}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+          </div>
+
+          {/* Filter Candidates */}
+          <div className="flex flex-wrap gap-2">
+            <FilterDropdown
+              selectedFilters={filters}
+              onFilterChange={handleFilterChange}
+            />
+          </div>
         </div>
 
-        {/* filter candidates */}
-        <div className="flex flex-wrap gap-2">
-          <FilterDropdown
-            selectedFilters={filters}
-            onFilterChange={handleFilterChange}
-          />
-        </div>
-        {/* Sort and Date Range */}
+        {/* Right side - Sort, Date Range, Export */}
         <div className="flex flex-wrap justify-end items-center gap-2">
           <select
             onChange={(e) => handleSortChange(e.target.value)}
@@ -282,12 +318,13 @@ const CandidatesApplied = () => {
               </tr>
             </thead>
             <tbody>
-              {paginatedCandidates.map((candidate) => (
+              {paginatedCandidates.map((candidate, index) => (
                 <tr key={candidate.id} className="border-t">
                   <td className="px-4 py-2">
                     <input
                       type="checkbox"
-                      onChange={() => handleCheckboxChange(candidate)}
+                      checked={selectedCandidate === index}
+                      onChange={() => handleCheckboxChange(index)}
                     />
                   </td>
                   <td className="px-4 py-2 text-blue-500 font-bold">

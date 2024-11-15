@@ -3,6 +3,9 @@ import { useCustomToast } from "../utils/useCustomToast";
 import { addJobAPI } from "../../api/jobApi";
 import { Plus, Trash2 } from "lucide-react";
 import { jobFormSchema } from "../../validators/ZodSchema";
+import { useNavigate } from "react-router-dom";
+import { SidebarBody, SidebarLink, Sidebar } from "../../ui/sidebar";
+import { IconUsers, IconList } from "@tabler/icons-react";
 
 const JobForm = () => {
   const [formData, setFormData] = useState({
@@ -24,6 +27,8 @@ const JobForm = () => {
   const [authToken, setAuthToken] = useState(null);
   const [questionEntries, setQuestionEntries] = useState([]);
   const [showQuestions, setShowQuestions] = useState(false);
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -65,7 +70,7 @@ const JobForm = () => {
     setIsLoading(true);
     try {
       console.log(formData, "form data");
-      await addJobAPI(authToken, formData);
+      await addJobAPI(authToken, formData, navigate);
       setSubmitted(true);
       showToast("Job added successfully!", "success");
     } catch (error) {
@@ -113,8 +118,28 @@ const JobForm = () => {
 
   return (
     <div className="flex h-screen">
-      <div className="flex-1 p-5 flex flex-col items-center overflow-y-auto">
-        <div className="w-full max-w-[70%] p-5 border border-gray-300 rounded-lg bg-white shadow-xl relative">
+      <Sidebar>
+        <SidebarBody className="p-2">
+          <SidebarLink
+            link={{
+              href: "/MainReqDashboard",
+              label: "Jobs",
+              icon: <IconUsers />,
+            }}
+            className="mb-2 mt-2"
+          />
+          <SidebarLink
+            link={{
+              href: "/MainReqDashboard",
+              label: "Candidate",
+              icon: <IconList />,
+            }}
+            className="mb-2"
+          />
+        </SidebarBody>
+      </Sidebar>
+      <div className="w-70% flex-1 p-5 flex flex-col items-center overflow-y-auto sm:w-[90%]">
+        <div className="lg:w-[70%] sm:w-[90%] w-full p-5 border border-gray-300 rounded-lg bg-white shadow-xl relative">
           <h2 className="text-center text-2xl text-gray-900">Add New Job</h2>
           <hr className="my-4 border-gray-500" />
           {!submitted ? (
@@ -134,8 +159,8 @@ const JobForm = () => {
                   {getPostDate()} {/* Automatically set the post date */}
                 </p>
               </div>
-              <div className="one flex space-x-4 mb-4">
-                <div className="flex  w-1/2">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
                     Title:<span className="text-red-500">*</span>
                   </label>
@@ -159,9 +184,9 @@ const JobForm = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center w-1/2">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
-                    Job Link:
+                    Job Link:<span className="text-red-500">*</span>
                   </label>
                   <div className="flex flex-col w-full">
                     <input
@@ -174,6 +199,7 @@ const JobForm = () => {
                       className={`w-full px-3 py-2 border rounded-md shadow-sm ${
                         errors.job_link ? "border-red-500" : ""
                       }`}
+                      required
                     />
                     {errors.job_link && (
                       <span className="text-red-500 text-xs">
@@ -184,10 +210,10 @@ const JobForm = () => {
                 </div>
               </div>
 
-              <div className="one flex space-x-4 mb-4">
-                <div className="flex items-center w-1/2">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
-                    Experience Required (years)
+                    Experience Required(years):
                     <span className="text-red-500">*</span>
                   </label>
                   <div className="flex flex-col w-full ">
@@ -210,9 +236,9 @@ const JobForm = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center w-1/2">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
-                    Company Name<span className="text-red-500">*</span>
+                    Company Name:
                   </label>
                   <div className="flex flex-col w-full ">
                     <input
@@ -225,7 +251,6 @@ const JobForm = () => {
                       className={`w-full px-3 py-2 border rounded-md shadow-sm ${
                         errors.company_name ? "border-red-500" : ""
                       }`}
-                      required
                     />
                     {errors.company_name && (
                       <span className="text-red-500 text-xs">
@@ -236,10 +261,10 @@ const JobForm = () => {
                 </div>
               </div>
 
-              <div className="one flex space-x-4 mb-4">
-                <div className="flex items-center w-1/2">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
-                    Company Logo URL:
+                    Company Logo(URL):
                   </label>
                   <div className="flex flex-col w-full">
                     <input
@@ -260,9 +285,9 @@ const JobForm = () => {
                     )}
                   </div>
                 </div>
-                <div className="flex items-center w-1/2">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
-                    Location:<span className="text-red-500">*</span>
+                    Location:
                   </label>
                   <div className="flex flex-col w-full">
                     <input
@@ -272,10 +297,9 @@ const JobForm = () => {
                       placeholder=""
                       style={{ fontSize: "0.875rem" }}
                       onChange={handleChange}
-                      className={`px-3 py-2 border rounded-md shadow-sm ${
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
                         errors.location ? "border-red-500" : ""
                       }`}
-                      required
                     />
                     {errors.location && (
                       <span className="text-red-500 text-xs">
@@ -285,8 +309,8 @@ const JobForm = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex space-x-4 mb-4">
-                <div className="flex items-center w-1/2">
+              <div className="flex flex-col sm:flex-row sm:space-x-4 sm:space-y-0 space-y-4 mb-4">
+                <div className="flex lg:items-center sm:w-100 sm:flex-row sm:w-full lg:w-1/2 flex-col">
                   <label className="w-48 text-sm text-gray-900">
                     Skills Required:<span className="text-red-500">*</span>
                   </label>
@@ -301,6 +325,7 @@ const JobForm = () => {
                       className={`w-full px-3 py-2 border rounded-md shadow-sm ${
                         errors.skills_required ? "border-red-500" : ""
                       }`}
+                      required
                     />
                     {errors.skills_required && (
                       <span className="text-red-500 text-xs">
@@ -310,11 +335,14 @@ const JobForm = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center w-1/2">
-                  <label className="w-48 text-sm text-gray-900">
-                    Employment Type:<span className="text-red-500">*</span>
+                <div className="mb-4 w-full md:w-1/2 pl-2 flex flex-col sm:flex-row items-start sm:items-center">
+                  <label
+                    className="w-full sm:w-48 text-sm text-gray-700 mb-1 sm:mb-0"
+                    htmlFor="employment_type"
+                  >
+                    Employment Type:
                   </label>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex items-center justify-start sm:justify-center space-x-4 sm:space-x-4 flex-wrap">
                     {["full-time", "part-time", "intern"].map((type) => (
                       <label key={type} className="flex items-center">
                         <input
@@ -334,7 +362,7 @@ const JobForm = () => {
 
               <div className="flex flex-col mb-4">
                 <label className="w-48 text-sm text-gray-900 mb-2">
-                  Job Description:
+                  Job Description:<span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-col w-full">
                   <textarea
@@ -426,7 +454,7 @@ const JobForm = () => {
 
                         <div>
                           <h3 className="text-sm font-semibold text-gray-700">
-                            Answer
+                            Answer:
                           </h3>
                           <input
                             type="text"

@@ -71,8 +71,6 @@ const Header = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      console.log(window.innerWidth);
-
       if (window.innerWidth < 450) {
         setMargin({ marginTop: "150px", marginBottom: "150px" });
       } else {

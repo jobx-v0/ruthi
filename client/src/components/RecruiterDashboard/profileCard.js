@@ -124,10 +124,10 @@ const ProfileCard = ({ candidate, onClose, updateCandidateStage }) => {
       className="flex-1 p-5 flex-column justify-center items-start"
       style={{
         maxWidth: "600px",
-        margin: "0 auto",
-        padding: "16px",
+        padding: "16px", // Reduced padding here
         overflowY: "auto",
         maxHeight: "80vh", // Adjusted max height to ensure responsiveness
+        marginTop: "8px", // Adjusted max height to ensure responsiveness
       }}
     >
       <header

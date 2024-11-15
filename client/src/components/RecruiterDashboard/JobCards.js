@@ -37,160 +37,65 @@ const JobCard = ({ job, onOpenModal, applicationCount }) => {
   const handleCardClick = () => {
     navigate(`/JobDescription/${job._id}`);
   };
-
   return (
     <div
-      className="job-card"
+      className="job-card w-full sm:w-1/2 lg:w-1/3 xl:w-1/4 min-w-[300px] max-w-[380px] border-none rounded-xl p-5 bg-gradient-to-br from-gray-100 to-white shadow-lg my-5 flex flex-col justify-between transition-all duration-200 cursor-pointer overflow-hidden hover:translate-y-[-4px] hover:shadow-xl"
       onClick={handleCardClick}
-      style={{
-        width: "30%",
-        minWidth: "300px",
-        maxWidth: "380px",
-        border: "none",
-        borderRadius: "12px",
-        padding: "20px",
-        backgroundColor: "#ffffff",
-        backgroundImage: "linear-gradient(135deg, #f3f4f6, #ffffff)",
-        boxShadow: "0 10px 25px rgba(0, 0, 0, 0.08)",
-        margin: "20px 0",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        transition: "transform 0.2s, box-shadow 0.3s",
-        cursor: "pointer",
-        overflow: "hidden",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "translateY(-4px)";
-        e.currentTarget.style.boxShadow = "0 15px 30px rgba(0, 0, 0, 0.12)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "0 10px 25px rgba(0, 0, 0, 0.08)";
-      }}
     >
-      <div style={{ paddingBottom: "15px" }}>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            position: "relative", // Required for absolute positioning of the icon
-            marginBottom: "15px", // Add space below the flex container
-          }}
-        >
+      <div className="pb-4">
+        <div className="flex justify-between items-center relative mb-4">
           <img
             src={job.company_logo}
             alt={`${job.company_name} logo`}
-            style={{
-              width: "40px",
-              height: "40px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 10px rgba(0, 0, 0, 0.15)",
-            }}
+            className="w-10 h-10  rounded-md shadow-md"
           />
-          {/* Delete Icon */}
           <IconTrash
             onClick={(e) => {
-              e.stopPropagation(); // Prevents navigation on delete
-              onOpenModal(job._id); // Open the modal with job ID
+              e.stopPropagation();
+              onOpenModal(job._id);
             }}
-            style={{ color: "#f87171", cursor: "pointer", fontSize: "20px" }}
+            className="text-red-500 cursor-pointer text-xl"
           />
         </div>
-        {/* Posted date */}
-        <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            color: "#0284c7",
-            padding: "4px",
-            borderRadius: "8px",
-            fontSize: "12px",
-            fontWeight: "bold",
-          }}
-        >
-          <FontAwesomeIcon icon={faClock} style={{ marginRight: "4px" }} />
+        <span className="flex items-center text-blue-600 p-1 rounded-md text-xs font-bold">
+          <FontAwesomeIcon icon={faClock} className="mr-1" />
           {formatPostedDate(job.posted_date)}
         </span>
-        {/* Title aligned to the left */}
-        <h3
-          style={{
-            fontSize: "20px",
-            fontWeight: "600",
-            color: "#1f2937",
-            marginBottom: "10px",
-            textAlign: "left",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            maxWidth: "100%",
-          }}
-        >
+        <h3 className="text-lg font-semibold text-gray-900 mb-2 text-left overflow-hidden text-ellipsis whitespace-nowrap">
           {job.title}
         </h3>
-
-        {/* Job Location with FontAwesome Location Icon */}
-        <p
-          style={{
-            fontSize: "15px",
-            color: "#6b7280",
-            marginBottom: "10px",
-            display: "flex",
-            alignItems: "center",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-        >
+        <p className="text-sm text-gray-600 mb-2 flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
           <FontAwesomeIcon
             icon={faMapMarkerAlt}
-            style={{ marginRight: "8px", color: "#ef4444", fontSize: "16px" }}
+            className="mr-2 text-red-500 text-lg"
           />
           {job.location}
         </p>
-
-        {/* Employment Type */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "15px",
-          }}
-        >
-          <p style={{ fontSize: "13px", color: "#6b7280", maxWidth: "100px" }}>
+        <div className="flex justify-between items-center mb-4">
+          <p className="text-xs text-gray-600 max-w-[100px]">
             {job.employment_type}
           </p>
-          {/* "+Today" Text with Green Background */}
-          <span
-            style={{
-              backgroundColor: "#bbf7d0",
-              color: "#065f46",
-              padding: "4px 10px",
-              borderRadius: "12px",
-              fontSize: "12px",
-              fontWeight: "bold",
-              display: "inline-block",
-            }}
-          >
+          <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">
             +Today
           </span>
         </div>
       </div>
 
-      <div className="flex flex-row items-center">
-        <span
-          style={{
-            fontSize: "30px",
-            fontWeight: "bold",
-            marginRight: "5px",
-            color: "#1f2937",
-          }}
+      <div
+        className="flex items-center"
+        onClick={(e) => {
+          e.stopPropagation(); // Prevents triggering the card click
+        }}
+      >
+        <a
+          href={`/CandidatesApplied?jobId=${job._id}`} // Pass the job ID as a query parameter
+          className="flex items-center hover:text-blue-500 transition-colors"
         >
-          {applicationCount}
-        </span>
-        <span>Applications</span>
+          <span className="text-2xl font-bold text-gray-900 mr-2">
+            {applicationCount}
+          </span>
+          <span className="text-gray-600">Applications</span>
+        </a>
       </div>
     </div>
   );
@@ -201,11 +106,9 @@ const JobList = () => {
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
   const [showAll, setShowAll] = useState(false);
-  const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [jobToDelete, setJobToDelete] = useState(null);
-  const [applications, setApplications] = useState([]);
   const showToast = useCustomToast();
   const navigate = useNavigate();
   const [filters, setFilters] = useState({
@@ -218,20 +121,6 @@ const JobList = () => {
   const handleOpenModal = (jobId) => {
     setJobToDelete(jobId);
     setIsModalOpen(true);
-  };
-  //write the code to fetch the applications using the axios
-  const fetchApplications = async () => {
-    try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_BACKEND_URL}/api/jobApplications/all`
-      );
-      setApplications(response.data);
-      const data2 = response.data;
-      console.log("data of appli", data2);
-      //continue
-    } catch (error) {
-      setError(error.message);
-    }
   };
 
   const fetchJobs = async (query = "", page = 1, limit = 1000) => {
@@ -305,7 +194,6 @@ const JobList = () => {
   // Initial fetch for all jobs
   useEffect(() => {
     fetchJobs();
-    fetchApplications();
     fetchJobs(searchQuery, 1, 1000, filters);
   }, [filters]);
 
@@ -320,26 +208,16 @@ const JobList = () => {
   const displayedJobs = showAll ? jobs : jobs.slice(0, 3);
 
   return (
-    <div
-      className="dashboard"
-      style={{
-        display: "flex",
-        width: "990px",
-        minHeight: "100vh",
-        margin: "0 auto",
-      }} // Change background based on modal state
-    >
-      <div
-        className="main-content"
-        style={{
-          flexGrow: 1,
-          padding: "20px",
-          transition: "margin-left 0.3s",
-        }}
-      >
-        <div className="filterandserch flex justify-between mb-6">
-          <form className="flex items-center space-x-4">
-            <div className="relative w-50%">
+    <div className="dashboard flex flex-col lg:flex-row w-full max-w-5xl min-h-screen mx-auto">
+      <div className="main-content flex-grow p-5 transition-all">
+        <div className="flex items-center justify-between mb-5">
+          <h1 className="text-2xl font-bold text-gray-800">
+            Current Openings ({jobs.length})
+          </h1>
+        </div>
+        <div className="filterandsearch flex flex-col sm:flex-row justify-between mb-6">
+          <form className="flex items-center space-x-4 w-full">
+            <div className="relative w-20% sm:w-1/2">
               <input
                 type="text"
                 value={searchQuery}
@@ -348,9 +226,8 @@ const JobList = () => {
                   fetchJobs(e.target.value);
                 }}
                 placeholder="Search jobs..."
-                className="border border-gray-300 rounded-full py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full"
+                className="border border-gray-300 rounded-full py-2 px-4 pr-10 focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
               />
-              {/* Search Icon positioned at the end of the input */}
               <IconSearch
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
                 size={20}
@@ -366,33 +243,11 @@ const JobList = () => {
             <FilterDropdown
               selectedFilters={filters}
               onFilterChange={handleFilterChange}
+              className="absolute top-0 left-0 right-0 z-50 bg-white shadow-lg p-4 max-h-64 overflow-y-auto"
             />
           </form>
         </div>
-
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-          }}
-        >
-          <h1
-            style={{ fontSize: "23px", fontWeight: "bold", color: "#1f2937" }}
-          >
-            Current Openings ({jobs.length})
-          </h1>
-        </div>
-        <div
-          className="job-list"
-          style={{
-            display: "flex",
-            gap: "20px",
-            flexWrap: "wrap",
-            marginTop: "15px",
-          }}
-        >
+        <div className="job-list flex flex-wrap gap-5 mt-4">
           {displayedJobs.map((job) => (
             <JobCard
               key={job._id}
@@ -402,6 +257,7 @@ const JobList = () => {
             />
           ))}
         </div>
+
         <ConfirmationModal
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
@@ -411,13 +267,7 @@ const JobList = () => {
         {!showAll && jobs.length > 3 && (
           <button
             onClick={handleSeeAll}
-            className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor = "#fb923c")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor = "#f97316")
-            }
+            className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300 mt-6"
           >
             See All
           </button>
@@ -425,13 +275,7 @@ const JobList = () => {
         {showAll && (
           <button
             onClick={() => setShowAll(false)}
-            className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300"
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.backgroundColor = "#fb923c")
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.backgroundColor = "#f97316")
-            }
+            className="bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300 mt-6"
           >
             See Less
           </button>

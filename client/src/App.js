@@ -24,11 +24,14 @@ import ReachOut from "./components/ReachOut";
 import JobCard from "./components/core/JobCards";
 import Candidates from "./components/core/Candidates";
 import JobDescription from "./components/core/JobDescription";
-// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
+import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
-import EditJob from  "./components/core/EditJobModel";
+import EditJob from "./components/core/EditJobModel";
+import ChatBotUI from "./components/chatbot/ChatBotUI";
+import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
+import InterviewPreview from "./components/interview/InterviewPreview";
 
 function App() {
   return (
@@ -105,10 +108,34 @@ function App() {
               }
             />
             <Route
+              path="/chatbot"
+              element={
+                <ProtectedRoute>
+                  <ChatBotUI />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/new-interview"
               element={
                 <ProtectedRoute>
                   <NewInterview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/interview-preview"
+              element={
+                <ProtectedRoute>
+                  <InterviewPreview />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/verify-interview/:token"
+              element={
+                <ProtectedRoute>
+                  <InterviewTokenVerifier />
                 </ProtectedRoute>
               }
             />
@@ -136,7 +163,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-             <Route
+            <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
@@ -168,21 +195,13 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/EditJobModel/:id"
+            {/* <Route
+              path="/recruiter-dashboard"
               element={
                 <ProtectedRoute>
                   <EditJob />
                 </ProtectedRoute>
               }
-            />
-            {/* <Route
-            path="/recruiter-dashboard"
-            element={
-              <ProtectedRoute>
-                <RecruiterDashboard />
-              </ProtectedRoute>
-            }
             /> */}
 
             <Route

@@ -33,13 +33,18 @@ export default function Login() {
     e.preventDefault();
     try {
       const result = await loginUserAPI(loginState);
-      console.log(result);
+
       if (result.success) {
         setToken(result.token);
         const isProfileSubmitted = result.userData.isProfileSubmitted;
         const isParsedResume = result.userData.isParsedResume;
-        // navigation flow
-        if (isProfileSubmitted) {
+
+        const redirectPath = sessionStorage.getItem("redirectPath");
+
+        if (redirectPath) {
+          navigate(redirectPath);
+          sessionStorage.removeItem("redirectPath");
+        } else if (isProfileSubmitted) {
           navigate("/profile");
         } else if (!isParsedResume) {
           navigate("/uploadResume");
@@ -47,9 +52,9 @@ export default function Login() {
           navigate("/profile");
         }
       } else {
-        console.log("errorcode: ", result.errorCode)
+        console.log("errorcode: ", result.errorCode);
         if (result.errorCode === 403) {
-          console.log("email got  login side: ", result);
+          console.log("email got login side: ", result);
           navigate("/verify-email-prompt", { state: { email: result.email } });
         }
         customToast(result.error || "Login failed. Please try again.", "error");

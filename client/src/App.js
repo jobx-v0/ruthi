@@ -27,10 +27,9 @@ import JobDescription from "./components/core/JobDescription";
 import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
-import AddNewJob from "./components/core/AddNewJob";
-import ChatBotUI from "./components/chatbot/ChatBotUI";
-import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
-import InterviewPreview from "./components/interview/InterviewPreview";
+import AddNewJob from "./components/RecruiterDashboard/AddNewJob";
+import EditJob from "./components/RecruiterDashboard/EditJobModel";
+import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
 
 function App() {
   return (
@@ -163,26 +162,10 @@ function App() {
               }
             />
             <Route
-              path="/MainReqDashboard"
-              element={
-                <ProtectedRoute>
-                  <MainReqDashboard />
-                </ProtectedRoute>
-              }
-            />
-             <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
                   <JobCard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/Candidates"
-              element={
-                <ProtectedRoute>
-                  <CandidatesApplied />
                 </ProtectedRoute>
               }
             />
@@ -210,6 +193,23 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/recruiter-portal"
+              element={
+                <ProtectedRoute>
+                  <MainReqDashboard />
+                </ProtectedRoute>
+              }
+            />
+            {/* <Route
+            path="/recruiter-dashboard"
+            element={
+              <ProtectedRoute>
+                <RecruiterDashboard />
+              </ProtectedRoute>
+            }
+            /> */}
 
             <Route
               path="/job-portal"

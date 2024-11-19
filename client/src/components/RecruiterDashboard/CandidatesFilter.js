@@ -1,8 +1,26 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { fetchJobsAPI } from "../../api/jobApi";
+
 
 function FilterDropdown({ selectedFilters, onFilterChange }) {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [jobs, setJobs] = useState([]);
 
+  const fetchJobs = async (query = "", page = 1, limit = 1000) => {
+    const authToken = localStorage.getItem("authToken");
+    try {
+      const response = await fetchJobsAPI(authToken, query, page, limit);
+      const data = await response.json();
+      console.log("Jobs from the backend filter: ", data);
+      setJobs(data);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchJobs();
+  }, []);
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
 
@@ -29,7 +47,7 @@ function FilterDropdown({ selectedFilters, onFilterChange }) {
       </button>
 
       {showDropdown && (
-        <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-lg">
+        <div className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded-lg z-10">
           {["Role", "Experience", "Skills", "Engagement", "Pay Range"].map((category) => (
             <DropdownItem
               key={category}
@@ -40,58 +58,67 @@ function FilterDropdown({ selectedFilters, onFilterChange }) {
           ))}
         </div>
       )}
-
-      {/* <div className="mt-4">
-        <h2 className="font-bold">Selected Filters:</h2>
-        {Object.entries(selectedFilters).map(([category, options]) =>
-          options.length ? (
-            <p key={category}>
-              <span className="font-semibold">{category.charAt(0).toUpperCase() + category.slice(1)}:</span>{" "}
-              {Array.isArray(options) ? options.join(", ") : options}
-            </p>
-          ) : null
-        )}
-      </div> */}
     </div>
   );
 }
 
 const DropdownItem = ({ category, onSelect, selectedFilters }) => {
   const [showSubDropdown, setShowSubDropdown] = useState(false);
+  const [timeoutId, setTimeoutId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const options = {
-    Role: ["Frontend Developer", "Backend Developer", "Full Stack Developer", "QA Engineer","Data Scientist"],
+    Role: ["Frontend Developer", "Backend Developer", "Full Stack Developer", "QA Engineer", "Data Scientist"],
     Experience: ["0-2 years", "2-5 years", "5+ years"],
     Skills: ["Python", "JavaScript", "React.js", "Node.js", "AWS"],
     Engagement: ["full-time", "part-time", "Remote"],
   };
 
+  const filteredOptions = options[category] ? options[category].filter(option =>
+    option.toLowerCase().includes(searchTerm.toLowerCase())
+  ) : [];
+
+  const handleMouseLeave = () => {
+    const id = setTimeout(() => setShowSubDropdown(false), 200);
+    setTimeoutId(id);
+  };
+
+  const handleMouseEnter = () => {
+    clearTimeout(timeoutId);
+    setShowSubDropdown(true);
+  };
+
   return (
     <div
-      className="px-4 py-2 hover:bg-gray-200 cursor-pointer"
-      onMouseEnter={() => setShowSubDropdown(true)}
-      onMouseLeave={() => setShowSubDropdown(false)}
+      className="px-4 py-2 hover:bg-gray-200 cursor-pointer relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       {category}
       {showSubDropdown && (
-        <div className="absolute left-full top-0 mt-2 w-48 bg-white shadow-lg rounded-lg">
-          {category === "Pay Range" ? (
-            <PayRangeSlider onSelect={onSelect} />
-          ) : (
-            options[category].map((option) => (
-              <div key={option} className="px-4 py-2">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    className="mr-2"
-                    checked={selectedFilters[category.toLowerCase()]?.includes(option)}
-                    onChange={() => onSelect(category.toLowerCase(), option)}
-                  />
-                  {option}
-                </label>
-              </div>
-            ))
+          <div className="absolute left-full top-0 ml-2 w-48 bg-white shadow-lg rounded-lg z-20">
+          {(category === "Role" || category === "Skills") && (
+            <input
+              type="text"
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-2 py-1 border rounded mb-2 w-full"
+            />
           )}
+          {filteredOptions.map((option) => (
+            <div key={option} className="px-4 py-2">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  className="mr-2"
+                  checked={selectedFilters[category.toLowerCase()]?.includes(option)}
+                  onChange={() => onSelect(category.toLowerCase(), option)}
+                />
+                {option}
+              </label>
+            </div>
+          ))}
         </div>
       )}
     </div>

@@ -177,7 +177,19 @@ export default function OverviewPage({ setInvalidSections }) {
         position_of_responsibility: positionsOfResponsibility,
         competitions,
         extra_curricular_activities: extracurricularActivities,
+        total_experience: 0,
       };
+
+      const calculateTotalExperience = (experience) => {
+        return experience.reduce((total, exp) => {
+          const startDate = new Date(exp.start_date);
+          const endDate = exp.currently_working ? new Date() : new Date(exp.end_date);
+          const years = endDate.getFullYear() - startDate.getFullYear();
+          return total + (years >= 0 ? years : 0);
+        }, 0);
+      };
+
+      dataToSubmit.total_experience = calculateTotalExperience(dataToSubmit.experience);
 
       console.log("dataToSubmit", dataToSubmit);
 

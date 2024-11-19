@@ -14,8 +14,7 @@
   },
   "dependencies": {
     "concurrently": "^7.0.0",
-    "express-rate-limit": "^7.4.1"
-    "concurrently": "^7.0.0",
+    "express-rate-limit": "^7.4.1",
     "react-vertical-timeline-component": "^3.6.0"
   }
 }

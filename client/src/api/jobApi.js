@@ -47,7 +47,7 @@ export const fetchJobByIdAPI = async (authToken, id) => {
 
 export const addJobAPI = async (authToken, newJobData) => {
   try {
-    await axios.post(`${API_URL}/jobs`, newJobData, {
+    await axios.post(`${API_URL}/postjob`, newJobData, {
       headers: {
         Authorization: `Bearer ${authToken}`,
       },

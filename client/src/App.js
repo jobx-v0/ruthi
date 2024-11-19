@@ -28,6 +28,7 @@ import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterD
 import "react-toastify/dist/ReactToastify.css";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
 import AddNewJob from "./components/core/AddNewJob";
+import EditJob from "./components/core/EditJobModel";
 import ChatBotUI from "./components/chatbot/ChatBotUI";
 import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
 import InterviewPreview from "./components/interview/InterviewPreview";
@@ -162,7 +163,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/JobCards"
               element={
@@ -199,7 +199,7 @@ function App() {
               path="/recruiter-dashboard"
               element={
                 <ProtectedRoute>
-                  <RecruiterDashboard />
+                  <EditJob />
                 </ProtectedRoute>
               }
             /> */}

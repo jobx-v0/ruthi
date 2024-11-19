@@ -12,7 +12,6 @@ register = async (req, res) => {
   try {
     // Retrieve user data from the request body
     const { username, password, email, role, companyName } = req.body;
-    console.log("inside register");
     // Check if the username or password is missing
     if (!username || !password) {
       return res
@@ -27,11 +26,9 @@ register = async (req, res) => {
     const existingUser = await User.findOne({ username });
     const existingUserWithmail = await User.findOne({ email });
     if (existingUser) {
-      console.log("Username already exists!!!");
       return res.status(400).json({ message: "Username is already in use." });
     }
     if (existingUserWithmail) {
-      console.log("Email already exists!!!");
       return res.status(400).json({ message: "Email is already in use." });
     }
 
@@ -89,7 +86,9 @@ login = async (req, res) => {
 
     // Check if the user is verified
     if (!user.isVerified) {
-      return res.status(403).json({ message: "You are not verified.", email: user.email});
+      return res
+        .status(403)
+        .json({ message: "You are not verified.", email: user.email });
     }
 
     // Verify the user's password using the virtual 'password' field
@@ -99,8 +98,6 @@ login = async (req, res) => {
       const token = jwt.sign({ id: user._id, role: user.role }, secretKey, {
         expiresIn: "12h",
       });
-      console.log("Authenticated new user");
-      // Send the token in the response
       res.json({ token });
     } else {
       res.status(401).json({ message: "Invalid password." });
@@ -119,11 +116,9 @@ verifyEmail = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
-    console.log("decoded jwt:", decoded);
     const userId = decoded._id || decoded.id;
 
     const user = await User.findById(userId);
-    console.log("user from DB: ", user);
 
     if (!user) {
       return res.status(404).send("User not found");
@@ -132,12 +127,6 @@ verifyEmail = async (req, res) => {
     if (user.isVerified) {
       return res.status(400).send("Email is already verified");
     }
-
-    // const newToken = jwt.sign(
-    //   { userId: user._id}, // Payload
-    //   process.env.JWT_TOKEN_SECRET_KEY, // Secret key
-    //   { expiresIn: "1h" } // Token expires in 24 hours
-    // );
 
     user.isVerified = true;
     await user.save();
@@ -151,22 +140,25 @@ verifyEmail = async (req, res) => {
 };
 
 // Forgot Password Endpoint
-forgotPassword = async (req, res) => {
-  const { email } = req.body;
+forgotPassword = [
+  limiter,
+  async (req, res) => {
+    const { email } = req.body;
 
-  try {
-    const user = await User.findOne({ email });
+    try {
+      const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      await EmailService.sendPasswordResetMail(user);
+      res.json({ message: "Password reset link sent" });
+    } catch (error) {
+      res.status(500).json({ message: "An error occurred. Please try again." });
     }
-
-    await EmailService.sendPasswordResetMail(user);
-    res.json({ message: "Password reset link sent" });
-  } catch (error) {
-    res.status(500).json({ message: "An error occurred. Please try again." });
-  }
-};
+  },
+];
 
 resetPassword = async (req, res) => {
   const { token, password } = req.body;
@@ -206,30 +198,33 @@ getUser = async (req, res) => {
   }
 };
 
-resendVerificationEmail = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ message: "Email is required." });
-    }
+resendVerificationEmail = [
+  limiter,
+  async (req, res) => {
+    try {
+      const { email } = req.body;
+      if (!email) {
+        return res.status(400).json({ message: "Email is required." });
+      }
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(404).json({ message: "User not found." });
-    }
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: "User is already verified." });
-    }
+      if (user.isVerified) {
+        return res.status(400).json({ message: "User is already verified." });
+      }
 
-    // Send verification email again
-    await EmailService.sendVerificationEmail(user);
-    res.status(200).json({ message: "Verification email sent." });
-  } catch (error) {
-    console.error("Error resending verification email:", error);
-    res.status(500).json({ message: "Failed to resend verification email." });
-  }
-};
+      // Send verification email again
+      await EmailService.sendVerificationEmail(user);
+      res.status(200).json({ message: "Verification email sent." });
+    } catch (error) {
+      console.error("Error resending verification email:", error);
+      res.status(500).json({ message: "Failed to resend verification email." });
+    }
+  },
+];
 
 const client = new OAuth2Client(process.env.REACT_APP_GOOGLE_CLIENT_ID);
 

@@ -109,7 +109,7 @@ export default function Login() {
     } catch (error) {
       console.error("Error during Google login:", error);
       customToast(
-        "Authentication failed. Please Signup as a new user/admin",
+        "Authentication failed. Please Signup as a new user",
         "error"
       );
     }

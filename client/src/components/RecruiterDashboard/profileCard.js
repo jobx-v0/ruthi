@@ -12,7 +12,7 @@ import { FaRegEdit } from "react-icons/fa";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import DownloadResume from "../../services/DownloadResume";
+import DownloadPdf from "../../services/DownloadPdf";
 
 const ProfileCard = ({
   candidate,
@@ -315,7 +315,7 @@ const ProfileCard = ({
 
       {activeTab === "Resume" && (
         <div style={{ padding: "16px", textAlign: "center" }}>
-          <DownloadResume />
+          <DownloadPdf />
         </div>
       )}
 

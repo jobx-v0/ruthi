@@ -71,14 +71,7 @@ function App() {
                 </GuestRoute>
               }
             />
-            <Route
-              path="/reach-out"
-              element={
-                <GuestRoute>
-                  <ReachOut />
-                </GuestRoute>
-              }
-            />
+            <Route path="/reach-out" element={<ReachOut />} />
             {/* Protected Routes (authenticated pages) */}
             {/* <Route
               path="/home"

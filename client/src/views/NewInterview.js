@@ -12,18 +12,18 @@ import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Flex } from "@tremor/react";
 import { Chip, Button, Tooltip, useDisclosure } from "@nextui-org/react";
-
+import { toast, Toaster } from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRight, faCheck } from "@fortawesome/free-solid-svg-icons";
 import "../components/interview/interview.css";
 import VideoRecorder from "../components/VideoRecorder";
 import { useLocation } from "react-router-dom";
+import CheatingInterviewModal from "../components/interview/CheatingInterviewModal";
 
 const InterviewPage = () => {
   var { authToken, setToken, userInfo, fetchUserInfo } = useAuth();
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  // const [userAnswers, setUserAnswers] = useState([]);
   const hasFetchedQuestions = useRef(false);
   const hasCreatedInterview = useRef(false);
   const navigate = useNavigate();
@@ -37,14 +37,21 @@ const InterviewPage = () => {
   const location = useLocation();
   const { jobId } = location.state || {};
 
+  const [interviewId, setInterviewId] = useState("");
+
+  const [isFullScreen, setIsFullScreen] = useState(true);
+
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isCheatingModalOpen, setIsCheatingModalOpen] = useState(false);
+
   const handleTimerActiveChange = (newTimerActiveValue) => {
     setIsTimerActive(newTimerActiveValue);
   };
 
   const fetchQuestionsData = (token) => {
-    fetchQuestionsAPI(token)
+    fetchQuestionsAPI(token, jobId)
       .then((response) => {
-        const questionsResponse = response.data.Questions;
+        const questionsResponse = response?.data;
         setQuestions(questionsResponse);
       })
       .catch((error) => {
@@ -54,41 +61,165 @@ const InterviewPage = () => {
   };
 
   useEffect(() => {
-    const storedAuthToken = localStorage.getItem("authToken");
-    if (storedAuthToken) {
-      setToken(storedAuthToken);
-      // Fetch user info from the backend
-      fetchUserInfo(storedAuthToken);
-
-      // Fetch questions from the backend when the component mounts
-      if (!hasFetchedQuestions.current) {
-        hasFetchedQuestions.current = true;
-        fetchQuestionsData(storedAuthToken);
-      }
-    } else {
-      // Redirect to login if no authToken found
-      navigate("/login");
-      return;
+    if (!hasFetchedQuestions.current) {
+      hasFetchedQuestions.current = true;
+      fetchQuestionsData(authToken);
     }
-  }, []);
+  }, [jobId]);
 
   useEffect(() => {
     if (
       authToken &&
       userInfo?._id &&
       jobId &&
-      questions.length > 0 &&
-      !hasCreatedInterview.current
+      questions?.length > 0 &&
+      !hasCreatedInterview?.current
     ) {
       hasCreatedInterview.current = true;
-      let questionIds = questions.map((question) => question._id);
-      createInterviewAPI(authToken, userInfo._id, jobId, questionIds).catch(
-        (error) => {
+      let questionIds = questions?.map((question) => question?._id);
+      createInterviewAPI(authToken, userInfo?._id, jobId, questionIds)
+        .then((response) => {
+          setInterviewId(response.data.interview._id);
+        })
+        .catch((error) => {
           console.error("Error creating interview:", error);
-        }
-      );
+        });
     }
-  }, [authToken, userInfo?._id, jobId, questions.length]);
+  }, [authToken, userInfo?._id, jobId, questions?.length]);
+
+  const enterFullScreen = (attempt = 1) => {
+    const elem = document.documentElement;
+
+    if (document.fullscreenEnabled) {
+      const requestFullScreen =
+        elem.requestFullscreen ||
+        elem.mozRequestFullScreen ||
+        elem.webkitRequestFullscreen ||
+        elem.msRequestFullscreen;
+
+      if (requestFullScreen) {
+        requestFullScreen
+          .call(elem)
+          .then(() => {
+            setIsFullScreen(true);
+          })
+          .catch((err) => {
+            console.warn("Error entering fullscreen:", err);
+            if (attempt < 5) {
+              setTimeout(() => {
+                enterFullScreen(attempt + 1);
+              }, 1000);
+            }
+          });
+      }
+    } else {
+      console.log("Fullscreen is not supported by this browser.");
+    }
+  };
+
+  const onCloseCheatingModal = () => {
+    setIsCheatingModalOpen(false);
+    window.removeEventListener("beforeunload", (e) => {
+      e.preventDefault();
+      // e.returnValue = "";
+    });
+    exitFullScreen();
+    navigate("/thank-you");
+  };
+
+  useEffect(() => {
+    const handleFocusChange = () => {
+      if (!document.hasFocus()) {
+        setTabSwitchCount((prev) => prev + 1);
+
+        if (tabSwitchCount > 2) {
+          setIsCheatingModalOpen(true);
+          setTimeout(() => {
+            onCloseCheatingModal();
+          }, 8000);
+        }
+
+        toast(
+          `Warning: Tab switching or window change detected! ${tabSwitchCount}`,
+          {
+            icon: "⚠️",
+          }
+        );
+      }
+    };
+
+    window.addEventListener("blur", handleFocusChange);
+
+    return () => {
+      window.removeEventListener("blur", handleFocusChange);
+    };
+  }, [tabSwitchCount]);
+
+  const handleKeyDown = (e) => {
+    e.preventDefault();
+    toast("Warning: Keyboard usage is not allowed!", {
+      icon: "⚠️",
+    });
+    console.log("Warning: Keyboard usage is not allowed!");
+  };
+
+  const ensureFullScreen = () => {
+    if (!document.fullscreenElement && isFullScreen) {
+      enterFullScreen();
+    }
+  };
+
+  const exitFullScreen = () => {
+    if (document.fullscreenElement) {
+      const exitFullScreen =
+        document.exitFullscreen ||
+        document.mozCancelFullScreen ||
+        document.webkitExitFullscreen ||
+        document.msExitFullscreen;
+
+      if (exitFullScreen) {
+        exitFullScreen
+          .call(document)
+          .then(() => {
+            setIsFullScreen(false);
+          })
+          .catch((err) => {
+            console.warn("Error exiting fullscreen:", err);
+          });
+      }
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("keydown", handleKeyDown);
+
+    document.addEventListener("fullscreenchange", ensureFullScreen);
+
+    const intervalId = setInterval(() => {
+      if (isFullScreen && !document.fullscreenElement) {
+        enterFullScreen();
+      }
+    }, 100);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("fullscreenchange", ensureFullScreen);
+      clearInterval(intervalId);
+    };
+  }, [isFullScreen]);
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      e.preventDefault(); // Necessary for most browsers to trigger the dialog
+      e.returnValue = ""; // Chrome requires setting returnValue to an empty string
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   const handleNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -100,20 +231,37 @@ const InterviewPage = () => {
   const handleSubmit = () => {
     submitInterviewAPI(authToken, userInfo._id, jobId)
       .then((response) => {
+        window.removeEventListener("beforeunload", (e) => {
+          e.preventDefault();
+          // e.returnValue = "";
+        });
         navigate("/thank-you");
       })
       .catch((error) => {
         console.error("Error submitting interview:", error);
-        // Handle error (e.g., show error message to user)
       });
   };
 
-  const questionsCount = questions.length;
-  const isLastQuestion = currentQuestionIndex === questions.length - 1;
+  const questionsCount = questions?.length || 0;
+  const isLastQuestion = currentQuestionIndex === questionsCount - 1;
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <Nav isInterviewPage={true} isLandingPage={false} />
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: "#363636",
+            color: "#fff",
+          },
+        }}
+      />
+      <Nav
+        isInterviewPage={true}
+        isLandingPage={false}
+        exitFullScreen={exitFullScreen}
+      />
       <div className="bg-white m-3 p-2 lg:p-4 rounded-xl shadow-xl border-1 border-slate-50 max-w-6xl w-11/12  lg:w-full flex flex-col ">
         <Flex className="gap-4 p-0 py-1 mb-3 w-full justify-between">
           {" "}
@@ -135,8 +283,8 @@ const InterviewPage = () => {
           <div>
             <QuestionCategoryModal
               type={
-                questions[currentQuestionIndex]
-                  ? questions[currentQuestionIndex].type
+                questions && questions.length !== 0
+                  ? questions[currentQuestionIndex]?.type || ""
                   : ""
               }
             />
@@ -163,6 +311,7 @@ const InterviewPage = () => {
           jobId={jobId}
           onTimerActiveChange={handleTimerActiveChange}
           userId={userInfo?._id}
+          interviewId={interviewId}
         />
 
         {!isTimerActive ? (
@@ -175,7 +324,7 @@ const InterviewPage = () => {
               >
                 <Button
                   size="sm"
-                  className=" py-6 lg:p-8 text-md w-0 lg:w-auto lg:text-lg font-medium border-blue-600 bg-white text-blue-600 hover:bg-blue-600 hover:text-white border-1"
+                  className="py-6 lg:p-8 text-md w-0 lg:w-auto lg:text-lg font-medium border-blue-600 bg-white text-blue-600 hover:bg-blue-600 hover:text-white border-1"
                   onPress={
                     isLastQuestion ? onOpenSubmitModal : handleNextQuestion
                   }
@@ -194,6 +343,10 @@ const InterviewPage = () => {
         ) : (
           <></>
         )}
+        <CheatingInterviewModal
+          isCheatingModalOpen={isCheatingModalOpen}
+          onCloseCheatingModal={onCloseCheatingModal}
+        />
         <SubmitIntervieModal
           isSubmitModalOpen={isSubmitModalOpen}
           onOpenSubmitModal={onOpenSubmitModal}

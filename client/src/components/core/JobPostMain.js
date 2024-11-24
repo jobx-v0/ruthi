@@ -1,182 +1,116 @@
-import { Button } from "@nextui-org/react";
-import { Locate, Luggage, Crown, Trash2, Pencil } from "lucide-react";
-import { useDisclosure } from "@nextui-org/react";
-import { useAuth } from "../../context/AuthContext";
+import { formatDistanceToNow } from "date-fns";
 import { useNavigate } from "react-router-dom";
-import DeleteConfirmationModel from "./DeleteConfirmationModal";
-import StartInterviewModal from "../home/StartInterviewModal";
-import NewInterview from "../../views/NewInterview";
-import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API_URL = BACKEND_URL + "/api";
-
-const SkillTag = ({ skill }) => {
-  return (
-    <div className="inline-block rounded-full bg-gray-200 px-4 py-2 mr-2 hover:bg-gray-300 cursor-pointer">
-      <span className="text-gray-500">{skill}</span>
-    </div>
-  );
-};
-
-export default function JobPostMain({
-  id,
+const JobPostMain = ({
+  _id,
   title,
   jobLink,
-  company,
   companyLogoUrl,
+  company,
   description,
   location,
   employmentType,
   yearsOfExperience,
   skills,
+  posted_date,
+  numberOfApplicants,
   handleDelete,
   handleEdit,
-}) {
+}) => {
   const navigate = useNavigate();
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const { userInfo } = useAuth();
 
-  const confirmDelete = () => {
-    handleDelete(id);
-    onClose();
-  };
-
-  const handleClick = (e) => {
-    e.preventDefault();
-
-    // Check if the user has remaining attempts
-    // if (remainingAttempts <= 0) {
-    //   alert("You have reached the maximum number of interview attempts.");
-    //   return;
-    // }
-
-    navigate("/new-interview", { state: { jobId: id } });
+  const handleApplyNow = () => {
+    navigate("/chatbot", { state: { job_id: _id, company_name: company } });
   };
 
   return (
     <>
-      <div className="relative bg-gray-100 shadow-md rounded-3xl p-6 my-5">
-        {/* Render delete icon */}
-        {userInfo?.role === "admin" && (
-          <>
-            <div className="absolute top-2 right-2">
-              <Trash2
-                className="text-red-500 cursor-pointer"
-                onClick={onOpen}
-              />
-            </div>
-            <div className="absolute top-2 right-10">
-              <Pencil
-                className="text-blue-500 cursor-pointer"
-                onClick={() => handleEdit(id)}
-              />
-            </div>
-          </>
-        )}
-        <div className="container px-4 md:px-6">
-          <div className="grid gap-4 md:grid-cols-[200px_1fr] lg:grid-cols-[300px_1fr] items-start">
-            <div className="flex items-start space-x-4">
-              {/* Render company logo if provided */}
-              <img
-                alt="Company logo"
-                className="rounded-lg object-cover aspect-square border"
-                height="80"
-                src={companyLogoUrl}
-                width="80"
-              />
-              <div className="space-y-2.5">
-                {/* Render title if provided */}
-                {title && (
-                  <h3 className="text-2xl text-black font-bold tracking-tighter">
-                    {title}
-                  </h3>
-                )}
-                {/* Render company if provided */}
-                {company && <p className="text-gray-500">{company}</p>}
-              </div>
-            </div>
-            <div className="space-y-4">
-              {/* Render description if provided */}
-              {description && (
-                <div className="grid gap-0.5 items-start">
-                  <h4 className="text-xl text-black font-semibold tracking-tighter">
-                    Description
-                  </h4>
-                  <p className="text-gray-500 leading-7">{description}</p>
-                </div>
-              )}
-              {/* Render location, employment type, and years of experience if provided */}
-              <div className="flex items-center justify-evenly">
-                {location && (
-                  <div className="flex items-center">
-                    <Locate className="w-4 h-4 mr-1 text-black" />
-                    <span className="text-gray-500">{location}</span>
-                  </div>
-                )}
-                {employmentType && (
-                  <div className="flex items-center">
-                    <Luggage className="w-4 h-4 mr-1 text-black" />
-                    <span className="text-gray-500">{employmentType}</span>
-                  </div>
-                )}
-                {yearsOfExperience !== undefined && (
-                  <div className="flex items-center">
-                    <Crown className="w-4 h-4 mr-1 text-black" />
-                    <span className="text-gray-500">
-                      {yearsOfExperience} Years Exp
-                    </span>
-                  </div>
-                )}
-              </div>
+      <div className="w-full max-w-4xl mx-auto my-4 p-6 bg-white shadow-md rounded-md">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-4">
+            <img
+              src={companyLogoUrl}
+              alt={`${company} logo`}
+              className="w-16 h-16 object-contain rounded-[6px] overflow-h_den"
+            />
+            <div>
+              <h2 className="text-xl font-bold text-gray-800">{title}</h2>
+              <p className="text-gray-600">{company}</p>
+              <p className="text-gray-500">{location}</p>
             </div>
           </div>
+
+          {handleEdit && handleDelete && (
+            <div className="flex space-x-4">
+              <button
+                onClick={() => handleEdit(_id)}
+                className="text-blue-500 hover:text-blue-700"
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => handleDelete(_id)}
+                className="text-red-500 hover:text-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          )}
         </div>
-        <div className="container px-4 md:px-6">
-          <div className="container px-4 md:px-6">
-            <div className="flex items-center space-x-4">
-              <div className="space-y-4 flex-1">
-                {skills?.length > 0 && (
-                  <>
-                    <h4 className="text-lg text-black font-semibold tracking-tight">
-                      Top Skills
-                    </h4>
-                    {skills.map((skill, index) => (
-                      <SkillTag key={index} skill={skill} />
-                    ))}
-                  </>
-                )}
-              </div>
-              {/* Render Apply Now button */}
-              <Button
-                className="ml-auto mt-10 text-white bg-indigo-800"
-                size="lg"
-                radius="full"
-                variant="bordered"
-                onClick={() => window.open(jobLink, "_blank")}
+
+        <div className="mt-4">
+          <p className="text-gray-700">{description}</p>
+        </div>
+
+        <div className="mt-4 flex space-x-4">
+          <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded">
+            {employmentType}
+          </span>
+          <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded">
+            {yearsOfExperience} years experience
+          </span>
+        </div>
+
+        <div className="mt-4">
+          <h3 className="font-semibold">Skills Required:</h3>
+          <ul className="flex flex-wrap mt-2">
+            {skills.map((skill, index) => (
+              <li
+                key={index}
+                className="bg-gray-200 text-gray-800 text-sm px-3 py-1 rounded-full m-1"
               >
-                Apply Now
-              </Button>
-              {/* Render Start Interview button */}
-              {/* <Button
-                className="ml-auto mt-10 text-white bg-indigo-800"
-                size="lg"
-                radius="full"
-                variant="bordered"
-              >
-                Hell with Interview
-              </Button> */}
-              <StartInterviewModal handleClick={handleClick} />
-            </div>
-          </div>
+                {skill}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="mt-4 flex flex-col gap-2 items-start text-sm text-gray-400">
+          <span>{numberOfApplicants} applicants</span>
+          <span>Posted {formatDistanceToNow(new Date(posted_date))} ago</span>
+        </div>
+
+        <div className="flex gap-4 justify-end mt-4">
+          <button
+            className="bg-orange-500 text-white py-2 px-4 rounded-[20px] text-sm"
+            onClick={handleApplyNow}
+          >
+            Apply Now
+          </button>
+          <button className="bg-gray-200 text-black py-2 px-4 rounded-[20px] ">
+            <a
+              href={jobLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-black text-sm"
+            >
+              View Job Details
+            </a>
+          </button>
         </div>
       </div>
-      <DeleteConfirmationModel
-        isOpen={isOpen}
-        onClose={onClose}
-        handleDelete={confirmDelete}
-        subject={"job posting"}
-      />
     </>
   );
-}
+};
+
+export default JobPostMain;

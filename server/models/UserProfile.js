@@ -51,6 +51,7 @@ const userProfileSchema = new Schema(
         position: { type: String },
         start_date: { type: Date },
         end_date: { type: Date },
+        yearsofexperience: { type: Number },
         description: [String],
         id: { type: Number },
         currently_working: { type: Boolean },

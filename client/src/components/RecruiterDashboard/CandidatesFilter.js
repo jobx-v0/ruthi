@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 function FilterDropdown({ selectedFilters, onFilterChange }) {
   const [showDropdown, setShowDropdown] = useState(false);
-
+ const [selectedCandidate] = useState(false);
 
   const toggleDropdown = () => setShowDropdown(!showDropdown);
 
@@ -20,8 +20,13 @@ function FilterDropdown({ selectedFilters, onFilterChange }) {
 
   return (
     <div className="relative">
-      <button onClick={toggleDropdown} className="bg-black text-white py-2 px-4 rounded">
-        Filter
+      <button onClick={(e) => {
+          e.preventDefault(); 
+          toggleDropdown();
+        }}
+        className={`bg-orange-500 text-white font-semibold py-2 px-4 rounded hover:bg-orange-600 transition duration-300 
+          ${selectedCandidate ? 'opacity-50 pointer-events-none' : ''}`}>     
+             Filter
       </button>
 
       {showDropdown && (

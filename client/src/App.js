@@ -21,18 +21,17 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
-import JobCard from "./components/core/JobCards";
-import Candidates from "./components/core/Candidates";
-import JobDescription from "./components/core/JobDescription";
-import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
+import JobCard from "./components/RecruiterDashboard/JobCards";
+import JobDescription from "./components/RecruiterDashboard/JobDescription";
 import "react-toastify/dist/ReactToastify.css";
+import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
+import AddNewJob from "./components/RecruiterDashboard/AddNewJob";
+import EditJob from "./components/RecruiterDashboard/EditJobModel";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
-import AddNewJob from "./components/core/AddNewJob";
-import EditJob from "./components/core/EditJobModel";
 import ChatBotUI from "./components/chatbot/ChatBotUI";
 import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
 import InterviewPreview from "./components/interview/InterviewPreview";
-
+import ProtectedRouteForAdmin from "./components/ProtectedRouteAdmin";
 function App() {
   return (
     <AuthProvider>
@@ -72,16 +71,7 @@ function App() {
                 </GuestRoute>
               }
             />
-
-            <Route
-              path="/reach-out"
-              element={
-                // <GuestRoute>
-                  <ReachOut />
-                // </GuestRoute>
-              }
-            />
-
+            <Route path="/reach-out" element={<ReachOut />} />
             {/* Protected Routes (authenticated pages) */}
             {/* <Route
               path="/home"
@@ -163,56 +153,68 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
+            <Route
+              path="/MainReqDashboard"
+              element={
+                <ProtectedRoute>
+                  <ProtectedRouteForAdmin>
+                    <MainReqDashboard />
+                  </ProtectedRouteForAdmin>
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
-                  <JobCard />
+                  <ProtectedRouteForAdmin>
+                    <JobCard />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
-              path="/Candidates"
-              element={
-                <ProtectedRoute>
-                  <Candidates />
-                </ProtectedRoute>
-              }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/JobDescription/:id"
               element={
                 <ProtectedRoute>
-                  <JobDescription />
+                  <ProtectedRouteForAdmin>
+                    <JobDescription />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+
+            <Route
               path="/AddNewJob"
               element={
                 <ProtectedRoute>
-                  <AddNewJob />
+                  <ProtectedRouteForAdmin>
+                    <AddNewJob />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
-              path="/recruiter-dashboard"
+            />
+            <Route
+              path="/EditJobModel/:id"
               element={
                 <ProtectedRoute>
-                  <EditJob />
+                  <ProtectedRouteForAdmin>
+                    <EditJob />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
-            /> */}
+            />
 
-            {/* <Route
+            <Route
               path="/job-portal"
               element={
                 <ProtectedRoute>
-                  <CandidatesApplied />
+                  <ProtectedRouteForAdmin>
+                    <CandidatesApplied />
+                  </ProtectedRouteForAdmin>
                 </ProtectedRoute>
               }
-            /> */}
-
+            />
             {/* Routes not requiring protection */}
             {/* <Route path="/test" element={<VideoRecorder />} /> */}
             <Route path="/verification" element={<VerificationPage />} />

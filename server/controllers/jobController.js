@@ -1,6 +1,7 @@
 const Job = require("../models/Job");
 const mongoose = require("mongoose"); // Add this line
 const { ObjectId } = mongoose.Types;
+const Application = require("../models/JobsApplied");
 
 // Controller function to create a new job posting
 const createJob = async (req, res) => {
@@ -68,7 +69,25 @@ const getAllJobs = async (req, res) => {
     // Calculate the total number of pages based on the total number of jobs and page size
     const totalPages = Math.ceil(totalJobs / pageSize);
 
-    res.status(200).json({ jobs, pageNumber, pageSize, totalPages });
+    // Fetch the application count for each job
+    const jobsWithApplicationCounts = await Promise.all(
+      jobs.map(async (job) => {
+        const applicationCount = await Application.countDocuments({ job: new Object(job._id) });
+        
+        return {
+          ...job.toObject(), // Convert Mongoose document to plain object
+          applicationCount,
+        };
+      })
+    );
+
+    res.status(200).json({
+      jobs: jobsWithApplicationCounts,
+      pageNumber,
+      pageSize,
+      totalPages,
+    });
+    // res.status(200).json({ jobs, pageNumber, pageSize, totalPages });
   } catch (error) {
     console.error("Error fetching jobs:", error);
     res.status(500).json({ message: "Failed to fetch jobs" });

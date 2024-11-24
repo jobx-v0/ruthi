@@ -36,9 +36,14 @@ const appliedCandidatesSchema = new Schema({
     interview2: { type: Boolean, default: false },
     finalInterview: { type: Boolean, default: false },
   },
-  notes: {
-    type: String,
-  },
+  notes: [
+    {
+      note: {
+        ref: "UserProfile",
+        type: String,
+      },
+    },
+  ],
 });
 
 const Application = mongoose.model("Application", appliedCandidatesSchema);

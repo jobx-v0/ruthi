@@ -81,70 +81,70 @@ function App() {
               }
             />
             {/* Protected Routes (authenticated pages) */}
-            <Route
+            {/* <Route
               path="/home"
               element={
                 <ProtectedRoute>
                   <Home />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/admin"
               element={
                 <ProtectedRoute>
                   <AdminPage />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/jobs"
               element={
                 <ProtectedRoute>
                   <Jobs />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/chatbot"
               element={
                 <ProtectedRoute>
                   <ChatBotUI />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/new-interview"
               element={
                 <ProtectedRoute>
                   <NewInterview />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/interview-preview"
               element={
                 <ProtectedRoute>
                   <InterviewPreview />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/verify-interview/:token"
               element={
                 <ProtectedRoute>
                   <InterviewTokenVerifier />
                 </ProtectedRoute>
               }
-            />
-            <Route
+            /> */}
+            {/* <Route
               path="/thank-you"
               element={
                 <ProtectedRoute>
                   <ThankYouPage />
                 </ProtectedRoute>
               }
-            />
+            /> */}
             <Route
               path="/profile"
               element={

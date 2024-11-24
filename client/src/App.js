@@ -28,11 +28,10 @@ import MainReqDashboard from "./components/RecruiterDashboard/RecruiterSidebar";
 import AddNewJob from "./components/RecruiterDashboard/AddNewJob";
 import EditJob from "./components/RecruiterDashboard/EditJobModel";
 import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
-import AddNewJob from "./components/core/AddNewJob";
 import ChatBotUI from "./components/chatbot/ChatBotUI";
 import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
 import InterviewPreview from "./components/interview/InterviewPreview";
-
+import ProtectedRouteForAdmin from "./components/ProtectedRouteAdmin";
 function App() {
   return (
     <AuthProvider>
@@ -191,16 +190,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/JobCards"
-              element={
-                <ProtectedRoute>
-                  <ProtectedRouteForAdmin>
-                    <JobList />
-                  </ProtectedRouteForAdmin>
-                </ProtectedRoute>
-              }
-            />
+
             <Route
               path="/AddNewJob"
               element={

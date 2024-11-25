@@ -69,7 +69,7 @@ function ChatBotUI() {
           },
         }
       );
-
+      console.log(res.data.nextOptions);
       // Set up the chat messages
       const messages = res.data?.chatHistory?.length
         ? res.data.chatHistory.map((msg) => ({
@@ -195,23 +195,58 @@ function ChatBotUI() {
     }
   };
 
-  const renderMessageText = (text) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.split(urlRegex).map((part, index) => {
-      if (urlRegex.test(part)) {
-        return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline"
-          >
-            Click here.
-          </a>
-        );
+  const convertToAnchorTags = (text) => {
+    // Ensure the input is a string before calling split
+    if (typeof text !== "string") {
+      console.error("Expected a string, but received:", typeof text);
+      return null;
+    }
+
+    // Regular expression to match URLs
+    const urlRegex = /https?:\/\/[^\s]+/g;
+
+    // Replace URLs with anchor tags or display them as text based on the domain
+    return text.split("\n").map((line, index) => {
+      const matches = line.match(urlRegex);
+      if (matches) {
+        const url = matches[0];
+
+        // Check if the URL belongs to localhost:3000
+        if (url.includes("localhost:3000")) {
+          return (
+            <p key={index}>
+              {" "}
+              Here is your{" "}
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline break-words"
+              >
+                meeting link
+              </a>{" "}
+              {/* Display as plain text */}
+            </p>
+          );
+        } else {
+          return (
+            <p key={index}>
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline break-words"
+              >
+                {url}
+              </a>{" "}
+              {/* Display as a clickable link */}
+            </p>
+          );
+        }
       }
-      return part;
+
+      // Otherwise, return the line as plain text
+      return <p key={index}>{line}</p>;
     });
   };
 
@@ -343,7 +378,7 @@ function ChatBotUI() {
                           : "bg-blue-500 text-white"
                       } p-2 rounded-lg max-w-xs`}
                     >
-                      {renderMessageText(message.text)}
+                      {convertToAnchorTags(message.text)}
                     </div>
                   </div>
                 ))

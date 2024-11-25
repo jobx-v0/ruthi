@@ -1,26 +1,29 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
+import { useLocation } from "react-router-dom";
+import Nav from "../core/Nav";
 
-function ChatBotUI({ handleApplyNow, job_id, company }) {
+function ChatBotUI() {
   const [companies, setCompanies] = useState([]);
-  const [messages, setMessages] = useState();
-  const [options, setOptions] = useState();
+  const [messages, setMessages] = useState([]);
+  const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [activeJobId, setActiveJobId] = useState(null);
+  const [skeletonCompaniesLoading, setSkeletonCompaniesLoading] =
+    useState(false);
+  const [skeletonMessagesLoading, setSkeletonMessagesLoading] = useState(false);
+  const [activeJobId, setActiveJobId] = useState();
 
   const [displayDatePicker, setDisplayDatePicker] = useState(false);
   const [displayTimePicker, setDisplayTimePicker] = useState(false);
-
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-
   const { authToken } = useAuth();
-
-  // Ref to the chat container
   const chatContainerRef = useRef(null);
 
-  // Scroll to bottom whenever messages change
+  const location = useLocation();
+  const { job_id, company_name } = location.state || {};
+
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop =
@@ -29,33 +32,35 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
   }, [messages]);
 
   const fetchJobs = async () => {
+    setSkeletonCompaniesLoading(true);
+
     try {
       const res = await axios.get(`http://localhost:8000/api/getcompanies`, {
         headers: {
           Authorization: `Bearer ${authToken}`,
         },
       });
-
-      // Filter out any jobs that have the same `_id`
       let jobs = res.data.jobs.filter((job) => job._id !== job_id);
-      console.log(company, job_id);
-
-      // Append the new job entry only if it wasn't present in the original list
-      jobs.push({ company_name: company, _id: job_id });
-
+      if (company_name && job_id)
+        jobs.push({ company_name: company_name, _id: job_id });
       setCompanies(jobs);
       setActiveJobId(job_id);
     } catch (error) {
       console.error(error);
+    } finally {
+      setSkeletonCompaniesLoading(false);
     }
   };
 
   useEffect(() => {
+    setActiveJobId(job_id);
     fetchJobs();
   }, []);
 
   const fetchHistory = async (job_id) => {
+    setSkeletonMessagesLoading(true);
     try {
+      // Fetch the conversation history based on the job_id
       const res = await axios.get(
         `http://localhost:8000/api/chathistory/${job_id}`,
         {
@@ -65,42 +70,58 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
         }
       );
 
-      // Set messages from the API response if available; otherwise, use default
+      // Set up the chat messages
       const messages = res.data?.chatHistory?.length
         ? res.data.chatHistory.map((msg) => ({
             sender: msg.sender,
             text: msg.message,
           }))
         : [{ sender: "Bot", text: "Would you like to schedule an interview?" }];
-
       setMessages(messages);
 
-      // Set options based on nextOptions in the response or use the default
+      // Set up options
       const options = res.data?.nextOptions?.length
         ? res.data.nextOptions.map((opt) => ({
             text: opt.text,
             value: opt.value,
           }))
         : [{ text: "Yes", value: "schedule" }];
-
       setOptions(options);
 
-      if (options[0].value === "input-date") {
+      // Reset date and time inputs
+      setDate("");
+      setTime("");
+
+      // Reset display states for date and time pickers
+      setDisplayDatePicker(false);
+      setDisplayTimePicker(false);
+
+      // Check if nextOptions includes 'input-date' or 'input-time'
+      if (options.some((opt) => opt.value === "input-date")) {
         setDisplayDatePicker(true);
         setDisplayTimePicker(false);
-      } else if (options[0].value === "input-time") {
+      } else if (options.some((opt) => opt.value === "input-time")) {
         setDisplayDatePicker(false);
         setDisplayTimePicker(true);
+      } else {
+        // Hide both if neither input is required
+        setDisplayDatePicker(false);
+        setDisplayTimePicker(false);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching history:", error);
+    } finally {
+      setSkeletonMessagesLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchHistory(job_id);
+    if (job_id) fetchHistory(job_id);
     setDate("");
     setTime("");
+
+    setDisplayDatePicker(false);
+    setDisplayTimePicker(false);
   }, [job_id]);
 
   const handleCompanyClick = async (job_id) => {
@@ -110,30 +131,26 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
     setActiveJobId(job_id);
   };
 
-  // Handle user response and fetch the next step from the backend
   const handleUserResponse = async (response) => {
-    if (response.value === "input-date") {
-      if (!date) {
-        alert("Please select a date.");
-        return;
-      }
-    } else if (response.value === "input-time") {
-      if (!time) {
-        alert("Please select a time.");
-        return;
-      }
+    // Ensure date or time is selected before proceeding if required
+    if (response.value === "input-date" && !date) {
+      alert("Please select a date.");
+      return;
+    }
+    if (response.value === "input-time" && !time) {
+      alert("Please select a time.");
+      return;
     }
 
-    // Display the user's response in the chat
+    // Add the user's response to the chat history
     setMessages((prevMessages) => [
       ...prevMessages,
       { sender: "User", text: response.text },
     ]);
-
     setLoading(true);
-    console.log(response);
 
     try {
+      // Send the user response to the server
       const res = await axios.post(
         "http://localhost:8000/api/get-next-options",
         {
@@ -150,32 +167,27 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
         }
       );
 
-      // Update chat with the bot's response from the backend
+      // Add the bot's response to the chat
       setMessages((prevMessages) => [
         ...prevMessages,
         { sender: "Bot", text: res.data.nextMessage },
       ]);
 
-      if (res.data?.value) {
-        if (res.data?.value === "date") {
-          setDisplayDatePicker(true);
-          setDisplayTimePicker(false);
-        } else if (res.data?.value === "time") {
-          setDisplayDatePicker(false);
-          setDisplayTimePicker(true);
-        }
-      } else {
-        setDisplayDatePicker(false);
-        setDisplayTimePicker(false);
-      }
+      // Check if the next step requires a date or time input and update states accordingly
+      const nextValue = res.data?.value;
+      console.log("Next value:", nextValue);
+      setDisplayDatePicker(nextValue === "input-date");
+      setDisplayTimePicker(nextValue === "input-time");
 
-      // Update options with the new set of buttons for the user
+      // Set the next options for the user
       setOptions(res.data.nextOptions || []);
     } catch (error) {
       console.error("Error fetching next options:", error);
+
+      // Handle errors in chat with a retry option
       setMessages((prevMessages) => [
         ...prevMessages,
-        { sender: "bot", text: "An error occurred. Please try again." },
+        { sender: "Bot", text: "An error occurred. Please try again." },
       ]);
       setOptions([{ text: "Retry", value: "schedule" }]);
     } finally {
@@ -183,100 +195,197 @@ function ChatBotUI({ handleApplyNow, job_id, company }) {
     }
   };
 
-  return (
-    <div className="fixed z-10 inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-      <div className="relative w-3/4 h-3/4 bg-white rounded-lg shadow-lg flex">
-        {/* Close Button */}
-        <button
-          onClick={handleApplyNow}
-          className="absolute text-xl top-3 right-3 text-gray-600 hover:text-gray-800"
-        >
-          ✕
-        </button>
+  const renderMessageText = (text) => {
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    return text.split(urlRegex).map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 underline"
+          >
+            Click here.
+          </a>
+        );
+      }
+      return part;
+    });
+  };
 
-        {/* Left Sidebar - Companies List */}
-        <aside className="w-1/3 p-4 border-r border-gray-200">
-          <h2 className="text-xl font-bold mb-4">Applied Companies</h2>
-          <ul>
-            {companies?.map((company, index) => (
-              <li
-                key={index}
-                className={`mb-2 p-2 ${
-                  activeJobId === company._id
-                    ? "bg-orange-500 text-white"
-                    : "bg-gray-100"
-                } rounded hover:bg-orange-400 hover:text-white hover:cursor-pointer`}
-                onClick={() => handleCompanyClick(company._id)}
-              >
-                {company.company_name}
-              </li>
-            ))}
-          </ul>
+  return (
+    <div
+      className="bg-gray-900 bg-opacity-50 flex items-center justify-center flex-col overflow-y-hidden"
+      style={{ height: "100vh" }}
+    >
+      <Nav />
+      <div className="relative w-full h-full bg-white shadow-lg flex overflow-y-hidden">
+        <aside className="w-1/4 p-4 border-r border-gray-200 flex flex-col bg-gray-50">
+          <h2 className="text-xl font-bold mb-4 text-gray-800">
+            Applied Companies
+          </h2>
+          {skeletonCompaniesLoading ? (
+            <div class="space-y-2 w-full">
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+              <div class="bg-gray-200 rounded h-10 w-full animate-pulse"></div>
+            </div>
+          ) : (
+            <div className="overflow-y-auto flex-1">
+              <ul className="overflow-y-auto">
+                {companies?.length !== 0 ? (
+                  companies?.map((company, index) => (
+                    <li
+                      key={index}
+                      className={`mb-2 p-2 ${
+                        activeJobId === company._id
+                          ? "bg-orange-500 text-white"
+                          : "bg-gray-100"
+                      } rounded cursor-pointer hover:bg-orange-400`}
+                      onClick={() => handleCompanyClick(company._id)}
+                    >
+                      {company.company_name}
+                    </li>
+                  ))
+                ) : (
+                  <>
+                    <li>You didn't apply to any company</li>
+                  </>
+                )}
+              </ul>
+            </div>
+          )}
         </aside>
 
-        {/* Chat Section */}
-        <main className="flex-1 flex flex-col p-4">
+        {/* Chat Area */}
+        <main className="flex-1 p-4 overflow-y-hidden">
           <h1 className="text-2xl font-bold mb-4">Schedule an Interview</h1>
-          <div
-            ref={chatContainerRef} // Reference to the chat container
-            className="flex-1 p-4 bg-gray-100 rounded shadow-inner overflow-y-auto"
-          >
-            {/* Display chat messages */}
-            {messages?.map((message, index) => (
-              <div
-                key={index}
-                className={`flex mb-2 ${
-                  message.sender === "Bot" ? "justify-start" : "justify-end"
-                }`}
-              >
-                <div
-                  className={`${
-                    message.sender === "Bot"
-                      ? "bg-gray-300 text-gray-800"
-                      : "bg-blue-500 text-white"
-                  } p-2 rounded-lg max-w-xs`}
-                >
-                  {message.text}
-                </div>
+          {skeletonMessagesLoading ? (
+            <div
+              class="flex-1 p-6 bg-gray-100 rounded"
+              style={{ height: "78vh", overflowY: "auto" }}
+            >
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-48 animate-pulse"></div>
               </div>
-            ))}
-
-            {/* Loading indicator */}
-            {loading ? (
-              <p>Loading...</p>
-            ) : (
-              <>
-                {displayDatePicker ? (
-                  <input
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                  />
-                ) : null}
-
-                {displayTimePicker ? (
-                  <input
-                    type="time"
-                    value={time}
-                    onChange={(e) => setTime(e.target.value)}
-                  />
-                ) : null}
-
-                {/* Action Buttons below the last bot message */}
-                <div className="mt-4 flex space-x-2">
-                  {options?.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => handleUserResponse(option)}
-                      className="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600"
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-24 animate-pulse"></div>
+              </div>
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-56 animate-pulse"></div>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-32 animate-pulse"></div>
+              </div>
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-48 animate-pulse"></div>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-24 animate-pulse"></div>
+              </div>
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-56 animate-pulse"></div>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-32 animate-pulse"></div>
+              </div>
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-48 animate-pulse"></div>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-32 animate-pulse"></div>
+              </div>
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-48 animate-pulse"></div>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-32 animate-pulse"></div>
+              </div>
+              <div class="flex space-x-2">
+                <div class="bg-gray-300 rounded-lg h-8 w-56 animate-pulse"></div>
+              </div>
+              <div class="flex justify-end space-x-2">
+                <div class="bg-blue-400 rounded-lg h-8 w-24 animate-pulse"></div>
+              </div>
+            </div>
+          ) : (
+            <div
+              ref={chatContainerRef}
+              className="flex-1 p-6 bg-gray-100 rounded"
+              style={{ height: "78vh", overflowY: "auto" }}
+            >
+              {messages?.length === 0 ? (
+                <p class="text-gray-600 text-center">
+                  Please select a company to schedule an interview.
+                </p>
+              ) : (
+                messages?.map((message, index) => (
+                  <div
+                    key={index}
+                    className={`flex mb-2 ${
+                      message.sender === "Bot" ? "justify-start" : "justify-end"
+                    }`}
+                  >
+                    <div
+                      className={`${
+                        message.sender === "Bot"
+                          ? "bg-gray-300 text-gray-800"
+                          : "bg-blue-500 text-white"
+                      } p-2 rounded-lg max-w-xs`}
                     >
-                      {option.text}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+                      {renderMessageText(message.text)}
+                    </div>
+                  </div>
+                ))
+              )}
+
+              {loading ? (
+                <p>Loading...</p>
+              ) : (
+                <>
+                  {displayDatePicker && (
+                    <input
+                      type="date"
+                      value={date}
+                      placeholder="Select date"
+                      onChange={(e) => setDate(e.target.value)}
+                      className="mb-4 p-2 border rounded"
+                    />
+                  )}
+                  {displayTimePicker && (
+                    <input
+                      type="time"
+                      value={time}
+                      placeholder="Select time"
+                      onChange={(e) => setTime(e.target.value)}
+                      className="mb-4 p-2 border rounded"
+                    />
+                  )}
+                  <div className="mt-4 space-x-2">
+                    {options?.map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() => handleUserResponse(option)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                      >
+                        {option.text}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </main>
       </div>
     </div>

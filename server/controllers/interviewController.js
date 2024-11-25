@@ -1,22 +1,16 @@
-const Interview = require("../models/Interview"); // Import the Interview model
-const MAX_ATTEMPTS = process.env.MAX_ATTEMPTS || 5; // Default to 5 if not specified in .env
+const Interview = require("../models/Interview");
+const MAX_ATTEMPTS = process.env.MAX_ATTEMPTS || 5;
 const Question = require("../models/Question");
 const Job = require("../models/Job");
 const InterviewService = require("../services/interviewService");
 const AzureService = require("../services/azureService");
 const OpenAIService = require("../services/openAIService");
+const jwt = require("jsonwebtoken");
 
-// Only for local mongo DB connection for testing
-// const Questions = [
-//     "What are you looking for in your next job?",
-//      "What are your career goals for the next five years?",
-//      "Describe a problem that you have solved using data. What did you enjoy about the process?"
-// ]
+const { JWT_TOKEN_SECRET_KEY } = process.env;
 
 const getQuestions = async (req, res) => {
-  // res.json({ Questions }); // Use only for local mongo db connection
   try {
-    // Fetch random questions, e.g., 3 questions
     const numberOfQuestions =
       parseInt(process.env.NUMBER_OF_QUESTIONS_IN_INTERVIEW) || 3;
     const randomQuestions = await Question.aggregate([
@@ -37,10 +31,8 @@ const getQuestionsBySkills = async (req, res) => {
 
     const jobId = req.body.jobId;
 
-    // Fetch the job by ID
     const job = await Job.findById(jobId);
 
-    // If the job contains pre-existing questions, randomly pick the numberOfQuestions
     if (job.questions && job.questions.length > 0) {
       const shuffledQuestions = job.questions.sort(() => 0.5 - Math.random());
       const selectedQuestions = shuffledQuestions
@@ -54,7 +46,6 @@ const getQuestionsBySkills = async (req, res) => {
       return res.status(200).json(selectedQuestions);
     }
 
-    // If no questions in the job, fetch based on skills
     const skills = job.skills_required;
 
     const questions = await Question.aggregate([
@@ -80,30 +71,24 @@ const getQuestionsBySkills = async (req, res) => {
 const saveChunkNumber = async (req, res) => {
   const { userID, jobID, questionID, numberOfChunks } = req.body;
   try {
-    // Find the interview based on user_id and job_id
     let interview = await Interview.findOne({ user_id: userID, job_id: jobID });
 
     if (!interview) {
-      // If no interview exists
       return res.status(400).json({ message: "No Interview Exists!" });
     }
 
-    // If interview exists, find the specific question in the data array
     const questionIndex = interview.data.findIndex(
       (item) => item.question.toString() === questionID.toString()
     );
 
     if (questionIndex > -1) {
-      // If question already exists, update the number of chunks
       interview.data[questionIndex].number_of_chunks = numberOfChunks;
 
-      // Save the interview document after updating
       await interview.save();
       return res
         .status(200)
         .json({ message: "Number of chunks saved successfully!" });
     } else {
-      // If the question doesn't exist in the interview
       return res
         .status(400)
         .json({ message: "Question doesn't exist in the interview!" });
@@ -117,9 +102,6 @@ const saveChunkNumber = async (req, res) => {
 const submitInterview = async (req, res) => {
   const { userId, jobId } = req.body;
   try {
-    // Trigger async processes
-    // triggerAsyncProcessing(userId, jobId);
-
     const interview = await Interview.findOne({
       user_id: userId,
       job_id: jobId,
@@ -145,7 +127,6 @@ const triggerAsyncProcessing = async (userId, jobId) => {
       `Starting async processing for user ${userId} and job ${jobId}`
     );
 
-    // sleep for 30 seconds
     console.log("Sleeping for 30 seconds...");
     await new Promise((resolve) => setTimeout(resolve, 30000));
 
@@ -158,7 +139,6 @@ const triggerAsyncProcessing = async (userId, jobId) => {
     console.log("Async processing completed successfully");
   } catch (error) {
     console.error("Error in async processing:", error);
-    // Rethrow the error to be caught by the caller
     throw new Error(`Async processing failed: ${error.message}`);
   }
 };
@@ -200,7 +180,6 @@ const createInterview = async (req, res) => {
     await InterviewService.checkExistingInterview(user_id, job_id);
 
     const data = InterviewService.createInterviewData(question_ids);
-    // console.log("data: ", data);
     const interview = await InterviewService.saveInterview(
       user_id,
       job_id,
@@ -229,7 +208,6 @@ const getCurrentCountOfInterviews = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Find the number of interview documents for the user
     let interviewCount = await Interview.countDocuments({ user_id: userId });
 
     if (interviewCount) {
@@ -244,6 +222,84 @@ const getCurrentCountOfInterviews = async (req, res) => {
   }
 };
 
+const getInterviewDetails = async (user_id, job_id) => {
+  try {
+    const interview = await Interview.findOne({ user_id, job_id });
+
+    if (!interview) {
+      return null;
+    }
+
+    return {
+      interviewQuestions: interview.interviewQuestions,
+    };
+  } catch (error) {
+    console.error("Error retrieving interview details:", error);
+    throw error;
+  }
+};
+
+const verifyInterviewToken = async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token not provided" });
+  }
+
+  try {
+    const decodedToken = jwt.verify(token, JWT_TOKEN_SECRET_KEY);
+
+    const { startTime, endTime, user_id, job_id } = decodedToken;
+
+    const currentTime = new Date();
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    const currentDateStr = currentTime.toISOString().slice(0, 19);
+    const startDateStr = startDate.toISOString().slice(0, 19);
+    const endDateStr = endDate.toISOString().slice(0, 19);
+
+    if (currentDateStr < startDateStr) {
+      return res.status(400).json({
+        status: "early",
+        message: "You are trying to access the interview too early.",
+      });
+    } else if (currentDateStr > endDateStr) {
+      return res.status(400).json({
+        status: "expired",
+        message: "The interview time has expired.",
+      });
+    }
+
+    const interviewDetails = await getInterviewDetails(user_id, job_id);
+
+    if (!interviewDetails) {
+      return res.status(404).json({ message: "Interview not found" });
+    }
+
+    if (
+      interviewDetails.interviewQuestions &&
+      interviewDetails.interviewQuestions.length > 0
+    ) {
+      return res.status(403).json({
+        status: "completed",
+        message: "Interview has already been completed",
+      });
+    }
+
+    return res.status(200).json({
+      status: "valid",
+      message: "Token is valid for the interview.",
+      job_id: job_id,
+    });
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    return res
+      .status(401)
+      .json({ status: "invalid", message: "Invalid token" });
+  }
+};
+
 const InterviewController = {
   getQuestions,
   getQuestionsBySkills,
@@ -252,6 +308,7 @@ const InterviewController = {
   getCurrentCountOfInterviews,
   createInterview,
   updateAnswer,
+  verifyInterviewToken,
 };
 
 module.exports = InterviewController;

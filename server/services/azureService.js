@@ -593,6 +593,26 @@ const downloadBlobPDFToFrontend = async (req, res) => {
   }
 };
 
+const downloadBlobUserResumeToFrontend = async (req, res) => {
+  try {
+    const user_id = req.user.id || req.user._id;
+
+    const blobName = path.join(`${user_id}`, `resume.pdf`);
+
+    const sasUrl = await generateSasTokenForBlob(blobName);
+
+    const response = await axios.get(sasUrl, { responseType: "stream" });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="file.pdf"');
+
+    response.data.pipe(res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Error downloading PDF: " + error.message);
+  }
+};
+
 const downloadVideoToFrontend = async (req, res) => {
   try {
     const { interviewId, questionId } = req.params;
@@ -681,6 +701,7 @@ const AzureService = {
   downloadBlobPDFToFrontend,
   downloadVideoToFrontend,
   tempUse,
+  downloadBlobUserResumeToFrontend,
 };
 
 module.exports = AzureService;

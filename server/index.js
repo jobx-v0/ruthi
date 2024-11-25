@@ -52,7 +52,7 @@ app.use("/api/user-profile", userProfileRoutes);
 app.use('/api/',jobsAppliedRoutes);
 
 // Start the server
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 8080;
 console.log("Port: ", port);
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

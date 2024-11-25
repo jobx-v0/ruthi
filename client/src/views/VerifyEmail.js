@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { useCustomToast } from "../components/utils/useCustomToast";
@@ -11,6 +11,11 @@ const VerifyEmailPrompt = () => {
   const toast = useCustomToast();
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    toast("Verification email sent!","success");
+  }, [toast]);
+  
+
   const resendVerificationEmail = async () => {    
     setLoading(true);
     try {
@@ -20,7 +25,12 @@ const VerifyEmailPrompt = () => {
       toast("Verification email sent!","success");
     } catch (error) {
       console.error("Error resending verification email:", error);
-      toast("Failed to resend verification email. Please try again later.","error");
+      if (error.response && error.response.status === 429) {
+        toast("Too many requests. Please try again later.", "error");
+      }
+      else {
+        toast("Failed to resend verification email. Please try again later.","error");
+      }
     } finally {
       setLoading(false);
     }

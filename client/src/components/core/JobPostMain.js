@@ -1,6 +1,5 @@
 import { formatDistanceToNow } from "date-fns";
-import ChatBotUI from "../chatbot/ChatBotUI";
-import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const JobPostMain = ({
   _id,
@@ -18,19 +17,11 @@ const JobPostMain = ({
   handleDelete,
   handleEdit,
 }) => {
-  const [showModal, setShowModal] = useState(false);
+  const navigate = useNavigate();
 
   const handleApplyNow = () => {
-    setShowModal((prev) => !prev);
+    navigate("/chatbot", { state: { job_id: _id, company_name: company } });
   };
-
-  useEffect(() => {
-    if (showModal) {
-      document.body.classList.add("no-scroll");
-    } else {
-      document.body.classList.remove("no-scroll");
-    }
-  }, [showModal]);
 
   return (
     <>
@@ -118,13 +109,6 @@ const JobPostMain = ({
           </button>
         </div>
       </div>
-      {showModal && (
-        <ChatBotUI
-          handleApplyNow={handleApplyNow}
-          job_id={_id}
-          company={company}
-        />
-      )}
     </>
   );
 };

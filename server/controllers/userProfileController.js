@@ -38,7 +38,6 @@ exports.createProfile = async (req, res) => {
 exports.getUserProfile = async (req, res) => {
   try {
     const userId = new ObjectId(req.user.id || req.user._id);
-    console.log("userId from getUserProgile", userId);
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" });
@@ -47,7 +46,6 @@ exports.getUserProfile = async (req, res) => {
     const userProfile = await UserProfile.findOne({
       user: userId,
     });
-    console.log("userprofile details", userProfile);
 
     if (!userProfile) {
       return res.status(404).json({ message: "User profile not found" });
@@ -65,8 +63,6 @@ exports.updateProfile = async (req, res) => {
   try {
     const userId = new ObjectId(req.user.id || req.user._id);
     const updateData = req.body;
-    console.log("userId from update profile", userId);
-    console.log("received data from body", updateData);
 
     if (!userId || !mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ message: "Invalid user ID" });

@@ -10,6 +10,20 @@ const formatDateForInput = (dateString) => {
   if (!dateString) return '';
   return dateString.substring(0, 7); // Return only YYYY-MM
 };
+// Helper function to calculate years of experience
+const calculateYearsOfExperience = (startDate, endDate) => {
+  if (!startDate || !endDate) return 0;
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  let years = end.getFullYear() - start.getFullYear();
+  const monthsDifference = end.getMonth() - start.getMonth();
+  // Adjust if the end month is before the start month within the year
+  if (monthsDifference < 0 || (monthsDifference === 0 && end.getDate() < start.getDate())) {
+    years -= 1;
+  }
+  return years;
+};
+
 
 export default function ExperienceForm() {
   const [experiences, setExperiences] = useRecoilState(experienceState);
@@ -21,6 +35,7 @@ export default function ExperienceForm() {
       ...exp,
       start_date: formatDateForInput(exp.start_date),
       end_date: formatDateForInput(exp.end_date),
+      yearsofexperience: calculateYearsOfExperience(exp.start_date, exp.end_date),
     }));
     setExperiences(formattedExperiences);
   }, []);
@@ -42,6 +57,7 @@ export default function ExperienceForm() {
       position: "",
       start_date: "",
       end_date: "",
+      yearsofexperience: "",
       description: "",
       currently_working: false,
     };
@@ -63,7 +79,6 @@ export default function ExperienceForm() {
       )
     );
     validateField(field, value, id);
-
     if (field === 'end_date') {
       const currentExperience = experiences.find(exp => exp.id === id);
       if (currentExperience && new Date(value) <= new Date(currentExperience.start_date)) {

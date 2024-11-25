@@ -12,7 +12,6 @@ register = async (req, res) => {
   try {
     // Retrieve user data from the request body
     const { username, password, email, role, companyName } = req.body;
-    console.log("inside register");
     // Check if the username or password is missing
     if (!username || !password) {
       return res
@@ -27,11 +26,9 @@ register = async (req, res) => {
     const existingUser = await User.findOne({ username });
     const existingUserWithmail = await User.findOne({ email });
     if (existingUser) {
-      console.log("Username already exists!!!");
       return res.status(400).json({ message: "Username is already in use." });
     }
     if (existingUserWithmail) {
-      console.log("Email already exists!!!");
       return res.status(400).json({ message: "Email is already in use." });
     }
 
@@ -101,8 +98,6 @@ login = async (req, res) => {
       const token = jwt.sign({ id: user._id, role: user.role }, secretKey, {
         expiresIn: "12h",
       });
-      console.log("Authenticated new user");
-      // Send the token in the response
       res.json({ token });
     } else {
       res.status(401).json({ message: "Invalid password." });
@@ -121,11 +116,9 @@ verifyEmail = async (req, res) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_TOKEN_SECRET_KEY);
-    console.log("decoded jwt:", decoded);
     const userId = decoded._id || decoded.id;
 
     const user = await User.findById(userId);
-    console.log("user from DB: ", user);
 
     if (!user) {
       return res.status(404).send("User not found");
@@ -134,12 +127,6 @@ verifyEmail = async (req, res) => {
     if (user.isVerified) {
       return res.status(400).send("Email is already verified");
     }
-
-    // const newToken = jwt.sign(
-    //   { userId: user._id}, // Payload
-    //   process.env.JWT_TOKEN_SECRET_KEY, // Secret key
-    //   { expiresIn: "1h" } // Token expires in 24 hours
-    // );
 
     user.isVerified = true;
     await user.save();
@@ -276,12 +263,12 @@ googleAuth = async (req, res) => {
     }
 
     // Check if the username already exists, to prevent duplicates
-    let usernameExists = await User.findOne({ username: name });
-    if (usernameExists) {
-      return res.status(400).json({
-        message: "Username already taken. Please choose a different one.",
-      });
-    }
+    // let usernameExists = await User.findOne({ username: name });
+    // if (usernameExists) {
+    //   return res.status(400).json({
+    //     message: "Username already taken. Please choose a different one.",
+    //   });
+    // }
 
     // Create a new user if they do not already exist
     const newUser = new User({

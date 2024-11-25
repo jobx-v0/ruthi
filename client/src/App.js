@@ -77,7 +77,7 @@ function App() {
               path="/reach-out"
               element={
                 // <GuestRoute>
-                <ReachOut />
+                 <ReachOut />
                 // </GuestRoute>
               }
             />

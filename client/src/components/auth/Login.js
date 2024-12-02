@@ -13,7 +13,6 @@ import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import { fetchUserProfile } from "../../api/userProfileApi";
 import { useCustomToast } from "../utils/useCustomToast";
-
 const fields = loginFields;
 let fieldsState = {};
 fields.forEach((field) => (fieldsState[field.id] = ""));
@@ -24,7 +23,9 @@ export default function Login() {
   const navigate = useNavigate();
   const customToast = useCustomToast();
   const REACT_APP_BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-
+  const mode = process.env.REACT_APP_MODE;
+  const emailService = true;
+  
   const handleChange = (e) => {
     setLoginState({ ...loginState, [e.target.id]: e.target.value });
   };
@@ -36,6 +37,13 @@ export default function Login() {
 
       if (result.success) {
         setToken(result.token);
+        if (!result.userData.isVerified && mode!='dev' && emailService) {
+          customToast(
+            "Please verify your email to access your account.",
+            "warning"
+          );
+          return; // Exit to prevent navigation if unverified
+        }
         const isProfileSubmitted = result.userData.isProfileSubmitted;
         const isParsedResume = result.userData.isParsedResume;
 
@@ -121,11 +129,7 @@ export default function Login() {
     <div className="flex flex-col lg:flex-row min-h-screen">
       {/* Left Side Content */}
       <div className="w-full lg:w-1/2 text-white p-8 flex flex-col items-center justify-center bg-gradient-to-r from-blue-600 via-blue-500 to-transparent">
-        <img
-          src={Ruthi_full_Logo}
-          alt="Ruthi Logo"
-          className="w-24 lg:w-48 h-auto"
-        />
+        <img src={Ruthi_full_Logo} alt="Ruthi Logo" className="w-24 lg:w-48 h-auto" />
         <div className="text-xl leading-relaxed text-center max-w-md relative hidden lg:block">
           <TextGenerateEffect duration={2} filter={false} words={words} />
         </div>

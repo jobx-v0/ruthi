@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext"; // Adjust the import path base
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_URL = BACKEND_URL + "/api/auth"; // Assuming the API URL is defined in your environment variables
+const mode = process.env.MODE;
+const emailServiceEnabled =true;
 
 const VerificationPage = () => {
   const [isVerified, setIsVerified] = useState(false);
@@ -13,16 +15,8 @@ const VerificationPage = () => {
 
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { userInfo } = useAuth(); // Get userInfo from AuthContext
-  let emailServiceEnabled;
-  try {
-    const configPath = path.join(__dirname, "config/dev.config.yaml");
-    const config = yaml.load(fs.readFileSync(configPath, "utf8"));
-    emailServiceEnabled = config.emailService;  // Extract emailService flag
-  } catch (error) {
-    console.error("Error loading YAML config:", error);
-    process.exit(1);
-  }
+  const { userInfo, setToken } = useAuth(); // Get userInfo from AuthContext
+
   useEffect(() => {
     if (!isLoading) {
       setIsTransitioning(true);
@@ -32,7 +26,19 @@ const VerificationPage = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
+
+ 
+    
+
+
   useEffect(() => {
+
+    if (mode=='dev') {
+      // Automatically set user as verified in dev mode
+      setIsVerified(true);
+      return;
+    }
+  
     // Skip verification if email service is disabled
     if (!emailServiceEnabled) {
       // Check if the user has uploaded their resume

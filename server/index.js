@@ -43,8 +43,8 @@ app.use(bodyParser.json());
 // Import other routes as needed
 const db = require("./config/db"); // Import the database connection
 const authRoutes = require("./routes/auth"); // Import your authentication routes
-const interviewRoutes = require("./routes/interview");
-const resultRoutes = require("./routes/result");
+//const interviewRoutes = require("./routes/interview");
+//const resultRoutes = require("./routes/result");
 const jobRoutes = require("./routes/job");
 const subscribeRoutes = require("./routes/subscription");
 const questionRoutes = require("./routes/question");
@@ -58,22 +58,23 @@ const jobsAppliedRoutes=require("./routes/jobsAppliedRoute");
 
 
 // Use interview routes
-app.use("/api/interview", interviewRoutes);
+// app.use("/api/interview", interviewRoutes);
+
 
 // Use result routes
-app.use("/api/result", resultRoutes);
-
+/*app.use("/api/result", resultRoutes);
 if(azureServiceEnabled){
   const azureRoutes = require("./routes/azure");
+  app.use("/api/azure", azureRoutes);
 
-// Use azure routes
-app.use("/api/azure", azureRoutes);
-
-}else{
-   console.log("Azure service is disabled.");
 }
+else{
+  console.log("Azure service is disabled.");
+}*/
+// Use azure routes
 
-if(openAIServiceEnabled){
+
+/*if(openAIServiceEnabled){
   const openAIRoutes = require("./routes/openAI");
 
 // Use open AI routes
@@ -82,7 +83,7 @@ app.use("/api/openai", openAIRoutes);
 
 }else{
    console.log("OpenAI service is disabled.");
-}
+}*/
 
 
 // Use job routes

@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext"; // Adjust the import path base
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API_URL = BACKEND_URL + "/api/auth"; // Assuming the API URL is defined in your environment variables
+const mode = process.env.MODE;
+const emailServiceEnabled =true;
 
 const VerificationPage = () => {
   const [isVerified, setIsVerified] = useState(false);
@@ -24,6 +26,30 @@ const VerificationPage = () => {
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
+
+ 
+    
+
+
+  useEffect(() => {
+
+    if (mode=='dev') {
+      // Automatically set user as verified in dev mode
+      setIsVerified(true);
+      return;
+    }
+  
+    // Skip verification if email service is disabled
+    if (!emailServiceEnabled) {
+      // Check if the user has uploaded their resume
+      if (userInfo?.hasUploadedResume) {
+        navigate("/profile");
+      } else {
+        navigate("/uploadResume");
+      }
+      return;
+    }
+  }, [emailServiceEnabled, navigate, userInfo]);
 
   useEffect(() => {
     if (userInfo?.isVerified) {

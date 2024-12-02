@@ -1,10 +1,11 @@
 const User = require("../models/User");
+const UnverifiedUser = require("../models/Unverified.js"); // Import the UnverifiedUser model
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 const EmailService = require("../services/emailService");
 const { OAuth2Client } = require("google-auth-library");
-const limiter = require("../middleware/rateLimiter");
-
+const limiter = require('../middleware/rateLimiter');
+const mode = process.env.MODE;
 require("dotenv").config();
 
 // Register a new user
@@ -19,10 +20,10 @@ register = async (req, res) => {
         .json({ message: "Username and password are required." });
     }
     if (!email) {
-      return res.status(400).json({ message: "Email are required." });
+      return res.status(400).json({ message: "Email is required." });
     }
 
-    // Check if the username already exists in the database
+    // Check if the username or email already exists in the database
     const existingUser = await User.findOne({ username });
     const existingUserWithmail = await User.findOne({ email });
     if (existingUser) {
@@ -32,32 +33,49 @@ register = async (req, res) => {
       return res.status(400).json({ message: "Email is already in use." });
     }
 
-    // Create a new user document and set the virtual 'password' field
-    const newUser = new User({
-      _id: new mongoose.Types.ObjectId(),
-      username,
-      password,
-      email,
-      role,
-      companyName, // Only for employers
-    });
-
-    // Save the user document to the database
-    await newUser.save();
-
-    // Send verification email
-    await EmailService.sendVerificationEmail(newUser);
-    console.log("New User Saved");
-
-    res.status(201).json({
-      message:
-        "Registration successful! Please check your email to verify your account.",
-    });
+    if (mode=='dev') {
+      // In dev mode, bypass email verification and save directly to the main User collection
+      const newUser = new User({
+        _id: new mongoose.Types.ObjectId(),
+        username,
+        password,
+        email,
+        role,
+        companyName,
+        isVerified: true, // Automatically verified in dev mode
+      });
+      await newUser.save();
+      console.log("New User Saved in Dev Mode");
+      return res.status(201).json({ message: "Registration successful!" });
+    }
+    if (mode != 'dev') {
+      // If not in devMode, store the user in the UnverifiedUser collection
+      const unverifiedUser = new UnverifiedUser({
+        _id: new mongoose.Types.ObjectId(),
+        username,
+        password,
+        email,
+        role,
+        companyName,
+        isVerified: false // Only for employers
+      });
+    
+      await unverifiedUser.save(); // Save the unverified user to the UnverifiedUser collection
+      await EmailService.sendVerificationEmail(unverifiedUser); // Send verification email to unverified user
+    
+      console.log("New Unverified User Saved");
+    
+      res.status(201).json({
+        message:
+          "Registration successful! Please check your email to verify your account.",
+      });
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Registration failed. Please try again." });
   }
 };
+
 
 // Log in an existing user
 login = async (req, res) => {

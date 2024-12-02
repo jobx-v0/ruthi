@@ -203,6 +203,7 @@ function App() {
                 </ProtectedRoute>
               }
             /> */}
+            /> */}
 
             {/* <Route
               path="/job-portal"

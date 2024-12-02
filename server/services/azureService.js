@@ -1,10 +1,10 @@
 const axios = require("axios");
-const {
+/*const {
   BlobServiceClient,
   generateBlobSASQueryParameters,
   BlobSASPermissions,
-} = require("@azure/storage-blob");
-const { DefaultAzureCredential } = require("@azure/identity");
+} = require("@azure/storage-blob");*/
+//const { DefaultAzureCredential } = require("@azure/identity");
 const ffmpeg = require("fluent-ffmpeg");
 const sdk = require("microsoft-cognitiveservices-speech-sdk");
 const fs = require("fs");
@@ -19,9 +19,9 @@ require("dotenv").config();
 
 const accountName = process.env.AZURE_STORAGE_ACCOUNT_NAME;
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME;
-const AZURE_STORAGE_CONNECTION_STRING =
+/*const AZURE_STORAGE_CONNECTION_STRING =
   process.env.AZURE_STORAGE_CONNECTION_STRING;
-const credential = new DefaultAzureCredential();
+const credential = new DefaultAzureCredential();*/
 
 class AzureServiceError extends Error {
   constructor(message, code) {

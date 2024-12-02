@@ -68,6 +68,7 @@ const VideoRecorder = ({
 
   const uploadChunkToAzure = async (blob, chunkNumber) => {
     try {
+    
       const response = await getSasURL(
         authToken,
         userId,

@@ -1,13 +1,12 @@
 const express = require("express");
 const router = express.Router();
 const QuestionController = require("../controllers/questionController");
-const { authMiddleware, isAdmin } = require("../middleware/authMiddleware");
+const { authMiddleware } = require("../middleware/authMiddleware");
 
-// Create a new question
+// Create a new question, isAdmin, we needa add this later.
 router.post(
   "/questions",
   authMiddleware,
-  isAdmin,
   QuestionController.createQuestion
 );
 
@@ -25,7 +24,6 @@ router.get(
 router.put(
   "/questions/:id",
   authMiddleware,
-  isAdmin,
   QuestionController.updateQuestionById
 );
 
@@ -33,7 +31,6 @@ router.put(
 router.delete(
   "/questions/:id",
   authMiddleware,
-  isAdmin,
   QuestionController.deleteQuestionById
 );
 

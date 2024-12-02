@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { fetchJobByIdAPI } from '../../api/jobApi';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMapMarkerAlt } from '@fortawesome/free-solid-svg-icons';
-import EditJobModel from "./EditJobModel";
 
 const DescriptionCard = ({ jobDetails }) => {
   return (
@@ -39,14 +38,14 @@ const DescriptionCard = ({ jobDetails }) => {
           <li>{jobDetails.description}</li>
         </ul>
       </div>
-      <div className="mb-2">
+      <p className="text-gray-600 text-sm mb-2">
         <strong>Skills Required:</strong>
         <ul className="pl-5 list-disc">
           {jobDetails.skills_required.map((skill, index) => (
             <li key={index}>{skill}</li>
           ))}
         </ul>
-      </div>
+      </p>
       <p className="text-gray-600 text-sm mb-2">
         <strong>Job Link:</strong>
         <a 
@@ -67,8 +66,6 @@ const JobDescription = () => {
   const [jobDetails, setJobDetails] = useState(null);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-
 
   useEffect(() => {
     const fetchJobDetails = async () => {
@@ -103,21 +100,20 @@ const JobDescription = () => {
   return (
     <div className="flex justify-center items-center min-h-screen p-5 flex-col">
       <DescriptionCard jobDetails={jobDetails} />
-      <div className="flex justify-end w-full">
-        <button 
-          onClick={() => setEditModalOpen(true)} 
-          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 mr-10"
-        >
-          Edit Job
-        </button>
+      <div className="flex justify-end w-full space-x-4">
         <button 
           onClick={() => navigate('/candidates')} 
-          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300 mr-36"
+          className="py-2 px-4 bg-orange-500 text-white text-sm rounded-md hover:bg-orange-400 transition duration-300"
         >
           Show Candidates
         </button>
+        <button 
+          onClick={() => navigate(`/edit-job/${id}`)} // Change the route according to your routing setup
+          className="py-2 px-4 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-400 transition duration-300"
+        >
+          Edit Job
+        </button>
       </div>
-      {isEditModalOpen && <EditJobModel onClose={() => setEditModalOpen(false)} />} {/* Render the EditJobModel */}
     </div>
   );
 };

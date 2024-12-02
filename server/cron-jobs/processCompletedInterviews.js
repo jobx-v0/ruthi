@@ -55,11 +55,11 @@ const checkCompletedInterviews = async () => {
   try {
     const interview = await Interview.findOne({
       isCompleted: true,
-      evaluation: "completed",
+      evaluation: "not done",
     }).sort({ created_at: 1 });
 
     if (interview) {
-      // interview.evaluation = "in process";
+      interview.evaluation = "in process";
       await interview.save();
       await processInterview(interview);
     } else {
@@ -69,5 +69,5 @@ const checkCompletedInterviews = async () => {
     console.error("Error processing interviews:", error);
   }
 };
-// checkCompletedInterviews();
-// setInterval(checkCompletedInterviews, 30 * 60 * 1000);
+
+setInterval(checkCompletedInterviews, 30 * 60 * 1000);

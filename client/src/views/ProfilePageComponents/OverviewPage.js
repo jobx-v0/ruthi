@@ -38,25 +38,12 @@ import {
 import {
   isValidData,
   hasAnyData,
-  requiredFields,
 } from "../../validators/validData";
 import axios from "axios";
 import Loader from "../../components/utils/Loader";
-import {
-  personalInfoSchema,
-  socialsSchema,
-  educationSchema,
-  courseSchema,
-  experienceSchema,
-  projectSchema,
-  awardSchema,
-  activitySchema,
-  competitionSchema,
-  publicationSchema,
-  positionSchema,
-} from "../../validators/ZodSchema";
 import { useCustomToast } from "../../components/utils/useCustomToast";
 import { updateUserAPI } from "../../api/authApi";
+import { validateProfile } from "../../validators/profileValidation";
 
 const SectionTitle = ({ title, icon }) => (
   <h2 className="text-lg font-bold text-gray-800 border-b pb-2 mb-3 flex items-center">
@@ -105,7 +92,7 @@ const renderDescription = (description) => {
   }
 };
 
-export default function OverviewPage({ setInvalidSections }) {
+export default function OverviewPage({ setInvalidSections, setValidationErrors }) {
   const showToast = useCustomToast();
   const { fetchUserInfo, authToken } = useAuth();
   const [userInfo, setUserInfo] = useState(null);
@@ -156,8 +143,6 @@ export default function OverviewPage({ setInvalidSections }) {
     getUserInfo();
   }, [authToken]);
 
-  console.log("rendering again");
-
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
@@ -183,263 +168,29 @@ export default function OverviewPage({ setInvalidSections }) {
       const calculateTotalExperience = (experience) => {
         return experience.reduce((total, exp) => {
           const startDate = new Date(exp.start_date);
-          const endDate = exp.currently_working ? new Date() : new Date(exp.end_date);
+          const endDate = exp.currently_working
+            ? new Date()
+            : new Date(exp.end_date);
           const years = endDate.getFullYear() - startDate.getFullYear();
           return total + (years >= 0 ? years : 0);
         }, 0);
       };
 
-      dataToSubmit.total_experience = calculateTotalExperience(dataToSubmit.experience);
+      dataToSubmit.total_experience = calculateTotalExperience(
+        dataToSubmit.experience
+      );
 
       console.log("dataToSubmit", dataToSubmit);
 
-      const invalidSections = [];
+      const invalidData = validateProfile(dataToSubmit);
+      console.log("invalid data: ", invalidData);
+      
 
-      // Helper function to check required fields
-      const checkRequiredFields = (section, data) => {
-        const required = requiredFields[section];
-        if (!required) return true;
-
-        return required.every((field) => {
-          if (section === "experience" && field === "end_date") {
-            return data.end_date || data.currently_working;
-          }
-          return (
-            data[field] !== undefined &&
-            data[field] !== null &&
-            data[field] !== ""
-          );
-        });
-      };
-
-      // Validate personal information
-      try {
-        personalInfoSchema.parse(dataToSubmit.personal_information);
-        if (
-          !checkRequiredFields(
-            "personal_information",
-            dataToSubmit.personal_information
-          )
-        ) {
-          invalidSections.push("personal_information");
-        }
-      } catch (error) {
-        invalidSections.push("personal_information");
-      }
-
-      // Validate socials (no required fields, just use Zod schema)
-      try {
-        socialsSchema.parse(dataToSubmit.socials);
-      } catch (error) {
-        invalidSections.push("socials");
-      }
-
-      // Validate education
-      if (isValidData(dataToSubmit.education)) {
-        dataToSubmit.education.forEach((edu, index) => {
-          try {
-            const result = educationSchema.safeParse(edu);
-            if (!result.success) {
-              console.error(
-                `Education validation error for item ${index}:`,
-                result.error
-              );
-              if (!invalidSections.includes("education")) {
-                invalidSections.push("education");
-              }
-            } else if (!checkRequiredFields("education", edu)) {
-              console.error(
-                `Required fields missing in education item ${index}`
-              );
-              if (!invalidSections.includes("education")) {
-                invalidSections.push("education");
-              }
-            }
-          } catch (error) {
-            console.error(
-              `Unexpected error in education validation for item ${index}:`,
-              error
-            );
-            if (!invalidSections.includes("education")) {
-              invalidSections.push("education");
-            }
-          }
-        });
-      }
-
-      // Validate courses
-      if (isValidData(dataToSubmit.courses)) {
-        dataToSubmit.courses.forEach((course, index) => {
-          try {
-            courseSchema.parse(course);
-            if (!checkRequiredFields("courses", course)) {
-              if (!invalidSections.includes("courses")) {
-                invalidSections.push("courses");
-              }
-            }
-          } catch (error) {
-            if (!invalidSections.includes("courses")) {
-              invalidSections.push("courses");
-            }
-          }
-        });
-      }
-
-      console.log(
-        "experience that is getting validated: ",
-        dataToSubmit.experience
-      );
-      // Validate experience
-      if (isValidData(dataToSubmit.experience)) {
-        dataToSubmit.experience.forEach((exp, index) => {
-          try {
-            const result = experienceSchema.safeParse(exp);
-
-            if (!result.success) {
-              // If validation fails, log the error and mark the experience section as invalid
-              console.error(
-                `Experience validation error for item ${index}:`,
-                result.error
-              );
-              if (!invalidSections.includes("experience")) {
-                invalidSections.push("experience");
-              }
-            } else {
-              // Dynamically check for required fields based on `currently_working`
-              const currentlyWorking = exp.currently_working;
-
-              // If `currently_working` is true, allow `end_date` to be null
-              if (
-                !currentlyWorking &&
-                (!exp.end_date || exp.end_date === null)
-              ) {
-                console.error(
-                  `End date is required in experience item ${index} if not currently working.`
-                );
-                if (!invalidSections.includes("experience")) {
-                  invalidSections.push("experience");
-                }
-              }
-
-              // Check other required fields
-              if (!checkRequiredFields("experience", exp)) {
-                console.error(
-                  `Required fields missing in experience item ${index}`
-                );
-                if (!invalidSections.includes("experience")) {
-                  invalidSections.push("experience");
-                }
-              }
-            }
-          } catch (error) {
-            console.error(
-              `Unexpected error in experience validation for item ${index}:`,
-              error
-            );
-            if (!invalidSections.includes("experience")) {
-              invalidSections.push("experience");
-            }
-          }
-        });
-      }
-
-      // Validate personal projects
-      if (isValidData(dataToSubmit.personal_projects)) {
-        dataToSubmit.personal_projects.forEach((project, index) => {
-          try {
-            projectSchema.parse(project);
-            if (!checkRequiredFields("personal_projects", project)) {
-              if (!invalidSections.includes("personal_projects")) {
-                invalidSections.push("personal_projects");
-              }
-            }
-          } catch (error) {
-            if (!invalidSections.includes("personal_projects")) {
-              invalidSections.push("personal_projects");
-            }
-          }
-        });
-      }
-
-      // Validate awards and achievements (no required fields, just use Zod schema)
-      if (isValidData(dataToSubmit.awards_and_achievements)) {
-        dataToSubmit.awards_and_achievements.forEach((award, index) => {
-          try {
-            awardSchema.parse(award);
-          } catch (error) {
-            if (!invalidSections.includes("awards_and_achievements")) {
-              invalidSections.push("awards_and_achievements");
-            }
-          }
-        });
-      }
-
-      // Validate extra curricular activities (no required fields, just use Zod schema)
-      if (isValidData(dataToSubmit.extra_curricular_activities)) {
-        dataToSubmit.extra_curricular_activities.forEach((activity, index) => {
-          try {
-            activitySchema.parse(activity);
-          } catch (error) {
-            if (!invalidSections.includes("extra_curricular_activities")) {
-              invalidSections.push("extra_curricular_activities");
-            }
-          }
-        });
-      }
-
-      // Validate competitions
-      if (isValidData(dataToSubmit.competitions)) {
-        dataToSubmit.competitions.forEach((competition, index) => {
-          try {
-            competitionSchema.parse(competition);
-            if (!checkRequiredFields("competitions", competition)) {
-              if (!invalidSections.includes("competitions")) {
-                invalidSections.push("competitions");
-              }
-            }
-          } catch (error) {
-            if (!invalidSections.includes("competitions")) {
-              invalidSections.push("competitions");
-            }
-          }
-        });
-      }
-
-      // Validate publications
-      if (isValidData(dataToSubmit.publications)) {
-        dataToSubmit.publications.forEach((publication, index) => {
-          try {
-            publicationSchema.parse(publication);
-            if (!checkRequiredFields("publications", publication)) {
-              if (!invalidSections.includes("publications")) {
-                invalidSections.push("publications");
-              }
-            }
-          } catch (error) {
-            if (!invalidSections.includes("publications")) {
-              invalidSections.push("publications");
-            }
-          }
-        });
-      }
-
-      // Validate positions of responsibility
-      if (isValidData(dataToSubmit.position_of_responsibility)) {
-        dataToSubmit.position_of_responsibility.forEach((position, index) => {
-          try {
-            positionSchema.parse(position);
-            if (!checkRequiredFields("position_of_responsibility", position)) {
-              if (!invalidSections.includes("position_of_responsibility")) {
-                invalidSections.push("position_of_responsibility");
-              }
-            }
-          } catch (error) {
-            if (!invalidSections.includes("position_of_responsibility")) {
-              invalidSections.push("position_of_responsibility");
-            }
-          }
-        });
-      }
+      const invalidSections = invalidData.map(({ sectionName }) => sectionName);
+      const validationErrors = invalidData.reduce((acc, { sectionName, errors }) => {
+        acc[sectionName] = errors;
+        return acc;
+      }, {});
 
       if (invalidSections.length > 0) {
         showToast(
@@ -450,6 +201,7 @@ export default function OverviewPage({ setInvalidSections }) {
         );
         setIsLoading(false);
         setInvalidSections(invalidSections);
+        setValidationErrors(validationErrors);
         return;
       }
 
@@ -472,7 +224,7 @@ export default function OverviewPage({ setInvalidSections }) {
       } catch (error) {
         console.error("Error updating profile:", error);
       }
-      
+
       showToast("Profile submitted successfully!", "success");
       await axios.put(
         `${BACKEND_URL}/api/auth/update`,

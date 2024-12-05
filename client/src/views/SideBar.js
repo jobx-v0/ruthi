@@ -134,6 +134,7 @@ export default function SideBar() {
   });
   const [isSubmitted, setIsSubmitted] = useRecoilState(isSubmittedState);
   const [invalidSections, setInvalidSections] = useState([]);
+  const [validationErrors, setValidationErrors] = useState({});
 
   const setPersonalInformation = useSetRecoilState(personalInformationState);
   const setSocials = useSetRecoilState(socialsState);
@@ -641,6 +642,8 @@ export default function SideBar() {
             isSubmitted={isSubmitted}
             setIsSubmitted={setIsSubmitted}
             setInvalidSections={setInvalidSections}
+            validationErrors={validationErrors}
+            setValidationErrors={setValidationErrors}
           />
         </main>
         {!isSubmitted && selectedSection !== "Overview" && (
@@ -676,7 +679,7 @@ export default function SideBar() {
   );
 }
 
-const Dashboard = ({ selectedSection, errors, setInvalidSections }) => {
+const Dashboard = ({ selectedSection, errors, setInvalidSections, validationErrors, setValidationErrors }) => {
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -684,29 +687,29 @@ const Dashboard = ({ selectedSection, errors, setInvalidSections }) => {
           {(() => {
             switch (selectedSection) {
               case "Basic Information":
-                return <BasicInformationForm errors={errors} />;
+                return <BasicInformationForm errors={errors} validationErrors={validationErrors.personal_information} />;
               case "Education":
-                return <Education />;
+                return <Education validationErrors={validationErrors.education} />;
               case "Experience":
-                return <ExperienceForm />;
+                return <ExperienceForm validationErrors={validationErrors.experience} />;
               case "Skills":
-                return <TechnicalSkills />;
+                return <TechnicalSkills validationErrors={validationErrors.skills} />;
               case "Publications":
-                return <Publications />;
+                return <Publications validationErrors={validationErrors.publications} />;
               case "Personal Projects":
-                return <PersonalProjects />;
+                return <PersonalProjects validationErrors={validationErrors.personal_projects} />;
               case "Awards and Achievements":
-                return <AwardsAndAchievements />;
+                return <AwardsAndAchievements validationErrors={validationErrors.awards_and_achievements} />;
               case "Positions of Responsibility":
-                return <PositionsOfResponsibility />;
+                return <PositionsOfResponsibility validationErrors={validationErrors.position_of_responsibility} />;
               case "Competitions":
-                return <Competitions />;
+                return <Competitions validationErrors={validationErrors.competitions} />;
               case "Extra-curricular Activities":
-                return <ExtraCurricularActivities />;
+                return <ExtraCurricularActivities validationErrors={validationErrors.extra_curricular_activities} />;
               case "Overview":
-                return <OverviewPage setInvalidSections={setInvalidSections} />;
+                return <OverviewPage setInvalidSections={setInvalidSections} setValidationErrors={setValidationErrors} />;
               default:
-                console.log("No matching section found for:", selectedSection); // Add this line for debugging
+                console.log("No matching section found for:", selectedSection);
                 return <div>Select a section</div>;
             }
           })()}

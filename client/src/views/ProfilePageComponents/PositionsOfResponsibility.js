@@ -28,10 +28,6 @@ export default function PositionsOfResponsibility() {
   // const { userInfo } = useAuth();
 
   useEffect(() => {
-    console.log("Current positions:", positions);
-  }, [positions]);
-
-  useEffect(() => {
     // Format dates when positions are loaded or updated
     const formattedPositions = positions.map(position => ({
       ...position,

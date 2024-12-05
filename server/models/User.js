@@ -25,11 +25,15 @@ const userSchema = new mongoose.Schema({
   isVerified: { type: Boolean, default: false },
   hashed_password: {
     type: String,
-    required: true,
+    required: function () {
+      return this.isGoogleAuth === false;
+    },
   },
   salt: {
     type: String,
-    required: true,
+    required: function () {
+      return this.isGoogleAuth === false;
+    },
   },
   companyName: {
     type: String,

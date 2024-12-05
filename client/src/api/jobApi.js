@@ -3,13 +3,11 @@ import axios from "axios";
 //const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 //const API_URL = BACKEND_URL + "/api/job";
 const API_URL = process.env.REACT_APP_BACKEND_URL + "/api";
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-//const API_URL = process.env.REACT_APP_BACKEND_URL + "/api/jobs";
 export const fetchJobsAPI = async (
   authToken,
   searchQuery = "",
   page = 1,
-  limit = 1000//limit is increased to 1000
+  limit = 10
 ) => {
   try {
     const response = await axios.get(`${API_URL}/jobs`, {

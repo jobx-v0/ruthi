@@ -263,12 +263,12 @@ googleAuth = async (req, res) => {
     }
 
     // Check if the username already exists, to prevent duplicates
-    let usernameExists = await User.findOne({ username: name });
-    if (usernameExists) {
-      return res.status(400).json({
-        message: "Username already taken. Please choose a different one.",
-      });
-    }
+    // let usernameExists = await User.findOne({ username: name });
+    // if (usernameExists) {
+    //   return res.status(400).json({
+    //     message: "Username already taken. Please choose a different one.",
+    //   });
+    // }
 
     // Create a new user if they do not already exist
     const newUser = new User({

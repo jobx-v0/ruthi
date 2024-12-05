@@ -1,15 +1,25 @@
-const express=require('express');
-const JobAppliedController=require('../controllers/jobAppliedController');
+const express = require("express");
+const JobAppliedController = require("../controllers/jobAppliedController");
 // const CreateApplicationRoute=require('../controllers/jobAppliedController')
-const router=express.Router();
+const router = express.Router();
 
-router.post('/jobApplications',JobAppliedController.createApplication);
+router.post("/jobApplications", JobAppliedController.createApplication);
 
-router.get('/jobApplications/all', JobAppliedController.getAppliedCandidates);4
+router.get("/jobApplications/all", JobAppliedController.getAppliedCandidates);
+4;
 
-router.put('/update-stage', JobAppliedController.updateApplicationStage);
+router.put("/update-stage", JobAppliedController.updateApplicationStage);
 
 // Get Hiring Stages for a Candidate
-router.get('/:id/stages', JobAppliedController.getStages);
+router.get("/:id/stages", JobAppliedController.getStages);
 
-module.exports=router;
+//CRUD routes for Notes
+router.post("/:applicationId/notes", JobAppliedController.addNote);
+
+router.get("/:applicationId/notes", JobAppliedController.getNotes);
+
+router.delete("/:applicationId/notes/:noteId", JobAppliedController.deleteNote);
+
+router.put("/:applicationId/notes/:noteId", JobAppliedController.updateNote);
+
+module.exports = router;

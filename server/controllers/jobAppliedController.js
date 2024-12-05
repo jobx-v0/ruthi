@@ -19,7 +19,7 @@ const createApplication = async (req, res) => {
       userProfile,
       job,
       appliedDate,
-      currentStage,
+      // currentStage,
       stage: applicationStage,
     });
     await newApplication.save();
@@ -49,10 +49,10 @@ const createApplication = async (req, res) => {
         : "N/A",
       appliedDate: newApplication.appliedDate,
       applicationStage: newApplication.currentStage,
-      linkedin: userProfileDetails.socials
+      linkedin: userProfileDetails.socials.linkedin
         ? userProfileDetails.socials.linkedin
         : "N/A", // Included only if user has provided socials in their profile
-      github: userProfileDetails.socials
+      github: userProfileDetails.socials.github
         ? userProfileDetails.socials.github
         : "N/A",
     };
@@ -73,6 +73,9 @@ const getAppliedCandidates = async (req, res) => {
     // Fetch all applications
     const applications = await Application.find({});
 
+    // const uniqueJobRoles = new Set();
+    const uniqueJobRoles = await Job.distinct("title");
+
     // Map through each application to fetch associated details
     const appliedApplications = await Promise.all(
       applications.map(async (application) => {
@@ -83,6 +86,10 @@ const getAppliedCandidates = async (req, res) => {
           ),
           Job.findById(application.job, "title location employment_type"),
         ]);
+
+        // if (jobDetails && jobDetails.title) {
+        //   uniqueJobRoles.add(jobDetails.title);
+        // }
         const skillsArray = userProfileDetails
           ? userProfileDetails.skills.map((skill) => ({
               name: skill.skill_name,
@@ -114,10 +121,13 @@ const getAppliedCandidates = async (req, res) => {
       })
     );
 
+    const uniqueJobRolesArray = Array.from(uniqueJobRoles);
+
     // Return the response with all formatted applied applications
     return res.status(200).json({
       message: "All applied candidates",
       appliedApplications,
+      uniqueJobRoles,
     });
   } catch (error) {
     console.error("Error getting applied candidates:", error);
@@ -125,29 +135,101 @@ const getAppliedCandidates = async (req, res) => {
   }
 };
 
+// const updateApplicationStage = async (req, res) => {
+//   try {
+//     const { applicationId, key, keyModified } = req.body;
+
+//     // Fetch the application document
+//     const application = await Application.findById(applicationId);
+//     console.log("Application:", application);
+
+//     if (!application) {
+//       return res.status(404).json({ message: "Application not found" });
+//     }
+
+//     // Check if the key exists in the application object
+//     if (application.stage.hasOwnProperty(key)) {
+//       application.stage[key] = !application.stage[key];
+//       application.currentStage = keyModified;
+//       await application.save();
+//       return res.status(200).json({
+//         message: "Application stage updated successfully",
+//       });
+//     } else {
+//       return res.status(400).json({ message: `Stage ${key} not found` });
+//     }
+//   } catch (error) {
+//     console.error("Error updating application stage:", error);
+//     return res.status(500).json({ message: "Internal Server Error" });
+//   }
+// };
+
 const updateApplicationStage = async (req, res) => {
   try {
-    const { applicationId, key } = req.body;
-    console.log("Request", req.body);
+    const { applicationId, key, keyModified } = req.body;
 
     // Fetch the application document
     const application = await Application.findById(applicationId);
-
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
 
-    // Check if the key exists in the application object
-    if (application.stage.hasOwnProperty(key)) {
-      application.stage[key] = !application.stage[key];
-      await application.save();
+    const stages = [
+      "applied",
+      "profileScreening",
+      "shortlisted",
+      "interview1",
+      "interview2",
+      "finalInterview",
+    ];
 
-      return res.status(200).json({
-        message: "Application stage updated successfully",
+    const lastTrueStageIndex = stages
+      .map((stage) => application.stage[stage])
+      .lastIndexOf(true);
+    console.log("lastTrueStageIndex: ", lastTrueStageIndex);
+
+    const allowedKeys = [
+      stages[lastTrueStageIndex],
+      stages[lastTrueStageIndex + 1],
+    ].filter(Boolean);
+
+    console.log("allowed keys", allowedKeys);
+
+    if (!allowedKeys.includes(key)) {
+      return res.status(400).json({
+        message: `You cannot modify the ${key} stage. Only ${allowedKeys.join(
+          " and "
+        )} can be modified.`,
       });
-    } else {
-      return res.status(400).json({ message: `Stage ${key} not found` });
     }
+
+    const index = stages.indexOf(key);
+
+    if (index > 0) {
+      if (application.stage[key]) {
+        const previousStage = stages[index - 1];
+        let keyModified;
+        if (previousStage === "applied") keyModified = "Applied";
+        if (previousStage === "profileScreening")
+          keyModified = "Profile Screening";
+        if (previousStage === "shortlisted") keyModified = "Shortlisted";
+        if (previousStage === "interview1") keyModified = "Interview 1";
+        if (previousStage === "interview2") keyModified = "Interview 2";
+        if (previousStage === "finalInterview") keyModified = "Final Interview";
+
+        application.currentStage = keyModified;
+        application.stage[key] = !application.stage[key];
+      } else {
+        application.currentStage = keyModified;
+        application.stage[key] = !application.stage[key];
+      }
+    }
+
+    await application.save();
+
+    return res
+      .status(200)
+      .json({ message: `Stage ${key} updated successfully` });
   } catch (error) {
     console.error("Error updating application stage:", error);
     return res.status(500).json({ message: "Internal Server Error" });
@@ -165,9 +247,93 @@ const getStages = async (req, res) => {
   }
 };
 
+//CRUD operations for notes
+// Add a note to an application
+const addNote = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId);
+    if (!application) {
+      res.status(404).json({ message: "Application Not Found" });
+    }
+
+    application.notes.push({ note: req.body.note });
+    await application.save();
+    const newNote = application.notes[application.notes.length - 1];
+    res.status(201).json(newNote);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get all notes for an application
+const getNotes = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId);
+    if (!application) {
+      res.status(404).json({ message: "Application Not Found" });
+    }
+    res.status(201).json({ notes: application.notes });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+const deleteNote = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId);
+    if (!application) {
+      res.status(404).json({ message: "Application Not Found" });
+    }
+    const noteIndex = application.notes.findIndex(
+      (note) => note._id.toString() === req.params.noteId
+    );
+
+    if (noteIndex === -1) {
+      res.status(404).json({ message: "Note Not Found" });
+    }
+
+    // Remove the note by index
+    application.notes.splice(noteIndex, 1);
+    await application.save();
+    res.status(201).json({ message: "Note deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+//edit a specific note
+const updateNote = async (req, res) => {
+  try {
+    const application = await Application.findById(req.params.applicationId);
+    if (!application) {
+      res.status(404).json({ message: "Application Not Found" });
+    }
+
+    // Find the note by its _id
+    const note = application.notes.find(
+      (note) => note._id.toString() === req.params.noteId
+    );
+
+    if (!note) {
+      res.status(404).json({ message: "Note Not Found" });
+    }
+
+    // Update the note content
+    note.note = req.body.updatedNote;
+    await application.save();
+    res.status(201).json({ message: "Note updated successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   createApplication,
   getAppliedCandidates,
   updateApplicationStage,
   getStages,
+  addNote,
+  getNotes,
+  deleteNote,
+  updateNote,
 };

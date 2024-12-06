@@ -108,6 +108,7 @@ const userProfileSchema = new Schema(
       },
     ],
     extra_curricular_activities: [String],
+    total_experience: { type: Number },
   },
   { timestamps: true }
 ); // Adding timestamps for createdAt and updatedAt fields

@@ -113,7 +113,7 @@ const getAppliedCandidates = async (req, res) => {
             : "N/A",
           appliedDate: application.appliedDate,
           applicationStage: application.currentStage,
-          employment_type: jobDetails.employment_type,
+          employment_type: jobDetails.employment_type ? jobDetails.employment_type : "N/A",
           socials: userProfileDetails ? userProfileDetails.socials : {}, // Included only if user has provided socials in their profile
           skills: skillsArray, // Formated skills as an array for easier use in frontend
           stageDetails: application.stage,

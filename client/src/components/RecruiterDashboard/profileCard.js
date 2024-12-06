@@ -38,17 +38,15 @@ const ProfileCard = ({
     const fetchHiringStages = async () => {
       try {
         console.log("fetching from Backend Using useEffect()");
-        const response = await fetch(
-          `http://localhost:3001/api/${candidate._id}/stages`
-        );
-        const data = await response.json();
+        const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/${candidate._id}/stages`); 
+        const data = response.data;
         console.log("Stages from backend:", data.stage);
 
         const result = Object.entries(data.stage).map(([key, value]) => {
           return { [key]: value };
         });
         console.log("result:", result);
-        setHiringStages(result); // Update hiring stages state with fetched data
+        setHiringStages(result);
       } catch (error) {
         console.error("Error fetching hiring stages", error);
       }

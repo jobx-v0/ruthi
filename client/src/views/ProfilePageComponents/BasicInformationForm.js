@@ -10,7 +10,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { personalInfoSchema, socialsSchema } from "../../validators/ZodSchema";
 
-const BasicInformationForm = ({ errors: parentErrors}) => {
+const BasicInformationForm = ({ errors: parentErrors, validationErrors }) => {
   const [personalInformation, setPersonalInformation] = useRecoilState(
     personalInformationState
   );
@@ -59,6 +59,12 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
     }
   };
 
+  // Helper function to get validation error message
+  const getValidationError = (fieldName) => {
+    const error = validationErrors?.find((error) => error.field === fieldName);
+    return error ? error.message : null;
+  };
+
   return (
     <div className="container mx-auto p-4">
       <motion.div
@@ -94,14 +100,14 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     id="firstName"
                     name="first_name"
                     className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.first_name ? "border-red-500" : "border-gray-300"
+                      getValidationError("first_name") ? "border-red-500" : "border-gray-300"
                     }`}
                     value={ensureString(profileInformation.personal_information.first_name)}
                     onChange={handleChange}
                   />
-                  {errors.first_name && (
+                  {getValidationError("first_name") && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.first_name}
+                      {getValidationError("first_name")}
                     </p>
                   )}
                 </div>
@@ -117,14 +123,14 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     id="lastName"
                     name="last_name"
                     className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.last_name ? "border-red-500" : "border-gray-300"
+                      getValidationError("last_name") ? "border-red-500" : "border-gray-300"
                     }`}
                     value={ensureString(profileInformation.personal_information.last_name)}
                     onChange={handleChange}
                   />
-                  {errors.last_name && (
+                  {getValidationError("last_name") && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.last_name}
+                      {getValidationError("last_name")}
                     </p>
                   )}
                 </div>
@@ -141,13 +147,13 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                   id="email"
                   name="email"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm bg-gray-100 focus:outline-none ${
-                    errors.email ? "border-red-500" : "border-gray-300"
+                    getValidationError("email") ? "border-red-500" : "border-gray-300"
                   }`}
                   value={userInfo?.email || ""}
                   readOnly
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                {getValidationError("email") && (
+                  <p className="text-red-500 text-xs mt-1">{getValidationError("email")}</p>
                 )}
               </div>
               <div>
@@ -159,7 +165,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                 </label>
                 <div
                   className={`flex items-center border rounded-md shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 ${
-                    errors.phone ? "border-red-500" : "border-gray-300"
+                    getValidationError("phone") ? "border-red-500" : "border-gray-300"
                   }`}
                 >
                   <span className="px-3 py-2 bg-gray-100 border-r border-gray-300 rounded-l-md">
@@ -175,8 +181,8 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                     maxLength={10}
                   />
                 </div>
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                {getValidationError("phone") && (
+                  <p className="text-red-500 text-xs mt-1">{getValidationError("phone")}</p>
                 )}
                 <div>
                   <label
@@ -187,7 +193,7 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                   </label>
                   <div
                     className={`flex items-center border rounded-md shadow-sm focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 ${
-                      errors.expected_salary
+                      getValidationError("expected_salary")
                         ? "border-red-500"
                         : "border-gray-300"
                     }`}
@@ -206,9 +212,9 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                       max="99"
                     />
                   </div>
-                  {errors.expected_salary && (
+                  {getValidationError("expected_salary") && (
                     <p className="text-red-500 text-xs mt-1">
-                      {errors.expected_salary}
+                      {getValidationError("expected_salary")}
                     </p>
                   )}
                 </div>
@@ -239,14 +245,14 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                   id="github"
                   name="github"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.github ? "border-red-500" : "border-gray-300"
+                    getValidationError("github") ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://github.com/username"
                   value={ensureString(profileInformation.socials.github)}
                   onChange={handleSocialChange}
                 />
-                {errors.github && (
-                  <p className="text-red-500 text-xs mt-1">{errors.github}</p>
+                {getValidationError("github") && (
+                  <p className="text-red-500 text-xs mt-1">{getValidationError("github")}</p>
                 )}
               </div>
               <div>
@@ -261,14 +267,14 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                   id="linkedin"
                   name="linkedin"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.linkedin ? "border-red-500" : "border-gray-300"
+                    getValidationError("linkedin") ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://linkedin.com/in/username"
                   value={ensureString(profileInformation.socials.linkedin)}
                   onChange={handleSocialChange}
                 />
-                {errors.linkedin && (
-                  <p className="text-red-500 text-xs mt-1">{errors.linkedin}</p>
+                {getValidationError("linkedin") && (
+                  <p className="text-red-500 text-xs mt-1">{getValidationError("linkedin")}</p>
                 )}
               </div>
               <div>
@@ -283,14 +289,14 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                   id="twitter"
                   name="twitter"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.twitter ? "border-red-500" : "border-gray-300"
+                    getValidationError("twitter") ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://twitter.com/username"
                   value={ensureString(profileInformation.socials.twitter)}
                   onChange={handleSocialChange}
                 />
-                {errors.twitter && (
-                  <p className="text-red-500 text-xs mt-1">{errors.twitter}</p>
+                {getValidationError("twitter") && (
+                  <p className="text-red-500 text-xs mt-1">{getValidationError("twitter")}</p>
                 )}
               </div>
               <div>
@@ -305,14 +311,14 @@ const BasicInformationForm = ({ errors: parentErrors}) => {
                   id="website"
                   name="website"
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.website ? "border-red-500" : "border-gray-300"
+                    getValidationError("website") ? "border-red-500" : "border-gray-300"
                   }`}
                   placeholder="https://example.com"
                   value={ensureString(profileInformation.socials.website)}
                   onChange={handleSocialChange}
                 />
-                {errors.website && (
-                  <p className="text-red-500 text-xs mt-1">{errors.website}</p>
+                {getValidationError("website") && (
+                  <p className="text-red-500 text-xs mt-1">{getValidationError("website")}</p>
                 )}
               </div>
             </div>

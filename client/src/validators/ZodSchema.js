@@ -44,8 +44,8 @@ export const educationSchema = z.object({
     .string()
     .min(1, "Degree is required")
     .regex(
-      /^[a-zA-Z\s.,'-]+$/,
-      "Degree should only contain letters, spaces, and common punctuation"
+      /^[a-zA-Z\s.,'()-]+$/,
+      "Degree should only contain letters, spaces, numerals, and common punctuation (.,'-())"
     ),
   start_date: z.string().refine(
     (date) => {
@@ -71,7 +71,10 @@ export const educationSchema = z.object({
         const [year, month] = date.split("-");
         const selectedDate = new Date(year, month - 1);
         const today = new Date();
-        const tenYearsFromNow = new Date(today.getFullYear() + 10, today.getMonth());
+        const tenYearsFromNow = new Date(
+          today.getFullYear() + 10,
+          today.getMonth()
+        );
         return selectedDate <= tenYearsFromNow;
       },
       { message: "End date cannot be more than 10 years in the future" }
@@ -168,7 +171,7 @@ export const experienceSchema = z.object({
       { message: "End date cannot be in the future" }
     )
     .optional(),
-  description: z.union([z.string(), z.array(z.string())]).optional(), 
+  description: z.union([z.string(), z.array(z.string())]).optional(),
   currently_working: z.boolean().optional(),
 });
 
@@ -208,13 +211,13 @@ export const projectSchema = z.object({
 export const awardSchema = z
   .string()
   .min(1, "Award name is required")
-  .regex(/^(?=.*[a-zA-Z])/, "Award name must contain at least one letter")
+  .regex(/^(?=.*[a-zA-Z])/, "Award name must contain at least one letter");
 
 // Extra Curricular Activities Schema
 export const activitySchema = z
   .string()
   .min(1, "Activity name is required")
-  .regex(/^(?=.*[a-zA-Z])/, "Activity name must contain at least one letter")
+  .regex(/^(?=.*[a-zA-Z])/, "Activity name must contain at least one letter");
 
 // Competition Schema
 export const competitionSchema = z.object({
@@ -291,4 +294,57 @@ export const positionSchema = z.object({
     )
     .optional(),
   description: z.union([z.string(), z.array(z.string())]).optional(),
+});
+
+export const jobFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Job title is required")
+    .max(100, "Job title must not exceed 100 characters"),
+  description: z
+    .string()
+    .min(10, "Job description must be at least 10 characters")
+    .max(1000, "Job description must not exceed 1000 characters"),
+  job_link: z.string().url("Invalid URL").or(z.literal("")),
+  posted_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Posted date must be in YYYY-MM-DD format")
+    .refine(
+      (date) => !isNaN(Date.parse(date)),
+      "Posted date must be a valid date"
+    ),
+  employment_type: z
+    .enum(["full-time", "part-time", "contract", "internship"])
+    .optional()
+    .or(z.literal("")),
+  location: z
+    .string()
+    .min(1, "Location is required")
+    .max(100, "Location must not exceed 100 characters"),
+  skills_required: z
+    .string()
+    .min(1, "Skill is required")
+    .min(1, "At least one skill is required"),
+  experience_required: z
+    .number()
+    .min(0, "Experience must be 0 or more")
+    .max(50, "Experience must not exceed 50 years")
+    .or(
+      z
+        .string()
+        .regex(/^[0-9]{1,2}$/, "Experience must be a number between 0 and 50")
+    ),
+  company_name: z
+    .string()
+    .min(1, "Company name is required")
+    .max(100, "Company name must not exceed 100 characters"),
+  company_logo: z.string().url("Invalid URL").or(z.literal("")).optional(),
+  custom_interview: z
+    .array(
+      z.object({
+        question: z.string().min(1, { message: "Question cannot be empty" }),
+        answer: z.string().optional(),
+      })
+    )
+    .optional(),
 });

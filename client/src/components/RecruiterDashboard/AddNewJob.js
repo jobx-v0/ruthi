@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { Sidebar, SidebarBody, SidebarLink } from "../../ui/sidebar";
-import { IconBriefcase, IconUser, IconPlus } from "@tabler/icons-react";
 import { useCustomToast } from "../utils/useCustomToast";
 import { addJobAPI } from "../../api/jobApi";
 import { Plus, Trash2 } from "lucide-react";
+import { jobFormSchema } from "../../validators/ZodSchema";
 
 const JobForm = () => {
-  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -17,7 +15,7 @@ const JobForm = () => {
     experience_required: "",
     company_name: "",
     company_logo: "",
-    questions: [],
+    custom_interview: [],
   });
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -30,28 +28,32 @@ const JobForm = () => {
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     setAuthToken(token);
-    setQuestionEntries(formData.questions);
+    setQuestionEntries(formData.custom_interview);
   }, []);
 
   const getPostDate = () => {
     return new Date().toISOString().split("T")[0]; // Format: YYYY-MM-DD
   };
+  const validateField = (name, value) => {
+    try {
+      jobFormSchema.shape[name].parse(value);
+      setErrors((prev) => ({ ...prev, [name]: null }));
+    } catch (error) {
+      setErrors((prev) => ({ ...prev, [name]: error.errors[0].message }));
+    }
+  };
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    switch (name) {
-      case "skills_required":
-        const skillsArray = value.split(",").map((skill) => skill.trim());
-        setFormData((prev) => ({ ...prev, [name]: skillsArray }));
-        break;
-      case "experience_required":
-        const experienceValue = Number(value);
-        setFormData((prev) => ({ ...prev, [name]: experienceValue }));
-        break;
-      default:
-        setFormData((prev) => ({ ...prev, [name]: value }));
-        break;
-    }
+    setFormData((prev) => ({
+      ...prev,
+      [name]:
+        name === "skills_required"
+          ? value.split(",").map((skill) => skill.trim())
+          : name === "experience_required"
+          ? Number(value)
+          : value,
+    }));
+    validateField(name, value);
   };
   const getDescriptionPoints = () => {
     return formData.description
@@ -80,7 +82,7 @@ const JobForm = () => {
     setQuestionEntries(updatedQuestions);
     setFormData((prevData) => ({
       ...prevData,
-      questions: updatedQuestions,
+      custom_interview: updatedQuestions,
     }));
   };
   const handleAddQuestiona = () => {
@@ -102,7 +104,7 @@ const JobForm = () => {
       experience_required: 0,
       company_name: "",
       company_logo: "",
-      questions: [],
+      custom_interview: [],
     });
     setErrors({});
     setQuestionEntries([]);
@@ -111,33 +113,6 @@ const JobForm = () => {
 
   return (
     <div className="flex h-screen">
-      <Sidebar open={open} setOpen={setOpen} className="flex-shrink-0">
-        <SidebarBody className="flex flex-col justify-start py-9">
-          <SidebarLink
-            link={{
-              href: "/jobcards",
-              label: "Job Cards",
-              icon: <IconBriefcase />,
-            }}
-            className="mb-2"
-          />
-          <SidebarLink
-            link={{
-              href: "/candidates",
-              label: "Candidates",
-              icon: <IconUser />,
-            }}
-          />
-          <SidebarLink
-            link={{
-              href: "/AddNewJob",
-              label: "Add New Job",
-              icon: <IconPlus />,
-            }}
-          />
-        </SidebarBody>
-      </Sidebar>
-
       <div className="flex-1 p-5 flex flex-col items-center overflow-y-auto">
         <div className="w-full max-w-[70%] p-5 border border-gray-300 rounded-lg bg-white shadow-xl relative">
           <h2 className="text-center text-2xl text-gray-900">Add New Job</h2>
@@ -160,35 +135,52 @@ const JobForm = () => {
                 </p>
               </div>
               <div className="one flex space-x-4 mb-4">
-                <div className="flex items-center w-1/2">
+                <div className="flex  w-1/2">
                   <label className="w-48 text-sm text-gray-900">
-                    Title<span className="text-red-500">*</span>
+                    Title:<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="title"
-                    value={formData.title}
-                    placeholder="Job Name"
-                    style={{ fontSize: "0.875rem" }}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm "
-                    required
-                  />
+                  <div className="flex flex-col w-full ">
+                    <input
+                      type="text"
+                      name="title"
+                      value={formData.title}
+                      placeholder="Job Name"
+                      style={{ fontSize: "0.875rem" }}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                        errors.title ? "border-red-500" : ""
+                      }`}
+                      required
+                    />
+                    {errors.title && (
+                      <span className="text-red-500 text-xs">
+                        {errors.title}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center w-1/2">
                   <label className="w-48 text-sm text-gray-900">
                     Job Link:
                   </label>
-                  <input
-                    type="url"
-                    name="job_link"
-                    value={formData.job_link}
-                    onChange={handleChange}
-                    placeholder="https://.."
-                    style={{ fontSize: "0.875rem" }}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm "
-                    required
-                  />
+                  <div className="flex flex-col w-full">
+                    <input
+                      type="url"
+                      name="job_link"
+                      value={formData.job_link}
+                      onChange={handleChange}
+                      placeholder="https://.."
+                      style={{ fontSize: "0.875rem" }}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                        errors.job_link ? "border-red-500" : ""
+                      }`}
+                    />
+                    {errors.job_link && (
+                      <span className="text-red-500 text-xs">
+                        {errors.job_link}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -198,31 +190,49 @@ const JobForm = () => {
                     Experience Required (years)
                     <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="number"
-                    name="experience_required"
-                    value={formData.experience_required}
-                    onChange={handleChange}
-                    placeholder="0"
-                    style={{ fontSize: "0.875rem" }}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm "
-                    required
-                  />
+                  <div className="flex flex-col w-full ">
+                    <input
+                      type="number"
+                      name="experience_required"
+                      value={formData.experience_required}
+                      onChange={handleChange}
+                      placeholder="0"
+                      style={{ fontSize: "0.875rem" }}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                        errors.experience_required ? "border-red-500" : ""
+                      }`}
+                      required
+                    />
+                    {errors.experience_required && (
+                      <span className="text-red-500 text-xs">
+                        {errors.experience_required}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center w-1/2">
                   <label className="w-48 text-sm text-gray-900">
                     Company Name<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="company_name"
-                    value={formData.company_name}
-                    onChange={handleChange}
-                    placeholder="Your Organization Name"
-                    style={{ fontSize: "0.875rem" }}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm "
-                    required
-                  />
+                  <div className="flex flex-col w-full ">
+                    <input
+                      type="text"
+                      name="company_name"
+                      value={formData.company_name}
+                      onChange={handleChange}
+                      placeholder="Your Organization Name"
+                      style={{ fontSize: "0.875rem" }}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                        errors.company_name ? "border-red-500" : ""
+                      }`}
+                      required
+                    />
+                    {errors.company_name && (
+                      <span className="text-red-500 text-xs">
+                        {errors.company_name}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -231,51 +241,78 @@ const JobForm = () => {
                   <label className="w-48 text-sm text-gray-900">
                     Company Logo URL:
                   </label>
-                  <input
-                    type="url"
-                    name="company_logo"
-                    value={formData.company_logo}
-                    placeholder="https://.."
-                    style={{ fontSize: "0.875rem" }}
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm "
-                    required
-                  />
+                  <div className="flex flex-col w-full">
+                    <input
+                      type="url"
+                      name="company_logo"
+                      value={formData.company_logo}
+                      placeholder="https://.."
+                      style={{ fontSize: "0.875rem" }}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                        errors.company_logo ? "border-red-500" : ""
+                      }`}
+                    />
+                    {errors.company_logo && (
+                      <span className="text-red-500 text-xs">
+                        {errors.company_logo}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center w-1/2">
                   <label className="w-48 text-sm text-gray-900">
-                    Location<span className="text-red-500">*</span>
+                    Location:<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="location"
-                    value={formData.location}
-                    placeholder=""
-                    onChange={handleChange}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm "
-                    required
-                  />
+                  <div className="flex flex-col w-full">
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      placeholder=""
+                      style={{ fontSize: "0.875rem" }}
+                      onChange={handleChange}
+                      className={`px-3 py-2 border rounded-md shadow-sm ${
+                        errors.location ? "border-red-500" : ""
+                      }`}
+                      required
+                    />
+                    {errors.location && (
+                      <span className="text-red-500 text-xs">
+                        {errors.location}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="flex space-x-4 mb-4">
                 <div className="flex items-center w-1/2">
                   <label className="w-48 text-sm text-gray-900">
-                    Skills Required<span className="text-red-500">*</span>
+                    Skills Required:<span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="skills_required"
-                    value={formData.skills_required.join(", ")}
-                    onChange={handleChange}
-                    placeholder="Comma-separated values"
-                    style={{ fontSize: "0.875rem" }}
-                    className="w-full px-3 py-2 border rounded-md shadow-sm"
-                  />
+                  <div className="flex flex-col w-full">
+                    <input
+                      type="text"
+                      name="skills_required"
+                      value={formData.skills_required.join(", ")}
+                      onChange={handleChange}
+                      placeholder="Comma-separated values"
+                      style={{ fontSize: "0.875rem" }}
+                      className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                        errors.skills_required ? "border-red-500" : ""
+                      }`}
+                    />
+                    {errors.skills_required && (
+                      <span className="text-red-500 text-xs">
+                        {errors.skills_required}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="flex items-center w-1/2">
                   <label className="w-48 text-sm text-gray-900">
-                    Employment Type<span className="text-red-500">*</span>
+                    Employment Type:<span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center space-x-4">
                     {["full-time", "part-time", "intern"].map((type) => (
@@ -296,19 +333,28 @@ const JobForm = () => {
               </div>
 
               <div className="flex flex-col mb-4">
-                <label className="w-48 text-sm text-gray-900">
+                <label className="w-48 text-sm text-gray-900 mb-2">
                   Job Description:
                 </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="4"
-                  placeholder="Describe your Job"
-                  style={{ fontSize: "0.875rem" }}
-                  className="flex-1 p-2 text-sm border border-gray-300 rounded"
-                  required
-                />
+                <div className="flex flex-col w-full">
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    rows="4"
+                    placeholder="Describe your Job"
+                    style={{ fontSize: "0.875rem" }}
+                    className={`w-full px-3 py-2 border rounded-md shadow-sm ${
+                      errors.description ? "border-red-500" : ""
+                    }`}
+                    required
+                  />
+                  {errors.description && (
+                    <span className="text-red-500 text-xs">
+                      {errors.description}
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="mt-4">
                 <ul className="list-disc list-inside">
@@ -358,7 +404,7 @@ const JobForm = () => {
                       <div className="flex flex-col space-y-4">
                         <div>
                           <h3 className="text-sm font-semibold text-gray-700">
-                            Question<span className="text-red-500">*</span>
+                            Question:<span className="text-red-500">*</span>
                           </h3>
                           <input
                             type="text"
@@ -369,7 +415,7 @@ const JobForm = () => {
                               setQuestionEntries(updatedEntries);
                               setFormData((prevData) => ({
                                 ...prevData,
-                                questions: updatedEntries,
+                                custom_interview: updatedEntries,
                               }));
                             }}
                             placeholder="Enter question"
@@ -391,7 +437,7 @@ const JobForm = () => {
                               setQuestionEntries(updatedEntries);
                               setFormData((prevData) => ({
                                 ...prevData,
-                                questions: updatedEntries,
+                                custom_interview: updatedEntries,
                               }));
                             }}
                             placeholder="Enter answer (Optional)"

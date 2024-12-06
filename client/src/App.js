@@ -77,76 +77,76 @@ function App() {
               path="/reach-out"
               element={
                 // <GuestRoute>
-                  <ReachOut />
+                <ReachOut />
                 // </GuestRoute>
               }
             />
 
             {/* Protected Routes (authenticated pages) */}
-            {/* <Route
+            <Route
               path="/home"
               element={
                 <ProtectedRoute>
                   <Home />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/admin"
               element={
                 <ProtectedRoute>
                   <AdminPage />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/jobs"
               element={
                 <ProtectedRoute>
                   <Jobs />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/chatbot"
               element={
                 <ProtectedRoute>
                   <ChatBotUI />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/new-interview"
               element={
                 <ProtectedRoute>
                   <NewInterview />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/interview-preview"
               element={
                 <ProtectedRoute>
                   <InterviewPreview />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/verify-interview/:token"
               element={
                 <ProtectedRoute>
                   <InterviewTokenVerifier />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/thank-you"
               element={
                 <ProtectedRoute>
                   <ThankYouPage />
                 </ProtectedRoute>
               }
-            /> */}
+            />
             <Route
               path="/profile"
               element={
@@ -163,55 +163,55 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            {/* <Route
+            <Route
               path="/JobCards"
               element={
                 <ProtectedRoute>
                   <JobCard />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/Candidates"
               element={
                 <ProtectedRoute>
                   <Candidates />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/JobDescription/:id"
               element={
                 <ProtectedRoute>
                   <JobDescription />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/AddNewJob"
               element={
                 <ProtectedRoute>
                   <AddNewJob />
                 </ProtectedRoute>
               }
-            /> */}
-            {/* <Route
+            />
+            <Route
               path="/recruiter-dashboard"
               element={
                 <ProtectedRoute>
                   <EditJob />
                 </ProtectedRoute>
               }
-            /> */}
+            />
 
-            {/* <Route
+            <Route
               path="/job-portal"
               element={
                 <ProtectedRoute>
                   <CandidatesApplied />
                 </ProtectedRoute>
               }
-            /> */}
+            />
 
             {/* Routes not requiring protection */}
             {/* <Route path="/test" element={<VideoRecorder />} /> */}

@@ -69,7 +69,7 @@ function ChatBotUI() {
           },
         }
       );
-
+      console.log(res.data.nextOptions);
       // Set up the chat messages
       const messages = res.data?.chatHistory?.length
         ? res.data.chatHistory.map((msg) => ({
@@ -195,23 +195,48 @@ function ChatBotUI() {
     }
   };
 
-  const renderMessageText = (text) => {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.split(urlRegex).map((part, index) => {
-      if (urlRegex.test(part)) {
+  const convertToAnchorTags = (text) => {
+    // Ensure the input is a string before calling split
+    if (typeof text !== "string") {
+      console.error("Expected a string, but received:", typeof text);
+      return text; // Return text if it's not a string to avoid breaking the UI
+    }
+
+    // Regular expression to match URLs
+    const urlRegex = /https?:\/\/[^\s]+/g;
+
+    // Split the text into lines and process each line
+    return text.split("\n").map((line, index) => {
+      const matches = line.match(urlRegex);
+      if (matches) {
+        const url = matches[0];
+
+        // Extract the domain and up to 6 keywords from the URL path
+        const urlObject = new URL(url);
+        const keywords = urlObject.pathname
+          .split("/")
+          .filter((segment) => segment) // Filter out empty segments
+          .slice(0, 6) // Limit to 6 segments
+          .join(" / "); // Join with " / "
+
+        // Return the link with shortened keywords as the display text
         return (
-          <a
-            key={index}
-            href={part}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 underline"
-          >
-            Click here.
-          </a>
+          <li key={index} className="mb-2">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline break-words"
+            >
+              {keywords || urlObject.hostname}{" "}
+              {/* Fallback to hostname if no path */}
+            </a>
+          </li>
         );
       }
-      return part;
+
+      // Otherwise, return the line as plain text
+      return <p key={index}>{line}</p>;
     });
   };
 
@@ -269,7 +294,12 @@ function ChatBotUI() {
 
         {/* Chat Area */}
         <main className="flex-1 p-4 overflow-y-hidden">
-          <h1 className="text-2xl font-bold mb-4">Schedule an Interview</h1>
+          <h1 className="text-2xl font-bold mb-4">
+            {company_name
+              ? `${company_name} Interview`
+              : "Schedule an Interview"}
+          </h1>
+
           {skeletonMessagesLoading ? (
             <div
               class="flex-1 p-6 bg-gray-100 rounded"
@@ -325,7 +355,7 @@ function ChatBotUI() {
               style={{ height: "78vh", overflowY: "auto" }}
             >
               {messages?.length === 0 ? (
-                <p class="text-gray-600 text-center">
+                <p className="text-gray-600 text-center">
                   Please select a company to schedule an interview.
                 </p>
               ) : (
@@ -343,16 +373,19 @@ function ChatBotUI() {
                           : "bg-blue-500 text-white"
                       } p-2 rounded-lg max-w-xs`}
                     >
-                      {renderMessageText(message.text)}
+                      {convertToAnchorTags(message.text)}{" "}
+                      {/* Render clickable links */}
                     </div>
                   </div>
                 ))
               )}
 
+              {/* Loading State */}
               {loading ? (
-                <p>Loading...</p>
+                <p className="text-gray-600 text-center mt-4">Loading...</p>
               ) : (
                 <>
+                  {/* Date Picker */}
                   {displayDatePicker && (
                     <input
                       type="date"
@@ -362,6 +395,7 @@ function ChatBotUI() {
                       className="mb-4 p-2 border rounded"
                     />
                   )}
+                  {/* Time Picker */}
                   {displayTimePicker && (
                     <input
                       type="time"
@@ -371,6 +405,7 @@ function ChatBotUI() {
                       className="mb-4 p-2 border rounded"
                     />
                   )}
+                  {/* Options */}
                   <div className="mt-4 space-x-2">
                     {options?.map((option) => (
                       <button

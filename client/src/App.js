@@ -1,15 +1,15 @@
 import "./App.css";
 import { Toaster } from "react-hot-toast";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import Home from "./views/Home";
+// import Home from "./views/Home";
 import { AuthProvider } from "./context/AuthContext";
 import SignupPage from "./views/Signup";
-import AdminPage from "./views/Admin";
+// import AdminPage from "./views/Admin";
 import Login from "./views/Login";
-import ThankYouPage from "./views/ThankYouPage";
+// import ThankYouPage from "./views/ThankYouPage";
 import { NextUIProvider } from "@nextui-org/react";
-import Jobs from "./views/Jobs";
-import NewInterview from "./views/NewInterview";
+// import Jobs from "./views/Jobs";
+// import NewInterview from "./views/NewInterview";
 import LandingTest from "./components/LandingTest";
 import VerificationPage from "./views/Verification";
 import VerifyEmailPrompt from "./views/VerifyEmail";
@@ -21,17 +21,17 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import GuestRoute from "./components/GuestRoute";
 import { ToastContainer } from "react-toastify";
 import ReachOut from "./components/ReachOut";
-import JobCard from "./components/core/JobCards";
-import Candidates from "./components/core/Candidates";
-import JobDescription from "./components/core/JobDescription";
-import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
+// import JobCard from "./components/core/JobCards";
+// import Candidates from "./components/core/Candidates";
+// import JobDescription from "./components/core/JobDescription";
+// import RecruiterDashboard from "./components/core/RecruiterComponents/RecruiterDashboard";
 import "react-toastify/dist/ReactToastify.css";
-import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
-import AddNewJob from "./components/core/AddNewJob";
-import EditJob from "./components/core/EditJobModel";
-import ChatBotUI from "./components/chatbot/ChatBotUI";
-import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
-import InterviewPreview from "./components/interview/InterviewPreview";
+// import CandidatesApplied from "./components/RecruiterDashboard/CandidatesApplied";
+// import AddNewJob from "./components/core/AddNewJob";
+// import EditJob from "./components/core/EditJobModel";
+// import ChatBotUI from "./components/chatbot/ChatBotUI";
+// import InterviewTokenVerifier from "./components/interview/InterviewTokenVerifier";
+// import InterviewPreview from "./components/interview/InterviewPreview";
 
 function App() {
   return (

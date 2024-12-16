@@ -44,7 +44,7 @@ export const educationSchema = z.object({
     .string()
     .min(1, "Degree is required")
     .regex(
-      /^[a-zA-Z\s.,'()-]+$/,
+      /^[a-zA-Z0-9\s.,'()-]+$/,
       "Degree should only contain letters, spaces, numerals, and common punctuation (.,'-())"
     ),
   start_date: z.string().refine(

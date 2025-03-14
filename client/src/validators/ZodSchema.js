@@ -292,3 +292,61 @@ export const positionSchema = z.object({
     .optional(),
   description: z.union([z.string(), z.array(z.string())]).optional(),
 });
+
+export const jobFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Job title is required")
+    .max(100, "Job title must not exceed 100 characters"),
+  description: z
+    .string()
+    .min(10, "Job description must be at least 10 characters")
+    .max(1000, "Job description must not exceed 1000 characters"),
+  job_link: z
+    .string()
+    .url("Invalid URL").or(z.literal("")),
+  posted_date: z
+    .string()
+    .regex(
+      /^\d{4}-\d{2}-\d{2}$/,
+      "Posted date must be in YYYY-MM-DD format"
+    )
+    .refine((date) => !isNaN(Date.parse(date)), "Posted date must be a valid date"),
+  employment_type: z
+    .enum(["full-time", "part-time", "contract", "internship"])
+    .optional()
+    .or(z.literal("")),
+  location: z
+    .string()
+    .min(1, "Location is required")
+    .max(100, "Location must not exceed 100 characters"),
+  skills_required: z
+    .string().min(1, "Skill is required")
+    .min(1, "At least one skill is required"),
+  experience_required: z
+    .number()
+    .min(0, "Experience must be 0 or more")
+    .max(50, "Experience must not exceed 50 years")
+    .or(
+      z
+        .string()
+        .regex(/^[0-9]{1,2}$/, "Experience must be a number between 0 and 50")
+    ),
+  company_name: z
+    .string()
+    .min(1, "Company name is required")
+    .max(100, "Company name must not exceed 100 characters"),
+  company_logo: z
+    .string()
+    .url("Invalid URL").or(z.literal(""))
+    .optional(),
+  custom_interview: z
+    .array(
+      z.object({
+        question: z.string().min(1, { message: "Question cannot be empty" }),
+        answer: z.string().optional(),
+      })
+    )
+    .optional(),
+});
+

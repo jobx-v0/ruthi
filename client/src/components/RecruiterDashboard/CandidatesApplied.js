@@ -1,6 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import ProfileCard from "./profileCard";
 import FilterDropdown from "./CandidatesFilter";
+import axios from "axios";
+import { IconSearch } from "@tabler/icons-react";
 
 const stageBadgeColors = {
   Applied: "#ab21df12",
@@ -17,6 +19,7 @@ const CandidatesApplied = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCandidate, setSelectedCandidate] = useState(null); // State for selected candidate
   const [candidates, setCandidates] = useState([]);
+  const profileCardRef = useRef(null);
   const [displayFilters, setDisplayFilters] = useState(false);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(candidates.length / itemsPerPage);
@@ -32,18 +35,12 @@ const CandidatesApplied = () => {
   useEffect(() => {
     //log data
     console.log("Fetching candidates from API...");
-    // Fetch candidates from the API
-
     const getCandidates = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:3001/api/jobApplications/all"
+        const response = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL}/api/jobApplications/all`
         );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        console.log("response", response);
-        const data = await response.json();
+        const data = response.data;
         console.log("Data from API", data);
         setCandidates(data.appliedApplications);
       } catch (error) {
@@ -84,10 +81,6 @@ const CandidatesApplied = () => {
     setSearchQuery(e.target.value.toLowerCase());
   };
 
-  const handleCheckboxChange = (candidate) => {
-    setSelectedCandidate(candidate); // Set the selected candidate
-  };
-
   // Function to calculate the start date based on the selected range
   const getStartDateForRange = (range) => {
     const currentDate = new Date();
@@ -102,7 +95,16 @@ const CandidatesApplied = () => {
         return null; // Return a very old date if no range selected
     }
   };
-
+  const handleCheckboxChange = (index) => {
+    setSelectedCandidate((prevSelected) => {
+      // If the candidate is already selected, remove it
+      if (prevSelected === index) {
+        return null;
+      }
+      // Otherwise, select the candidate at the given index
+      return index;
+    });
+  };
   const filteredCandidates = candidates
     .filter((candidate) => {
       // Check if candidate matches the role filter

@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const User = require("../models/User");
 
 const authMiddleware = (req, res, next) => {
   // Get the token from the request headers
@@ -26,7 +27,7 @@ const authMiddleware = (req, res, next) => {
     const decoded = jwt.verify(token, secretKey); // Replace 'your-secret-key' with your actual secret key
 
     // Attach the user object to the request for further use if needed
-    req.user = decoded;
+    req.user = decoded;    
 
     // Continue to the next middleware or route handler
     next();
@@ -37,7 +38,8 @@ const authMiddleware = (req, res, next) => {
 };
 
 const isAdmin = (req, res, next) => {
-  if (req.user.role === "admin") {
+  
+  if (req.user && req.user.role === "admin") {
     next();
   } else {
     console.log("Only Admin has access to this route.")

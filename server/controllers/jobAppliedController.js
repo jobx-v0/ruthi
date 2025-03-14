@@ -100,6 +100,7 @@ const getAppliedCandidates = async (req, res) => {
         // Format each application with desired fields and handle missing details
         return {
           _id: application._id,
+          job_id: application.job,
           appliedRole: jobDetails ? jobDetails.title : "N/A",
           appliedLocation: jobDetails ? jobDetails.location : "N/A",
           userName: userProfileDetails
@@ -113,7 +114,7 @@ const getAppliedCandidates = async (req, res) => {
             : "N/A",
           appliedDate: application.appliedDate,
           applicationStage: application.currentStage,
-          employment_type: jobDetails.employment_type,
+          employment_type: jobDetails.employment_type ? jobDetails.employment_type : "N/A",
           socials: userProfileDetails ? userProfileDetails.socials : {}, // Included only if user has provided socials in their profile
           skills: skillsArray, // Formated skills as an array for easier use in frontend
           stageDetails: application.stage,
